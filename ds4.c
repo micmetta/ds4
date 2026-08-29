@@ -1261,6 +1261,706 @@ typedef struct {
 
 static ds4_expert_profile g_expert_profile;
 
+/* TEST_0 routing trace. This decode-only diagnostic records authoritative
+ * top-k ids and, for CUDA top-k layers, the top eight selection scores. */
+typedef struct {
+    bool active;
+    bool failed;
+    FILE *fp;
+    pthread_mutex_t mutex;
+} ds4_routing_trace;
+
+/* TEST_1 oracle replay. The binary file is deliberately small and private to
+ * the test: a sorted vector gives deterministic lookup by (token, layer). */
+typedef struct {
+    uint32_t pos;
+    uint32_t layer;
+    int32_t selected[DS4_MAX_EXPERT_USED];
+    float weights[DS4_MAX_EXPERT_USED];
+} ds4_routing_oracle_entry;
+
+typedef struct {
+    bool failed;
+    FILE *write_fp;
+    ds4_routing_oracle_entry *entries;
+    size_t count;
+    size_t cap;
+} ds4_routing_oracle;
+
+enum { DS4_ROUTING_TRACE_TOP_CANDIDATES = 8 };
+
+static ds4_routing_trace g_routing_trace = {
+    .mutex = PTHREAD_MUTEX_INITIALIZER,
+};
+
+/* TEST_2 SSD-streaming trace. It is independent from routing tracing so a
+ * timing run does not need to emit router-score data. */
+typedef struct {
+    bool active;
+    bool failed;
+    FILE *fp;
+    pthread_mutex_t mutex;
+} ds4_ssd_trace;
+
+static ds4_ssd_trace g_ssd_trace = {
+    .mutex = PTHREAD_MUTEX_INITIALIZER,
+};
+
+/* TEST_3 VRAM-capacity probe.  It only observes cudaMemGetInfo at the three
+ * useful boundaries; it never changes routing, loading, or CUDA scheduling. */
+typedef struct {
+    bool active;
+    bool failed;
+    FILE *fp;
+    pthread_mutex_t mutex;
+} ds4_test3_vram_trace;
+
+static ds4_test3_vram_trace g_test3_vram_trace = {
+    .mutex = PTHREAD_MUTEX_INITIALIZER,
+};
+
+/* TEST_4 records only the controlled prefetch decisions.  It is independent
+ * from TEST_2 timings so Run B can remain a clean demand-load baseline. */
+typedef struct {
+    bool active;
+    bool failed;
+    FILE *fp;
+    pthread_mutex_t mutex;
+} ds4_test4_trace;
+static ds4_test4_trace g_test4_trace = {
+    .mutex = PTHREAD_MUTEX_INITIALIZER,
+};
+typedef struct {
+    bool valid;
+    uint32_t pos;
+    uint32_t layer;
+    ds4_gpu_stream_expert_table table;
+    int32_t selected[DS4_MAX_EXPERT_USED];
+} ds4_test4_prefetch_context;
+typedef struct {
+    bool valid;
+    uint32_t pos;
+    uint32_t token;
+    uint32_t layer;
+    bool is_hash;
+    int32_t selected[DS4_MAX_EXPERT_USED];
+    ds4_gpu_stream_expert_load_stats load_stats;
+} ds4_test3_vram_context;
+
+/* TEST_3 host-memory snapshot.  /proc reports the memory visible to the
+ * Linux/WSL guest running DS4.  MemAvailable is deliberately preferred to
+ * MemFree: Linux may reclaim page cache, whereas a future pinned allocation
+ * cannot rely on that cache being immediately disposable. */
+typedef struct {
+    uint64_t total_bytes;
+    uint64_t available_bytes;
+    uint64_t free_bytes;
+    uint64_t page_cache_bytes;
+    uint64_t swap_total_bytes;
+    uint64_t swap_free_bytes;
+    uint64_t process_rss_bytes;
+    uint64_t process_vmsize_bytes;
+    uint64_t process_locked_bytes;
+    uint64_t process_rss_anon_bytes;
+    uint64_t process_rss_file_bytes;
+    uint64_t process_rss_shmem_bytes;
+} ds4_test3_ram_info;
+static ds4_test3_vram_context g_test3_vram_context;
+static ds4_test4_prefetch_context g_test4_prefetch_context;
+/* The first decode position defines the phase of TEST_6 bursts.  This keeps
+ * INIT_DISTANCE and STEP independent of the prompt length. */
+static bool g_test4_prefetch_first_pos_valid;
+static uint32_t g_test4_prefetch_first_pos;
+static pthread_once_t g_ssd_trace_once = PTHREAD_ONCE_INIT;
+static pthread_once_t g_test3_vram_trace_once = PTHREAD_ONCE_INIT;
+static pthread_once_t g_test4_trace_once = PTHREAD_ONCE_INIT;
+static pthread_once_t g_routing_trace_once = PTHREAD_ONCE_INIT;
+static ds4_routing_oracle g_routing_oracle;
+static pthread_once_t g_routing_oracle_once = PTHREAD_ONCE_INIT;
+
+static const unsigned char ds4_routing_oracle_magic[8] = {
+    'D', 'S', '4', 'O', 'R', 'C', '1', '\0'
+};
+
+static void topk_desc(const float *score, int n, int k, int *idx);
+static const ds4_routing_oracle_entry *ds4_routing_oracle_find(uint32_t pos,
+                                                                 uint32_t layer);
+
+static void ds4_routing_trace_init(void) {
+    const char *path = getenv("DS4_ROUTING_TRACE_PATH");
+    if (!path || !path[0]) return;
+    g_routing_trace.fp = fopen(path, "w");
+    if (!g_routing_trace.fp) {
+        fprintf(stderr,
+                "ds4: failed to open DS4_ROUTING_TRACE_PATH=%s: %s\n",
+                path,
+                strerror(errno));
+        g_routing_trace.failed = true;
+        return;
+    }
+    setvbuf(g_routing_trace.fp, NULL, _IOLBF, 0);
+    g_routing_trace.active = true;
+}
+
+static void ds4_ssd_trace_init(void) {
+    const char *path = getenv("DS4_SSD_TRACE_PATH");
+    if (!path || !path[0]) return;
+    g_ssd_trace.fp = fopen(path, "w");
+    if (!g_ssd_trace.fp) {
+        fprintf(stderr, "ds4: failed to open DS4_SSD_TRACE_PATH=%s: %s\n",
+                path, strerror(errno));
+        g_ssd_trace.failed = true;
+        return;
+    }
+    setvbuf(g_ssd_trace.fp, NULL, _IOLBF, 0);
+    g_ssd_trace.active = true;
+}
+
+static void ds4_test3_vram_trace_init(void) {
+    const char *path = getenv("DS4_TEST_3_VRAM_TRACE_PATH");
+    if (!path || !path[0]) return;
+    g_test3_vram_trace.fp = fopen(path, "w");
+    if (!g_test3_vram_trace.fp) {
+        fprintf(stderr, "ds4: failed to open DS4_TEST_3_VRAM_TRACE_PATH=%s: %s\n",
+                path, strerror(errno));
+        g_test3_vram_trace.failed = true;
+        return;
+    }
+    setvbuf(g_test3_vram_trace.fp, NULL, _IOLBF, 0);
+    g_test3_vram_trace.active = true;
+}
+
+static void ds4_test4_trace_init(void) {
+    const char *path = getenv("DS4_TEST_4_TRACE_PATH");
+    if (!path || !path[0]) return;
+    g_test4_trace.fp = fopen(path, "w");
+    if (!g_test4_trace.fp) {
+        fprintf(stderr, "ds4: failed to open DS4_TEST_4_TRACE_PATH=%s: %s\n",
+                path, strerror(errno));
+        g_test4_trace.failed = true;
+        return;
+    }
+    setvbuf(g_test4_trace.fp, NULL, _IOLBF, 0);
+    g_test4_trace.active = true;
+}
+
+static bool ds4_ssd_trace_active(void) {
+    pthread_once(&g_ssd_trace_once, ds4_ssd_trace_init);
+    return g_ssd_trace.active && !g_ssd_trace.failed;
+}
+
+static bool ds4_test3_vram_trace_active(void) {
+    pthread_once(&g_test3_vram_trace_once, ds4_test3_vram_trace_init);
+    return g_test3_vram_trace.active && !g_test3_vram_trace.failed;
+}
+
+static bool ds4_test4_trace_active(void) {
+    pthread_once(&g_test4_trace_once, ds4_test4_trace_init);
+    return g_test4_trace.active && !g_test4_trace.failed;
+}
+
+static uint64_t ds4_test3_kib_to_bytes(uint64_t kib) {
+    return kib <= UINT64_MAX / 1024u ? kib * 1024u : UINT64_MAX;
+}
+
+static void ds4_test3_ram_info_set_meminfo(
+        ds4_test3_ram_info *out, const char *key, uint64_t bytes) {
+    if (strcmp(key, "MemTotal") == 0) out->total_bytes = bytes;
+    else if (strcmp(key, "MemAvailable") == 0) out->available_bytes = bytes;
+    else if (strcmp(key, "MemFree") == 0) out->free_bytes = bytes;
+    else if (strcmp(key, "Cached") == 0) out->page_cache_bytes += bytes;
+    else if (strcmp(key, "SReclaimable") == 0) out->page_cache_bytes += bytes;
+    else if (strcmp(key, "Shmem") == 0) {
+        out->page_cache_bytes = out->page_cache_bytes > bytes ?
+            out->page_cache_bytes - bytes : 0;
+    } else if (strcmp(key, "SwapTotal") == 0) out->swap_total_bytes = bytes;
+    else if (strcmp(key, "SwapFree") == 0) out->swap_free_bytes = bytes;
+}
+
+static void ds4_test3_ram_info_set_status(
+        ds4_test3_ram_info *out, const char *key, uint64_t bytes) {
+    if (strcmp(key, "VmRSS") == 0) out->process_rss_bytes = bytes;
+    else if (strcmp(key, "VmSize") == 0) out->process_vmsize_bytes = bytes;
+    else if (strcmp(key, "VmLck") == 0) out->process_locked_bytes = bytes;
+    else if (strcmp(key, "RssAnon") == 0) out->process_rss_anon_bytes = bytes;
+    else if (strcmp(key, "RssFile") == 0) out->process_rss_file_bytes = bytes;
+    else if (strcmp(key, "RssShmem") == 0) out->process_rss_shmem_bytes = bytes;
+}
+
+static bool ds4_test3_read_ram_file(
+        const char *path, ds4_test3_ram_info *out, bool status) {
+    FILE *fp = fopen(path, "r");
+    if (!fp) return false;
+    char line[256], key[64];
+    unsigned long long kib = 0;
+    while (fgets(line, sizeof(line), fp)) {
+        if (sscanf(line, "%63[^:]: %llu kB", key, &kib) != 2) continue;
+        if (status) ds4_test3_ram_info_set_status(out, key, ds4_test3_kib_to_bytes(kib));
+        else ds4_test3_ram_info_set_meminfo(out, key, ds4_test3_kib_to_bytes(kib));
+    }
+    return fclose(fp) == 0;
+}
+
+static bool ds4_test3_get_ram_info(ds4_test3_ram_info *out) {
+    if (!out) return false;
+    memset(out, 0, sizeof(*out));
+    return ds4_test3_read_ram_file("/proc/meminfo", out, false) &&
+        ds4_test3_read_ram_file("/proc/self/status", out, true);
+}
+
+static bool ds4_test3_vram_trace_record(
+        const char *stage, uint32_t pos, uint32_t token, uint32_t layer,
+        bool is_hash, const int32_t *selected,
+        const ds4_gpu_stream_expert_load_stats *load_stats) {
+    if (!ds4_test3_vram_trace_active()) return true;
+    ds4_gpu_memory_info memory = {0};
+    ds4_test3_ram_info ram = {0};
+    if (!ds4_gpu_get_memory_info(&memory) || !ds4_test3_get_ram_info(&ram)) return false;
+    pthread_mutex_lock(&g_test3_vram_trace.mutex);
+    const int rc = fprintf(g_test3_vram_trace.fp,
+        "{\"phase\":\"decode\",\"event\":\"vram_probe\","
+        "\"stage\":\"%s\",\"token_index\":%u,\"token_id\":%u,\"layer\":%u,"
+        "\"is_hash\":%s,\"experts\":[%d,%d,%d,%d,%d,%d],"
+        "\"free_bytes\":%" PRIu64 ",\"total_bytes\":%" PRIu64 ","
+        "\"used_bytes\":%" PRIu64 ","
+        "\"model_arena_reserved_bytes\":%" PRIu64 ","
+        "\"model_arena_used_bytes\":%" PRIu64 ","
+        "\"device_cache_bytes\":%" PRIu64 ","
+        "\"tensor_bytes\":%" PRIu64 ","
+        "\"q8_f16_cache_bytes\":%" PRIu64 ","
+        "\"q8_f32_cache_bytes\":%" PRIu64 ","
+        "\"derived_weights_bytes\":%" PRIu64 ","
+        "\"demand_cache_bytes\":%" PRIu64 ","
+        "\"selected_stage_pinned_bytes\":%" PRIu64 ","
+        "\"scratch_bytes\":%" PRIu64 ","
+        "\"known_allocated_bytes\":%" PRIu64 ","
+        "\"unattributed_bytes\":%" PRIu64 ","
+        "\"demand_bytes\":%" PRIu64 ","
+        "\"ram_total_bytes\":%" PRIu64 ","
+        "\"ram_available_bytes\":%" PRIu64 ","
+        "\"ram_free_bytes\":%" PRIu64 ","
+        "\"ram_page_cache_bytes\":%" PRIu64 ","
+        "\"swap_total_bytes\":%" PRIu64 ","
+        "\"swap_free_bytes\":%" PRIu64 ","
+        "\"process_rss_bytes\":%" PRIu64 ","
+        "\"process_vmsize_bytes\":%" PRIu64 ","
+        "\"process_locked_bytes\":%" PRIu64 ","
+        "\"process_rss_anon_bytes\":%" PRIu64 ","
+        "\"process_rss_file_bytes\":%" PRIu64 ","
+        "\"process_rss_shmem_bytes\":%" PRIu64 "}\n",
+        stage, pos, token, layer, is_hash ? "true" : "false",
+        selected ? selected[0] : -1, selected ? selected[1] : -1,
+        selected ? selected[2] : -1, selected ? selected[3] : -1,
+        selected ? selected[4] : -1, selected ? selected[5] : -1,
+        memory.free_bytes, memory.total_bytes, memory.used_bytes,
+        memory.model_arena_reserved_bytes, memory.model_arena_used_bytes,
+        memory.device_cache_bytes, memory.tensor_bytes,
+        memory.q8_f16_cache_bytes, memory.q8_f32_cache_bytes,
+        memory.derived_weights_bytes, memory.demand_cache_bytes,
+        memory.selected_stage_pinned_bytes,
+        memory.scratch_bytes, memory.known_allocated_bytes,
+        memory.unattributed_bytes, load_stats ? load_stats->bytes : 0,
+        ram.total_bytes, ram.available_bytes, ram.free_bytes,
+        ram.page_cache_bytes, ram.swap_total_bytes, ram.swap_free_bytes,
+        ram.process_rss_bytes, ram.process_vmsize_bytes,
+        ram.process_locked_bytes, ram.process_rss_anon_bytes,
+        ram.process_rss_file_bytes, ram.process_rss_shmem_bytes);
+    if (rc < 0 || fflush(g_test3_vram_trace.fp) != 0) g_test3_vram_trace.failed = true;
+    pthread_mutex_unlock(&g_test3_vram_trace.mutex);
+    return !g_test3_vram_trace.failed;
+}
+
+static void ds4_test3_vram_trace_set_context(
+        uint32_t pos, uint32_t token, uint32_t layer, bool is_hash,
+        const int32_t *selected, const ds4_gpu_stream_expert_load_stats *stats) {
+    if (!ds4_test3_vram_trace_active()) return;
+    g_test3_vram_context.valid = true;
+    g_test3_vram_context.pos = pos;
+    g_test3_vram_context.token = token;
+    g_test3_vram_context.layer = layer;
+    g_test3_vram_context.is_hash = is_hash;
+    memcpy(g_test3_vram_context.selected, selected,
+           DS4_N_EXPERT_USED * sizeof(selected[0]));
+    g_test3_vram_context.load_stats = *stats;
+}
+
+static bool ds4_test3_vram_trace_record_after_moe(uint32_t pos, uint32_t layer) {
+    if (!ds4_test3_vram_trace_active()) return true;
+    if (!g_test3_vram_context.valid || g_test3_vram_context.pos != pos ||
+        g_test3_vram_context.layer != layer) return true;
+    return ds4_test3_vram_trace_record("after_moe_queued", pos,
+                                       g_test3_vram_context.token, layer,
+                                       g_test3_vram_context.is_hash,
+                                       g_test3_vram_context.selected,
+                                       &g_test3_vram_context.load_stats);
+}
+
+static bool ds4_test4_trace_record(const char *event, uint32_t pos,
+                                   uint32_t layer, const int32_t *selected,
+                                   const ds4_gpu_stream_expert_load_stats *stats) {
+    if (!ds4_test4_trace_active()) return true;
+    pthread_mutex_lock(&g_test4_trace.mutex);
+    const int rc = fprintf(g_test4_trace.fp,
+        "{\"phase\":\"decode\",\"event\":\"%s\","
+        "\"token_index\":%u,\"layer\":%u,"
+        "\"experts\":[%d,%d,%d,%d,%d,%d],"
+        "\"bytes\":%" PRIu64 ",\"ssd_read_ms\":%.3f,"
+        "\"transfer_from_RAM_to_VRAM_ms\":%.3f,\"total_load_event_ms\":%.3f}\n",
+        event, pos, layer,
+        selected[0], selected[1], selected[2], selected[3],
+        selected[4], selected[5],
+        stats ? stats->bytes : 0,
+        stats ? stats->ssd_read_ms : 0.0,
+        stats ? stats->upload_and_sync_ms : 0.0,
+        stats ? stats->total_ms : 0.0);
+    if (rc < 0 || fflush(g_test4_trace.fp) != 0) g_test4_trace.failed = true;
+    pthread_mutex_unlock(&g_test4_trace.mutex);
+    return !g_test4_trace.failed;
+}
+
+static const char *ds4_test4_worker_event_name(uint32_t kind) {
+    switch (kind) {
+        case DS4_GPU_TEST4_EVENT_QUEUED:                 return "prefetch_worker_queued";
+        case DS4_GPU_TEST4_EVENT_WORKER_STARTED:         return "prefetch_worker_started";
+        case DS4_GPU_TEST4_EVENT_READY:                  return "prefetch_worker_ready";
+        case DS4_GPU_TEST4_EVENT_FAILED:                 return "prefetch_worker_failed";
+        case DS4_GPU_TEST4_EVENT_BANK_FULL:              return "prefetch_bank_full";
+        case DS4_GPU_TEST4_EVENT_LOOKUP_LOADING:         return "prefetch_lookup_loading";
+        case DS4_GPU_TEST4_EVENT_LOOKUP_FAILED:          return "prefetch_lookup_failed";
+        case DS4_GPU_TEST4_EVENT_LOOKUP_ABSENT:          return "prefetch_lookup_absent";
+        case DS4_GPU_TEST4_EVENT_LOOKUP_EXPERT_MISMATCH: return "prefetch_lookup_expert_mismatch";
+        case DS4_GPU_TEST4_EVENT_STALE_DISCARDED:        return "prefetch_stale_discarded";
+        default:                                         return "prefetch_unknown";
+    }
+}
+
+static const char *ds4_test4_worker_failure_name(uint32_t code) {
+    switch (code) {
+        case DS4_GPU_TEST4_FAILURE_NONE:                         return "none";
+        case DS4_GPU_TEST4_FAILURE_INVALID_SLOT:                 return "invalid_slot";
+        case DS4_GPU_TEST4_FAILURE_PINNED_ALLOCATION:            return "pinned_allocation";
+        case DS4_GPU_TEST4_FAILURE_INVALID_EXPERT:               return "invalid_expert";
+        case DS4_GPU_TEST4_FAILURE_DIRECT_IO_OFFSET_ALIGNMENT:   return "direct_io_offset_alignment";
+        case DS4_GPU_TEST4_FAILURE_DIRECT_IO_SIZE_ALIGNMENT:     return "direct_io_size_alignment";
+        case DS4_GPU_TEST4_FAILURE_DIRECT_IO_DESTINATION_ALIGNMENT:
+            return "direct_io_destination_alignment";
+        case DS4_GPU_TEST4_FAILURE_READ_GATE:                    return "read_gate";
+        case DS4_GPU_TEST4_FAILURE_READ_UP:                      return "read_up";
+        case DS4_GPU_TEST4_FAILURE_READ_DOWN:                    return "read_down";
+        default:                                                  return "unknown";
+    }
+}
+
+/* The CUDA worker cannot safely write the shared JSONL file itself.  It puts
+ * tiny lifecycle records in a bounded queue; the decode thread drains them.
+ * This is active only in TEST_4/5 tracing mode. */
+static bool ds4_test4_trace_drain_worker_events(void) {
+    if (!ds4_test4_trace_active()) return true;
+    ds4_gpu_test4_prefetch_event events[32];
+    const uint32_t count = ds4_gpu_test4_prefetch_drain_events(
+            events, (uint32_t)(sizeof(events) / sizeof(events[0])));
+    for (uint32_t i = 0; i < count; ++i) {
+        const ds4_gpu_test4_prefetch_event *event = &events[i];
+        pthread_mutex_lock(&g_test4_trace.mutex);
+        const int rc = fprintf(g_test4_trace.fp,
+            "{\"phase\":\"decode\",\"event\":\"%s\","
+            "\"token_index\":%u,\"layer\":%u,"
+            "\"experts\":[%d,%d,%d,%d,%d,%d],"
+            "\"bytes\":%" PRIu64 ","
+            "\"failure_reason\":\"%s\","
+            "\"queue_to_worker_ms\":%.3f,"
+            "\"worker_read_ms\":%.3f,"
+            "\"queue_to_ready_ms\":%.3f,"
+            "\"slot_age_ms\":%.3f}\n",
+            ds4_test4_worker_event_name(event->kind), event->target_token,
+            event->layer, event->selected[0], event->selected[1],
+            event->selected[2], event->selected[3], event->selected[4],
+            event->selected[5], event->bytes,
+            ds4_test4_worker_failure_name(event->failure_code),
+            event->queue_to_worker_ms,
+            event->worker_read_ms, event->queue_to_ready_ms,
+            event->slot_age_ms);
+        if (rc < 0 || fflush(g_test4_trace.fp) != 0) g_test4_trace.failed = true;
+        pthread_mutex_unlock(&g_test4_trace.mutex);
+        if (g_test4_trace.failed) return false;
+    }
+    return true;
+}
+
+static void ds4_test4_prefetch_set_context(
+        uint32_t pos, uint32_t layer, const ds4_gpu_stream_expert_table *table,
+        const int32_t *selected) {
+    if (!getenv("DS4_TEST_4_PREFETCH") || !table || !selected) return;
+    g_test4_prefetch_context.valid = true;
+    g_test4_prefetch_context.pos = pos;
+    g_test4_prefetch_context.layer = layer;
+    g_test4_prefetch_context.table = *table;
+    memcpy(g_test4_prefetch_context.selected, selected,
+           DS4_N_EXPERT_USED * sizeof(selected[0]));
+}
+
+/* TEST_4 keeps one future group for each active layer.  The experiment is
+ * intentionally limited to this model's 43 transformer layers. */
+static uint32_t ds4_test4_prefetch_layer_count(void) {
+    const char *value = getenv("DS4_TEST_4_PREFETCH_LAYERS");
+    if (!value || !value[0]) return 5u;
+    char *end = NULL;
+    errno = 0;
+    const unsigned long parsed = strtoul(value, &end, 10);
+    if (errno != 0 || end == value || *end != '\0') return 5u;
+    return parsed > DS4_N_LAYER ? DS4_N_LAYER : (uint32_t)parsed;
+}
+
+/* TEST_5 can ask farther ahead to give a slow secondary storage source more
+ * time.  The CUDA bank keeps at most eight future groups per active layer. */
+static uint32_t ds4_test4_prefetch_init_distance(void) {
+    const char *value = getenv("DS4_TEST_4_PREFETCH_INIT_DISTANCE");
+    /* TEST_4/5 compatibility: their existing runner still uses this name. */
+    if (!value || !value[0]) value = getenv("DS4_TEST_4_PREFETCH_DISTANCE");
+    if (!value || !value[0]) return 1u;
+    char *end = NULL;
+    errno = 0;
+    const unsigned long parsed = strtoul(value, &end, 10);
+    if (errno != 0 || end == value || *end != '\0' || parsed == 0u) return 1u;
+    return parsed > 8u ? 8u : (uint32_t)parsed;
+}
+
+static uint32_t ds4_test4_prefetch_step(void) {
+    const char *value = getenv("DS4_TEST_4_PREFETCH_STEP");
+    if (!value || !value[0]) return 1u;
+    char *end = NULL;
+    errno = 0;
+    const unsigned long parsed = strtoul(value, &end, 10);
+    if (errno != 0 || end == value || *end != '\0' || parsed == 0u) return 1u;
+    return parsed > 1024u ? 1024u : (uint32_t)parsed;
+}
+
+static bool ds4_test4_prefetch_enqueue_after_moe(uint32_t pos, uint32_t layer) {
+    if (!getenv("DS4_TEST_4_PREFETCH") ||
+        layer >= ds4_test4_prefetch_layer_count() ||
+        !g_test4_prefetch_context.valid || g_test4_prefetch_context.pos != pos ||
+        g_test4_prefetch_context.layer != layer) return true;
+    if (!g_test4_prefetch_first_pos_valid) {
+        g_test4_prefetch_first_pos = pos;
+        g_test4_prefetch_first_pos_valid = true;
+    }
+    const uint32_t step = ds4_test4_prefetch_step();
+    if ((pos - g_test4_prefetch_first_pos) % step != 0u) return true;
+    const uint32_t init_distance = ds4_test4_prefetch_init_distance();
+    const uint32_t target_token = pos + init_distance;
+    const ds4_routing_oracle_entry *future = ds4_routing_oracle_find(target_token, layer);
+    if (!future) return true; /* last generated token: there is no future work */
+    const int ok = ds4_gpu_test4_prefetch_enqueue(
+            &g_test4_prefetch_context.table, target_token, layer,
+            future->selected, DS4_N_EXPERT_USED);
+    if (ok && !ds4_test4_trace_drain_worker_events()) return false;
+    if (ok) return ds4_test4_trace_record("prefetch_enqueue", target_token, layer,
+                                          future->selected, NULL);
+    return false;
+}
+
+static bool ds4_ssd_trace_record_selected_load(
+        uint32_t pos, uint32_t token, uint32_t layer, bool is_hash,
+        const int32_t *selected, const ds4_gpu_stream_expert_load_stats *stats,
+        double router_sync_ms, double router_read_ms, double resume_ms) {
+    if (!ds4_ssd_trace_active()) return true;
+    if (!selected || !stats) return false;
+    pthread_mutex_lock(&g_ssd_trace.mutex);
+    const int rc = fprintf(g_ssd_trace.fp,
+        "{\"phase\":\"decode\",\"event\":\"selected_load\","
+        "\"token_index\":%u,\"token_id\":%u,\"layer\":%u,"
+        "\"is_hash\":%s,\"experts\":[%d,%d,%d,%d,%d,%d],"
+        "\"slot_count\":%u,\"unique_experts\":%u,\"bytes\":%" PRIu64 ","
+        "\"direct_io\":%s,\"cache_reused\":false,"
+        "\"router_sync_ms\":%.3f,\"router_read_ms\":%.3f,"
+        "\"ssd_read_ms\":%.3f,\"upload_and_sync_ms\":%.3f,"
+        "\"load_ms\":%.3f,\"resume_ms\":%.3f}\n",
+        pos, token, layer, is_hash ? "true" : "false",
+        selected[0], selected[1], selected[2], selected[3], selected[4], selected[5],
+        stats->slot_count, stats->unique_experts, stats->bytes,
+        stats->direct_io ? "true" : "false",
+        router_sync_ms, router_read_ms, stats->ssd_read_ms,
+        stats->upload_and_sync_ms, stats->total_ms, resume_ms);
+    if (rc < 0 || fflush(g_ssd_trace.fp) != 0) g_ssd_trace.failed = true;
+    pthread_mutex_unlock(&g_ssd_trace.mutex);
+    return !g_ssd_trace.failed;
+}
+
+static void ds4_routing_oracle_init(void) {
+    const char *write_path = getenv("DS4_ROUTING_ORACLE_WRITE_PATH");
+    const char *replay_path = getenv("DS4_ROUTING_ORACLE_REPLAY_PATH");
+    if (write_path && write_path[0] && replay_path && replay_path[0]) {
+        fprintf(stderr, "ds4: routing oracle cannot write and replay simultaneously\n");
+        g_routing_oracle.failed = true;
+        return;
+    }
+    if (write_path && write_path[0]) {
+        g_routing_oracle.write_fp = fopen(write_path, "wb");
+        if (!g_routing_oracle.write_fp ||
+            fwrite(ds4_routing_oracle_magic, 1, sizeof(ds4_routing_oracle_magic),
+                   g_routing_oracle.write_fp) != sizeof(ds4_routing_oracle_magic)) {
+            fprintf(stderr, "ds4: failed to create routing oracle %s: %s\n",
+                    write_path, strerror(errno));
+            g_routing_oracle.failed = true;
+        }
+        return;
+    }
+    if (!replay_path || !replay_path[0]) return;
+
+    FILE *fp = fopen(replay_path, "rb");
+    unsigned char magic[sizeof(ds4_routing_oracle_magic)];
+    if (!fp || fread(magic, 1, sizeof(magic), fp) != sizeof(magic) ||
+        memcmp(magic, ds4_routing_oracle_magic, sizeof(magic)) != 0) {
+        fprintf(stderr, "ds4: invalid routing oracle %s\n", replay_path);
+        if (fp) fclose(fp);
+        g_routing_oracle.failed = true;
+        return;
+    }
+    ds4_routing_oracle_entry entry;
+    while (fread(&entry, sizeof(entry), 1, fp) == 1) {
+        if (g_routing_oracle.count == g_routing_oracle.cap) {
+            const size_t next = g_routing_oracle.cap ? g_routing_oracle.cap * 2u : 256u;
+            g_routing_oracle.entries = xrealloc(g_routing_oracle.entries,
+                                                next * sizeof(entry));
+            g_routing_oracle.cap = next;
+        }
+        g_routing_oracle.entries[g_routing_oracle.count++] = entry;
+    }
+    if (ferror(fp) || fclose(fp) != 0 || g_routing_oracle.count == 0) {
+        fprintf(stderr, "ds4: failed to read routing oracle %s\n", replay_path);
+        g_routing_oracle.failed = true;
+    }
+}
+
+static bool ds4_routing_oracle_record(uint32_t pos, uint32_t layer,
+                                      const int32_t *selected, const float *weights) {
+    pthread_once(&g_routing_oracle_once, ds4_routing_oracle_init);
+    if (g_routing_oracle.failed) return false;
+    if (!g_routing_oracle.write_fp) return true;
+    ds4_routing_oracle_entry entry = { .pos = pos, .layer = layer };
+    memcpy(entry.selected, selected, DS4_N_EXPERT_USED * sizeof(selected[0]));
+    memcpy(entry.weights, weights, DS4_N_EXPERT_USED * sizeof(weights[0]));
+    return fwrite(&entry, sizeof(entry), 1, g_routing_oracle.write_fp) == 1 &&
+           fflush(g_routing_oracle.write_fp) == 0;
+}
+
+static const ds4_routing_oracle_entry *ds4_routing_oracle_find(uint32_t pos,
+                                                                 uint32_t layer) {
+    pthread_once(&g_routing_oracle_once, ds4_routing_oracle_init);
+    if (g_routing_oracle.failed || g_routing_oracle.count == 0) return NULL;
+    size_t lo = 0, hi = g_routing_oracle.count;
+    while (lo < hi) {
+        const size_t mid = lo + (hi - lo) / 2u;
+        const ds4_routing_oracle_entry *entry = &g_routing_oracle.entries[mid];
+        if (entry->pos < pos || (entry->pos == pos && entry->layer < layer)) lo = mid + 1u;
+        else hi = mid;
+    }
+    if (lo < g_routing_oracle.count && g_routing_oracle.entries[lo].pos == pos &&
+        g_routing_oracle.entries[lo].layer == layer) return &g_routing_oracle.entries[lo];
+    return NULL;
+}
+
+static bool ds4_routing_trace_wants_scores(void) {
+    pthread_once(&g_routing_trace_once, ds4_routing_trace_init);
+    return g_routing_trace.active && !g_routing_trace.failed;
+}
+
+static void ds4_routing_trace_write_candidates(
+        FILE                         *fp,
+        const float                  *probs,
+        const float                  *bias) {
+    if (!probs) {
+        fputs("null,\"cutoff_margin\":null", fp);
+        return;
+    }
+
+    float scores[DS4_MAX_EXPERT];
+    int top[DS4_ROUTING_TRACE_TOP_CANDIDATES];
+    for (uint32_t i = 0; i < DS4_N_EXPERT; i++) {
+        scores[i] = probs[i] + (bias ? bias[i] : 0.0f);
+    }
+    topk_desc(scores, (int)DS4_N_EXPERT,
+              DS4_ROUTING_TRACE_TOP_CANDIDATES, top);
+
+    fputc('[', fp);
+    for (uint32_t i = 0; i < DS4_ROUTING_TRACE_TOP_CANDIDATES; i++) {
+        const int expert = top[i];
+        if (i) fputc(',', fp);
+        fprintf(fp, "[%d,%.9g,%.9g,%.9g]", expert, probs[expert],
+                bias ? bias[expert] : 0.0f, scores[expert]);
+    }
+    fprintf(fp, "],\"cutoff_margin\":%.9g", scores[top[5]] - scores[top[6]]);
+}
+
+static bool ds4_routing_trace_record_decode(
+        uint32_t       pos,
+        uint32_t       token,
+        uint32_t       layer,
+        const int32_t *selected,
+        bool           is_hash,
+        const float   *router_probs,
+        const float   *router_bias,
+        const float   *router_weights,
+        const int32_t *original_selected,
+        const float   *original_weights) {
+    pthread_once(&g_routing_trace_once, ds4_routing_trace_init);
+    if (g_routing_trace.failed) return false;
+    if (!g_routing_trace.active) return true;
+    if (!selected) return false;
+
+    pthread_mutex_lock(&g_routing_trace.mutex);
+    const int rc = fprintf(g_routing_trace.fp,
+                           "{\"phase\":\"decode\",\"token_index\":%u,"
+                           "\"token_id\":%u,\"layer\":%u,\"is_hash\":%s,"
+                           "\"experts\":[%d,%d,%d,%d,%d,%d],\"top_candidates\":",
+                           pos,
+                           token,
+                           layer,
+                           is_hash ? "true" : "false",
+                           selected[0], selected[1], selected[2],
+                           selected[3], selected[4], selected[5]);
+    if (rc >= 0) {
+        ds4_routing_trace_write_candidates(g_routing_trace.fp,
+                                           is_hash ? NULL : router_probs,
+                                           is_hash ? NULL : router_bias);
+        fputs(",\"router_weights\":", g_routing_trace.fp);
+        if (!router_weights) fputs("null", g_routing_trace.fp);
+        else {
+            fputc('[', g_routing_trace.fp);
+            for (uint32_t i = 0; i < DS4_N_EXPERT_USED; i++) {
+                if (i) fputc(',', g_routing_trace.fp);
+                fprintf(g_routing_trace.fp, "%.9g", router_weights[i]);
+            }
+            fputc(']', g_routing_trace.fp);
+        }
+        fputs(",\"original_experts\":", g_routing_trace.fp);
+        if (!original_selected) fputs("null", g_routing_trace.fp);
+        else fprintf(g_routing_trace.fp, "[%d,%d,%d,%d,%d,%d]",
+                     original_selected[0], original_selected[1], original_selected[2],
+                     original_selected[3], original_selected[4], original_selected[5]);
+        fputs(",\"original_router_weights\":", g_routing_trace.fp);
+        if (!original_weights) fputs("null", g_routing_trace.fp);
+        else {
+            fputc('[', g_routing_trace.fp);
+            for (uint32_t i = 0; i < DS4_N_EXPERT_USED; i++) {
+                if (i) fputc(',', g_routing_trace.fp);
+                fprintf(g_routing_trace.fp, "%.9g", original_weights[i]);
+            }
+            fputc(']', g_routing_trace.fp);
+        }
+        if (fputs("}\n", g_routing_trace.fp) == EOF) {
+            g_routing_trace.failed = true;
+        }
+    }
+    if (rc < 0 || fflush(g_routing_trace.fp) != 0) {
+        fprintf(stderr, "ds4: failed to write routing trace: %s\n",
+                strerror(errno));
+        g_routing_trace.failed = true;
+    }
+    pthread_mutex_unlock(&g_routing_trace.mutex);
+    return !g_routing_trace.failed;
+}
+
 static int ds4_expert_profile_sort_cmp(const void *a, const void *b) {
     const ds4_expert_profile_sort_entry *ea = a;
     const ds4_expert_profile_sort_entry *eb = b;
@@ -20879,6 +21579,7 @@ static bool metal_graph_decode_set_hash_selected_override(
         const ds4_layer_weights *layer,
         uint32_t                 il,
         uint32_t                 token,
+        uint32_t                 pos,
         uint64_t                 gate_tensor_bytes,
         uint64_t                 down_tensor_bytes,
         const ds4_gpu_graph     *g) {
@@ -20899,9 +21600,60 @@ static bool metal_graph_decode_set_hash_selected_override(
 
     int selected[DS4_MAX_EXPERT_USED];
     int32_t selected_i32[DS4_MAX_EXPERT_USED];
+    float router_weights[DS4_MAX_EXPERT_USED] = {0};
     layer_hash_selected_experts(selected, model, layer, (int)token);
     for (uint32_t i = 0; i < DS4_N_EXPERT_USED; i++) {
         selected_i32[i] = (int32_t)selected[i];
+    }
+
+    /* TEST_4 also needs the hash layers in its oracle.  Normally these
+     * layers select ids from ffn_gate_tid2eid on the GPU and their weights
+     * are derived from the router probabilities there.  For an oracle run we
+     * stop after that router work, capture both tensors, and (on replay)
+     * write Run A's complete pair back before MoE starts.  The branch is
+     * deliberately disabled for normal inference, so its synchronisation is
+     * test-only. */
+    const bool oracle_write = getenv("DS4_ROUTING_ORACLE_WRITE_PATH") != NULL;
+    const bool oracle_replay = getenv("DS4_ROUTING_ORACLE_REPLAY_PATH") != NULL;
+    int32_t original_selected[DS4_MAX_EXPERT_USED] = {0};
+    float original_weights[DS4_MAX_EXPERT_USED] = {0};
+    if (oracle_write || oracle_replay) {
+        if (!g || ds4_gpu_end_commands() == 0 ||
+            ds4_gpu_tensor_read(metal_graph_router_selected(g), 0, selected_i32,
+                                (uint64_t)DS4_N_EXPERT_USED * sizeof(selected_i32[0])) == 0 ||
+            ds4_gpu_tensor_read(metal_graph_router_weights(g), 0, router_weights,
+                                (uint64_t)DS4_N_EXPERT_USED * sizeof(router_weights[0])) == 0) {
+            return false;
+        }
+        memcpy(original_selected, selected_i32, sizeof(original_selected));
+        memcpy(original_weights, router_weights, sizeof(original_weights));
+        const ds4_routing_oracle_entry *oracle = ds4_routing_oracle_find(pos, il);
+        if (oracle_replay && !oracle) {
+            fprintf(stderr, "ds4: routing oracle has no hash entry for token %u layer %u\n",
+                    pos, il);
+            return false;
+        }
+        if (oracle) {
+            memcpy(selected_i32, oracle->selected, sizeof(selected_i32));
+            memcpy(router_weights, oracle->weights, sizeof(router_weights));
+            if (ds4_gpu_tensor_write(metal_graph_router_selected(g), 0, selected_i32,
+                                     (uint64_t)DS4_N_EXPERT_USED * sizeof(selected_i32[0])) == 0 ||
+                ds4_gpu_tensor_write(metal_graph_router_weights(g), 0, router_weights,
+                                     (uint64_t)DS4_N_EXPERT_USED * sizeof(router_weights[0])) == 0) {
+                return false;
+            }
+        }
+        if (!ds4_routing_oracle_record(pos, il, selected_i32, router_weights) ||
+            ds4_gpu_begin_commands() == 0) {
+            return false;
+        }
+    }
+    if (!ds4_routing_trace_record_decode(pos, token, il, selected_i32, true,
+                                         NULL, NULL,
+                                         (oracle_write || oracle_replay) ? router_weights : NULL,
+                                         oracle_replay ? original_selected : NULL,
+                                         oracle_replay ? original_weights : NULL)) {
+        return false;
     }
     if (g && g->ssd_streaming) {
         if (DS4_N_EXPERT == 0 ||
@@ -20917,12 +21669,54 @@ static bool metal_graph_decode_set_hash_selected_override(
                                            il,
                                            gate_expert_bytes,
                                            down_expert_bytes);
-        if (ds4_gpu_stream_expert_cache_begin_selected_load(
-                    &table,
-                    selected_i32,
-                    DS4_N_EXPERT_USED) == 0) {
+        if (!ds4_test3_vram_trace_record("before_demand_load", pos, token, il,
+                                         true, selected_i32, NULL)) {
             return false;
         }
+        const bool ssd_trace = ds4_ssd_trace_active();
+        const double trace_t0 = ssd_trace ? now_sec() : 0.0;
+        if (!ds4_test4_trace_drain_worker_events()) return false;
+        ds4_gpu_stream_expert_load_stats prefetch_stats = {0};
+        const int prefetch_hit = ds4_gpu_test4_prefetch_try_selected_load(
+                &table, pos, il, selected_i32, DS4_N_EXPERT_USED, &prefetch_stats);
+        if (!ds4_test4_trace_drain_worker_events()) return false;
+        if (prefetch_hit < 0) return false;
+        if (prefetch_hit > 0) {
+            if (!ds4_test4_trace_record("prefetch_hit", pos, il,
+                                        selected_i32, &prefetch_stats)) return false;
+        } else if (ds4_gpu_stream_expert_cache_begin_selected_load(
+                    &table, selected_i32, DS4_N_EXPERT_USED) == 0) {
+            return false;
+        } else {
+            ds4_gpu_stream_expert_load_stats miss_stats = {0};
+            if (ds4_gpu_stream_expert_cache_last_load_stats(&miss_stats) == 0 ||
+                !ds4_test4_trace_record("prefetch_miss_demand", pos, il,
+                                        selected_i32, &miss_stats)) return false;
+        }
+        ds4_test4_prefetch_set_context(pos, il, &table, selected_i32);
+#if !defined(DS4_ROCM_BUILD) && !defined(DS4_NO_GPU) && !defined(__APPLE__)
+        ds4_gpu_stream_expert_load_stats test3_stats = {0};
+        if (ds4_test3_vram_trace_active() &&
+            ds4_gpu_stream_expert_cache_last_load_stats(&test3_stats) == 0) {
+            return false;
+        }
+        if (!ds4_test3_vram_trace_record("after_demand_load", pos, token, il,
+                                         true, selected_i32, &test3_stats)) {
+            return false;
+        }
+        ds4_test3_vram_trace_set_context(pos, token, il, true, selected_i32,
+                                         &test3_stats);
+        if (ssd_trace) {
+            ds4_gpu_stream_expert_load_stats stats = {0};
+            if (ds4_gpu_stream_expert_cache_last_load_stats(&stats) == 0 ||
+                !ds4_ssd_trace_record_selected_load(
+                        pos, token, il, true, selected_i32, &stats,
+                        0.0, 0.0,
+                        (now_sec() - trace_t0) * 1000.0 - stats.total_ms)) {
+                return false;
+            }
+        }
+#endif
     }
     return ds4_gpu_routed_moe_set_selected_override(selected_i32, DS4_N_EXPERT_USED) != 0;
 }
@@ -21125,6 +21919,8 @@ static bool metal_graph_decode_cuda_selected_load(
         const ds4_model          *model,
         const ds4_layer_weights  *layer,
         uint32_t                  il,
+        uint32_t                  pos,
+        uint32_t                  token,
         uint64_t                  gate_expert_bytes,
         uint64_t                  down_expert_bytes) {
 #if !defined(DS4_ROCM_BUILD) && !defined(DS4_NO_GPU) && !defined(__APPLE__)
@@ -21140,18 +21936,63 @@ static bool metal_graph_decode_cuda_selected_load(
 
     const bool profile =
         getenv("DS4_CUDA_STREAMING_EXPERT_CACHE_PROFILE") != NULL;
+    const bool ssd_trace = ds4_ssd_trace_active();
+    const bool test3_vram_trace = ds4_test3_vram_trace_active();
     const double t0 = profile ? now_sec() : 0.0;
+    const double trace_t0 = ssd_trace ? now_sec() : 0.0;
 
     if (ds4_gpu_end_commands() == 0) return false;
     const double t_sync = profile ? now_sec() : 0.0;
+    const double trace_t_sync = ssd_trace ? now_sec() : 0.0;
 
     int32_t selected_ids[DS4_MAX_EXPERT_USED] = {0};
+    int32_t original_selected[DS4_MAX_EXPERT_USED] = {0};
+    float router_weights[DS4_MAX_EXPERT_USED] = {0};
+    float original_weights[DS4_MAX_EXPERT_USED] = {0};
+    float router_probs[DS4_MAX_EXPERT];
+    const bool trace_scores = ds4_routing_trace_wants_scores();
+    const bool replay_requested = getenv("DS4_ROUTING_ORACLE_REPLAY_PATH") != NULL;
     bool ok = ds4_gpu_tensor_read(metal_graph_router_selected(g),
                                   0,
                                   selected_ids,
                                   (uint64_t)DS4_N_EXPERT_USED *
                                       sizeof(selected_ids[0])) != 0;
+    if (ok) ok = ds4_gpu_tensor_read(metal_graph_router_weights(g), 0,
+                                      router_weights,
+                                      (uint64_t)DS4_N_EXPERT_USED * sizeof(router_weights[0])) != 0;
+    if (ok && trace_scores) {
+        ok = ds4_gpu_tensor_read(metal_graph_router_probs(g),
+                                 0,
+                                 router_probs,
+                                 (uint64_t)DS4_N_EXPERT * sizeof(router_probs[0])) != 0;
+    }
+    const float *router_bias = layer->ffn_exp_probs_b ?
+        tensor_data(model, layer->ffn_exp_probs_b) : NULL;
+    if (ok) {
+        memcpy(original_selected, selected_ids, DS4_N_EXPERT_USED * sizeof(selected_ids[0]));
+        memcpy(original_weights, router_weights, DS4_N_EXPERT_USED * sizeof(router_weights[0]));
+        const ds4_routing_oracle_entry *oracle = ds4_routing_oracle_find(pos, il);
+        if (replay_requested && !oracle) {
+            fprintf(stderr, "ds4: routing oracle has no entry for token %u layer %u\n", pos, il);
+            ok = false;
+        } else if (oracle) {
+            memcpy(selected_ids, oracle->selected, DS4_N_EXPERT_USED * sizeof(selected_ids[0]));
+            memcpy(router_weights, oracle->weights, DS4_N_EXPERT_USED * sizeof(router_weights[0]));
+            ok = ds4_gpu_tensor_write(metal_graph_router_selected(g), 0, selected_ids,
+                                      (uint64_t)DS4_N_EXPERT_USED * sizeof(selected_ids[0])) != 0 &&
+                 ds4_gpu_tensor_write(metal_graph_router_weights(g), 0, router_weights,
+                                      (uint64_t)DS4_N_EXPERT_USED * sizeof(router_weights[0])) != 0;
+        }
+    }
+    if (ok) ok = ds4_routing_oracle_record(pos, il, selected_ids, router_weights);
+    if (ok) ok = ds4_routing_trace_record_decode(pos, token, il,
+                                                 selected_ids, false,
+                                                 trace_scores ? router_probs : NULL,
+                                                 router_bias, router_weights,
+                                                 replay_requested ? original_selected : NULL,
+                                                 replay_requested ? original_weights : NULL);
     const double t_read = profile ? now_sec() : 0.0;
+    const double trace_t_read = ssd_trace ? now_sec() : 0.0;
 
     if (ok) {
         const ds4_gpu_stream_expert_table table =
@@ -21160,15 +22001,64 @@ static bool metal_graph_decode_cuda_selected_load(
                                            il,
                                            gate_expert_bytes,
                                            down_expert_bytes);
-        ok = ds4_gpu_stream_expert_cache_begin_selected_load(
-                    &table,
-                    selected_ids,
-                    DS4_N_EXPERT_USED) != 0;
+        if (!ds4_test3_vram_trace_record("before_demand_load", pos, token, il,
+                                         false, selected_ids, NULL)) {
+            ok = false;
+        }
+        if (ok && !ds4_test4_trace_drain_worker_events()) ok = false;
+        ds4_gpu_stream_expert_load_stats prefetch_stats = {0};
+        const int prefetch_hit = ds4_gpu_test4_prefetch_try_selected_load(
+                &table, pos, il, selected_ids, DS4_N_EXPERT_USED, &prefetch_stats);
+        if (ok && !ds4_test4_trace_drain_worker_events()) ok = false;
+        if (prefetch_hit < 0) {
+            ok = false;
+        } else if (prefetch_hit > 0) {
+            ok = ds4_test4_trace_record("prefetch_hit", pos, il,
+                                        selected_ids, &prefetch_stats);
+        } else {
+            ok = ds4_gpu_stream_expert_cache_begin_selected_load(
+                    &table, selected_ids, DS4_N_EXPERT_USED) != 0;
+            if (ok) {
+                ds4_gpu_stream_expert_load_stats miss_stats = {0};
+                if (ds4_gpu_stream_expert_cache_last_load_stats(&miss_stats) == 0 ||
+                    !ds4_test4_trace_record("prefetch_miss_demand", pos, il,
+                                            selected_ids, &miss_stats)) ok = false;
+            }
+        }
+        if (ok) ds4_test4_prefetch_set_context(pos, il, &table, selected_ids);
     }
     const double t_load = profile ? now_sec() : 0.0;
 
+    ds4_gpu_stream_expert_load_stats load_stats = {0};
+    if (ok && (ssd_trace || test3_vram_trace) &&
+        ds4_gpu_stream_expert_cache_last_load_stats(&load_stats) == 0) {
+        ok = false;
+    }
+
+    if (ok && test3_vram_trace) {
+        ok = ds4_test3_vram_trace_record("after_demand_load", pos, token, il,
+                                         false, selected_ids, &load_stats);
+        if (ok) ds4_test3_vram_trace_set_context(pos, token, il, false,
+                                                  selected_ids, &load_stats);
+    }
+
     if (ds4_gpu_begin_commands() == 0) ok = false;
     const double t_done = profile ? now_sec() : 0.0;
+    const double trace_t_done = ssd_trace ? now_sec() : 0.0;
+
+    double trace_resume_ms = (trace_t_done - trace_t_read) * 1000.0 - load_stats.total_ms;
+    if (trace_resume_ms < 0.0) {
+        trace_resume_ms = 0.0;
+    }
+
+    if (ok && ssd_trace &&
+        !ds4_ssd_trace_record_selected_load(
+                pos, token, il, false, selected_ids, &load_stats,
+                (trace_t_sync - trace_t0) * 1000.0,
+                (trace_t_read - trace_t_sync) * 1000.0,
+                trace_resume_ms)) {
+        ok = false;
+    }
 
     if (profile) {
         fprintf(stderr,
@@ -21186,6 +22076,8 @@ static bool metal_graph_decode_cuda_selected_load(
     (void)model;
     (void)layer;
     (void)il;
+    (void)pos;
+    (void)token;
     (void)gate_expert_bytes;
     (void)down_expert_bytes;
     return false;
@@ -23852,6 +24744,7 @@ static bool metal_graph_encode_decode_layer_phase(
                                                                    layer,
                                                                    il,
                                                                    (uint32_t)token,
+                                                                   pos,
                                                                    layer->ffn_gate_exps->bytes,
                                                                    layer->ffn_down_exps->bytes,
                                                                    g);
@@ -24321,7 +25214,10 @@ static bool metal_graph_encode_decode_layer_phase(
         !decode_stage_profile &&
         !metal_graph_decode_cpu_router_applicable(g, layer) &&
         layer->ffn_gate_tid2eid == NULL &&
+        getenv("DS4_SSD_TRACE_PATH") == NULL &&
         getenv("DS4_MOE_REPLAY_SELECTED_IDS") == NULL &&
+        getenv("DS4_ROUTING_ORACLE_REPLAY_PATH") == NULL &&
+        getenv("DS4_ROUTING_ORACLE_WRITE_PATH") == NULL &&
         (q4_selected_shared_overlap ||
          iq2_selected_shared_overlap ||
          mxfp4_selected_shared_overlap ||
@@ -24342,7 +25238,10 @@ static bool metal_graph_encode_decode_layer_phase(
         metal_graph_decode_iq2_selected_slots_expected(g, layer) &&
         !metal_graph_decode_cpu_router_applicable(g, layer) &&
         layer->ffn_gate_tid2eid == NULL &&
-        getenv("DS4_MOE_REPLAY_SELECTED_IDS") == NULL;
+        getenv("DS4_SSD_TRACE_PATH") == NULL &&
+        getenv("DS4_MOE_REPLAY_SELECTED_IDS") == NULL &&
+        getenv("DS4_ROUTING_ORACLE_REPLAY_PATH") == NULL &&
+        getenv("DS4_ROUTING_ORACLE_WRITE_PATH") == NULL;
     const bool cuda_stream_selected_load =
         ok &&
         !overlap_selected_shared &&
@@ -24356,6 +25255,8 @@ static bool metal_graph_encode_decode_layer_phase(
                                                    model,
                                                    layer,
                                                    il,
+                                                   pos,
+                                                   (uint32_t)token,
                                                    gate_expert_bytes,
                                                    down_expert_bytes);
     }
@@ -24560,6 +25461,23 @@ static bool metal_graph_encode_decode_layer_phase(
             const bool flush_ok = ds4_gpu_flush_commands() != 0;
             bool finish_ok =
                 metal_graph_selected_async_load_finish(&async_load);
+            if (async_load.ids_ok) {
+                float router_probs[DS4_MAX_EXPERT];
+                const bool trace_scores = ds4_routing_trace_wants_scores();
+                bool scores_ok = true;
+                if (trace_scores) {
+                    scores_ok = ds4_gpu_tensor_read(metal_graph_router_probs(g), 0,
+                                                    router_probs,
+                                                    (uint64_t)DS4_N_EXPERT * sizeof(router_probs[0])) != 0;
+                }
+                const float *router_bias = layer->ffn_exp_probs_b ?
+                    tensor_data(model, layer->ffn_exp_probs_b) : NULL;
+                const bool trace_ok = ds4_routing_trace_record_decode(
+                        pos, (uint32_t)token, il, async_load.selected_ids,
+                        false, scores_ok && trace_scores ? router_probs : NULL,
+                        router_bias, NULL, NULL, NULL);
+                finish_ok = finish_ok && scores_ok && trace_ok;
+            }
             if (!finish_ok && async_load.ids_ok) {
                 /* The worker read valid ids but could not stage the load
                  * (it is not allowed to wait on in-flight cache entries).
@@ -24592,6 +25510,23 @@ static bool metal_graph_encode_decode_layer_phase(
                                      (uint64_t)DS4_N_EXPERT_USED * sizeof(selected_ids[0])) != 0 &&
                  ds4_gpu_routed_moe_set_selected_override(selected_ids,
                                                           DS4_N_EXPERT_USED) != 0;
+            if (ok) {
+                float router_probs[DS4_MAX_EXPERT];
+                const bool trace_scores = ds4_routing_trace_wants_scores();
+                if (trace_scores) {
+                    ok = ds4_gpu_tensor_read(metal_graph_router_probs(g), 0,
+                                             router_probs,
+                                             (uint64_t)DS4_N_EXPERT * sizeof(router_probs[0])) != 0;
+                }
+                const float *router_bias = layer->ffn_exp_probs_b ?
+                    tensor_data(model, layer->ffn_exp_probs_b) : NULL;
+                if (ok) {
+                    ok = ds4_routing_trace_record_decode(pos, (uint32_t)token,
+                                                         il, selected_ids, false,
+                                                         trace_scores ? router_probs : NULL,
+                                                         router_bias, NULL, NULL, NULL);
+                }
+            }
             if (ok) {
                 const ds4_gpu_stream_expert_table table =
                     graph_stream_expert_table_make(model,
@@ -24744,6 +25679,8 @@ static bool metal_graph_encode_decode_layer_phase(
                                                  NULL,
                                                  il,
                                                  false) != 0;
+    if (ok && !ds4_test3_vram_trace_record_after_moe(pos, il)) ok = false;
+    if (ok && !ds4_test4_prefetch_enqueue_after_moe(pos, il)) ok = false;
     if (!ok && parallel_full_ffn) {
 #if defined(__APPLE__)
         ds4_gpu_parallel_ffn_abort();

@@ -204,6 +204,79 @@ typedef struct ds4_gpu_stream_expert_table {
     uint64_t    gate_expert_bytes;
     uint64_t    down_expert_bytes;
 } ds4_gpu_stream_expert_table;
+
+/* Last synchronous CUDA selected-expert load. This is diagnostic data only;
+ * it does not participate in routing or cache decisions. */
+typedef struct ds4_gpu_stream_expert_load_stats {
+    uint32_t slot_count;
+    uint32_t unique_experts;
+    uint64_t bytes;
+    double   ssd_read_ms;
+    double   upload_and_sync_ms;
+    double   total_ms;
+    int      direct_io;
+} ds4_gpu_stream_expert_load_stats;
+
+/* TEST_4/5 lifecycle events emitted by the speculative pinned-RAM worker.
+ * They are diagnostics only: no event changes routing, loading or eviction. */
+enum {
+    DS4_GPU_TEST4_EVENT_QUEUED = 1,
+    DS4_GPU_TEST4_EVENT_WORKER_STARTED,
+    DS4_GPU_TEST4_EVENT_READY,
+    DS4_GPU_TEST4_EVENT_FAILED,
+    DS4_GPU_TEST4_EVENT_BANK_FULL,
+    DS4_GPU_TEST4_EVENT_LOOKUP_LOADING,
+    DS4_GPU_TEST4_EVENT_LOOKUP_FAILED,
+    DS4_GPU_TEST4_EVENT_LOOKUP_ABSENT,
+    DS4_GPU_TEST4_EVENT_LOOKUP_EXPERT_MISMATCH,
+    DS4_GPU_TEST4_EVENT_STALE_DISCARDED,
+};
+
+/* Why a speculative worker read failed.  This is trace-only information. */
+enum {
+    DS4_GPU_TEST4_FAILURE_NONE = 0,
+    DS4_GPU_TEST4_FAILURE_INVALID_SLOT,
+    DS4_GPU_TEST4_FAILURE_PINNED_ALLOCATION,
+    DS4_GPU_TEST4_FAILURE_INVALID_EXPERT,
+    DS4_GPU_TEST4_FAILURE_DIRECT_IO_OFFSET_ALIGNMENT,
+    DS4_GPU_TEST4_FAILURE_DIRECT_IO_SIZE_ALIGNMENT,
+    DS4_GPU_TEST4_FAILURE_DIRECT_IO_DESTINATION_ALIGNMENT,
+    DS4_GPU_TEST4_FAILURE_READ_GATE,
+    DS4_GPU_TEST4_FAILURE_READ_UP,
+    DS4_GPU_TEST4_FAILURE_READ_DOWN,
+};
+
+typedef struct ds4_gpu_test4_prefetch_event {
+    uint32_t kind;
+    uint32_t target_token;
+    uint32_t layer;
+    int32_t  selected[6];
+    uint64_t bytes;
+    uint32_t failure_code;
+    double   queue_to_worker_ms;
+    double   worker_read_ms;
+    double   queue_to_ready_ms;
+    double   slot_age_ms;
+} ds4_gpu_test4_prefetch_event;
+
+/* Lightweight CUDA-memory snapshot used only by TEST_3 diagnostics. */
+typedef struct ds4_gpu_memory_info {
+    uint64_t free_bytes;
+    uint64_t total_bytes;
+    uint64_t used_bytes;
+    uint64_t model_arena_reserved_bytes;
+    uint64_t model_arena_used_bytes;
+    uint64_t device_cache_bytes;
+    uint64_t tensor_bytes;
+    uint64_t q8_f16_cache_bytes;
+    uint64_t q8_f32_cache_bytes;
+    uint64_t derived_weights_bytes;
+    uint64_t demand_cache_bytes;
+    uint64_t selected_stage_pinned_bytes;
+    uint64_t scratch_bytes;
+    uint64_t known_allocated_bytes;
+    uint64_t unattributed_bytes;
+} ds4_gpu_memory_info;
 /* Reset only the prompt-local eviction heuristic.  The resident SSD expert
  * cache itself is intentionally kept warm across sessions. */
 void ds4_gpu_stream_expert_cache_reset_route_hotness(void);
@@ -219,6 +292,31 @@ int ds4_gpu_stream_expert_cache_begin_selected_load(
         const ds4_gpu_stream_expert_table *table,
         const int32_t                     *selected_ids,
         uint32_t                           n_selected);
+
+/* TEST_4 only: a separate pinned host bank is populated by a background
+ * Direct-I/O worker.  A return value of 1 from try_selected_load means the
+ * requested group was ready in that bank and was copied host->device; 0 means
+ * that the caller must use the ordinary synchronous demand load; -1 is an
+ * error.  These APIs are inert unless DS4_TEST_4_PREFETCH=1 is set. */
+int ds4_gpu_test4_prefetch_enqueue(
+        const ds4_gpu_stream_expert_table *table,
+        uint32_t                           target_token,
+        uint32_t                           layer,
+        const int32_t                     *selected_ids,
+        uint32_t                           n_selected);
+int ds4_gpu_test4_prefetch_try_selected_load(
+        const ds4_gpu_stream_expert_table *table,
+        uint32_t                           token,
+        uint32_t                           layer,
+        const int32_t                     *selected_ids,
+        uint32_t                           n_selected,
+        ds4_gpu_stream_expert_load_stats  *out_stats);
+uint32_t ds4_gpu_test4_prefetch_drain_events(
+        ds4_gpu_test4_prefetch_event      *out_events,
+        uint32_t                            max_events);
+int ds4_gpu_stream_expert_cache_last_load_stats(
+        ds4_gpu_stream_expert_load_stats *out);
+int ds4_gpu_get_memory_info(ds4_gpu_memory_info *out);
 int ds4_gpu_glm_stream_expert_cache_begin_selected_load_tensor(
         const ds4_gpu_stream_expert_table *table,
         const ds4_gpu_tensor              *selected,

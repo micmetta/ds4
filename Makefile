@@ -62,7 +62,7 @@ DS4_LINK_LIBS ?= $(CUDA_LDLIBS)
 METAL_LDLIBS := $(LDLIBS)
 endif
 
-.PHONY: all help clean test test-metal-session-batch test-mxfp4-cuda test-cuda-session-batch test-cuda-mixed-batch dspark-acceptance dspark-verify-depth mtp-verify-depth cpu cuda cuda-spark cuda-generic cuda-regression strix-halo rocm
+.PHONY: all help clean test test_0_runner test-predictor-0 test_1_runner test-predictor-1 test_2_runner test-predictor-2 test_3_runner test-predictor-3 test_4_runner test-predictor-4 test_5_runner test-predictor-5 test_6_runner test-predictor-6 test-metal-session-batch test-mxfp4-cuda test-cuda-session-batch test-cuda-mixed-batch dspark-acceptance dspark-verify-depth mtp-verify-depth cpu cuda cuda-spark cuda-generic cuda-regression strix-halo rocm
 
 ifeq ($(UNAME_S),Darwin)
 .PHONY: metal-decode-schedule-bench metal-prefill-variant-bench check-mxfp4-half-lut
@@ -221,6 +221,113 @@ tests/test_mxfp4_cuda: tests/test_mxfp4_cuda.cu $(MMQ_OBJS)
 
 test-mxfp4-cuda: tests/test_mxfp4_cuda
 	./tests/test_mxfp4_cuda
+endif
+
+test_predictor/test_0/test_0_runner: test_predictor/test_0/test_0_runner.c
+	$(CC) $(CFLAGS) -o $@ $<
+
+test_predictor/test_1/test_1_runner: test_predictor/test_1/test_1_runner.c
+	$(CC) $(CFLAGS) -o $@ $<
+
+test_predictor/test_2/test_2_runner: test_predictor/test_2/test_2_runner.c
+	$(CC) $(CFLAGS) -o $@ $<
+
+test_predictor/test_3/test_3_runner: test_predictor/test_3/test_3_runner.c
+	$(CC) $(CFLAGS) -o $@ $<
+
+test_predictor/test_4/test_4_runner: test_predictor/test_4/test_4_runner.c
+	$(CC) $(CFLAGS) -o $@ $<
+
+test_predictor/test_5/test_5_runner: test_predictor/test_5/test_5_runner.c
+	$(CC) $(CFLAGS) -o $@ $<
+
+test_predictor/test_6/test_6_runner: test_predictor/test_6/test_6_runner.c test_predictor/test_5/test_5_runner.c
+	$(CC) $(CFLAGS) -o $@ $<
+
+ifeq ($(UNAME_S),Darwin)
+test_0_runner: test_predictor/test_0/test_0_runner
+
+test-predictor-0: test_0_runner
+	@echo "TEST_0 requires a CUDA build and CUDA GPU"
+	@exit 2
+
+test_1_runner: test_predictor/test_1/test_1_runner test_predictor/test_0/test_0_runner
+
+test-predictor-1: test_1_runner
+	@echo "TEST_1 requires a CUDA build and CUDA GPU"
+	@exit 2
+
+test_2_runner: test_predictor/test_2/test_2_runner
+
+test-predictor-2: test_2_runner
+	@echo "TEST_2 requires a CUDA build and CUDA GPU"
+	@exit 2
+
+test_3_runner: test_predictor/test_3/test_3_runner
+
+test-predictor-3: test_3_runner
+	@echo "TEST_3 requires a CUDA build and CUDA GPU"
+	@exit 2
+
+test_4_runner: test_predictor/test_4/test_4_runner
+
+test-predictor-4: test_4_runner
+	@echo "TEST_4 requires a CUDA build and CUDA GPU"
+	@exit 2
+
+test_5_runner: test_predictor/test_5/test_5_runner
+
+test-predictor-5: test_5_runner
+	@echo "TEST_5 requires a CUDA build and CUDA GPU"
+	@exit 2
+
+test_6_runner: test_predictor/test_6/test_6_runner
+
+test-predictor-6: test_6_runner
+	@echo "TEST_6 requires a CUDA build and CUDA GPU"
+	@exit 2
+else
+test_0_runner: test_predictor/test_0/test_0_runner
+	$(MAKE) -j1 ds4 CUDA_ARCH=native
+
+test-predictor-0: test_0_runner
+	./test_predictor/test_0/test_0_runner
+
+test_1_runner: test_predictor/test_1/test_1_runner test_predictor/test_0/test_0_runner
+	$(MAKE) -j1 ds4 CUDA_ARCH=native
+
+test-predictor-1: test_1_runner
+	./test_predictor/test_1/test_1_runner
+
+test_2_runner: test_predictor/test_2/test_2_runner
+	$(MAKE) -j1 ds4 CUDA_ARCH=native
+
+test-predictor-2: test_2_runner
+	./test_predictor/test_2/test_2_runner
+
+test_3_runner: test_predictor/test_3/test_3_runner
+	$(MAKE) -j1 ds4 CUDA_ARCH=native
+
+test-predictor-3: test_3_runner
+	./test_predictor/test_3/test_3_runner
+
+test_4_runner: test_predictor/test_4/test_4_runner
+	$(MAKE) -j1 ds4 CUDA_ARCH=native
+
+test-predictor-4: test_4_runner
+	./test_predictor/test_4/test_4_runner
+
+test_5_runner: test_predictor/test_5/test_5_runner
+	$(MAKE) -j1 ds4 CUDA_ARCH=native
+
+test-predictor-5: test_5_runner
+	./test_predictor/test_5/test_5_runner
+
+test_6_runner: test_predictor/test_6/test_6_runner
+	$(MAKE) -j1 ds4 CUDA_ARCH=native
+
+test-predictor-6: test_6_runner
+	./test_predictor/test_6/test_6_runner
 endif
 
 ds4.o: ds4.c ds4.h ds4_ssd.h ds4_distributed.h ds4_gpu.h
