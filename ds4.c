@@ -1266,6 +1266,7 @@ static ds4_expert_profile g_expert_profile;
 typedef struct {
     bool active;
     bool failed;
+    unsigned router_logits_max;
     FILE *fp;
     pthread_mutex_t mutex;
 } ds4_routing_trace;
@@ -1292,6 +1293,11 @@ enum { DS4_ROUTING_TRACE_TOP_CANDIDATES = 8 };
 static ds4_routing_trace g_routing_trace = {
     .mutex = PTHREAD_MUTEX_INITIALIZER,
 };
+
+/* Decode-style SSD prefill reuses the token-at-a-time decode graph.  Keep its
+ * routing trace distinguishable from autoregressive decode without changing
+ * the graph or router itself. */
+static _Thread_local bool g_routing_trace_prefill_phase;
 
 /* TEST_2 SSD-streaming trace. It is independent from routing tracing so a
  * timing run does not need to emit router-score data. */
@@ -1397,6 +1403,24 @@ static void ds4_routing_trace_init(void) {
                 strerror(errno));
         g_routing_trace.failed = true;
         return;
+    }
+    const char *max_logits_text = getenv("DS4_DATASET_ROUTER_MAX_SCORES");
+    if (max_logits_text && max_logits_text[0]) {
+        char *end = NULL;
+        const unsigned long parsed = strtoul(max_logits_text, &end, 10);
+        if (end && *end == '\0' && parsed > 0) {
+            g_routing_trace.router_logits_max = (unsigned)parsed;
+            if (g_routing_trace.router_logits_max < DS4_N_EXPERT_USED) {
+                g_routing_trace.router_logits_max = DS4_N_EXPERT_USED;
+            }
+            if (g_routing_trace.router_logits_max > DS4_N_EXPERT) {
+                g_routing_trace.router_logits_max = DS4_N_EXPERT;
+            }
+        } else {
+            fprintf(stderr,
+                    "ds4: ignoring invalid DS4_DATASET_ROUTER_MAX_SCORES=%s\n",
+                    max_logits_text);
+        }
     }
     setvbuf(g_routing_trace.fp, NULL, _IOLBF, 0);
     g_routing_trace.active = true;
@@ -1865,6 +1889,12 @@ static bool ds4_routing_trace_wants_scores(void) {
     return g_routing_trace.active && !g_routing_trace.failed;
 }
 
+static bool ds4_routing_trace_wants_logits(void) {
+    pthread_once(&g_routing_trace_once, ds4_routing_trace_init);
+    return g_routing_trace.active && !g_routing_trace.failed &&
+           g_routing_trace.router_logits_max > 0;
+}
+
 static void ds4_routing_trace_write_candidates(
         FILE                         *fp,
         const float                  *probs,
@@ -1892,6 +1922,31 @@ static void ds4_routing_trace_write_candidates(
     fprintf(fp, "],\"cutoff_margin\":%.9g", scores[top[5]] - scores[top[6]]);
 }
 
+static void ds4_routing_trace_write_logits(FILE *fp, const float *logits) {
+    if (!logits || g_routing_trace.router_logits_max == 0) {
+        fputs("null", fp);
+        return;
+    }
+
+    int ranked[DS4_MAX_EXPERT];
+    const unsigned count = g_routing_trace.router_logits_max;
+    topk_desc(logits, (int)DS4_N_EXPERT, (int)count, ranked);
+
+    fprintf(fp, "{\"kind\":\"raw_logits\",\"max_scores_configured\":%u,"
+                "\"stored_count\":%u,\"expert_ids_ranked\":[",
+            count, count);
+    for (unsigned i = 0; i < count; i++) {
+        if (i) fputc(',', fp);
+        fprintf(fp, "%d", ranked[i]);
+    }
+    fputs("],\"values_ranked\":[", fp);
+    for (unsigned i = 0; i < count; i++) {
+        if (i) fputc(',', fp);
+        fprintf(fp, "%.9g", logits[ranked[i]]);
+    }
+    fputs("]}", fp);
+}
+
 static bool ds4_routing_trace_record_decode(
         uint32_t       pos,
         uint32_t       token,
@@ -1899,6 +1954,7 @@ static bool ds4_routing_trace_record_decode(
         const int32_t *selected,
         bool           is_hash,
         const float   *router_probs,
+        const float   *router_logits,
         const float   *router_bias,
         const float   *router_weights,
         const int32_t *original_selected,
@@ -1910,9 +1966,10 @@ static bool ds4_routing_trace_record_decode(
 
     pthread_mutex_lock(&g_routing_trace.mutex);
     const int rc = fprintf(g_routing_trace.fp,
-                           "{\"phase\":\"decode\",\"token_index\":%u,"
+                           "{\"phase\":\"%s\",\"token_index\":%u,"
                            "\"token_id\":%u,\"layer\":%u,\"is_hash\":%s,"
                            "\"experts\":[%d,%d,%d,%d,%d,%d],\"top_candidates\":",
+                           g_routing_trace_prefill_phase ? "prefill" : "decode",
                            pos,
                            token,
                            layer,
@@ -1923,6 +1980,9 @@ static bool ds4_routing_trace_record_decode(
         ds4_routing_trace_write_candidates(g_routing_trace.fp,
                                            is_hash ? NULL : router_probs,
                                            is_hash ? NULL : router_bias);
+        fputs(",\"router_logits\":", g_routing_trace.fp);
+        ds4_routing_trace_write_logits(g_routing_trace.fp,
+                                       is_hash ? NULL : router_logits);
         fputs(",\"router_weights\":", g_routing_trace.fp);
         if (!router_weights) fputs("null", g_routing_trace.fp);
         else {
@@ -21650,6 +21710,7 @@ static bool metal_graph_decode_set_hash_selected_override(
     }
     if (!ds4_routing_trace_record_decode(pos, token, il, selected_i32, true,
                                          NULL, NULL,
+                                         NULL,
                                          (oracle_write || oracle_replay) ? router_weights : NULL,
                                          oracle_replay ? original_selected : NULL,
                                          oracle_replay ? original_weights : NULL)) {
@@ -21950,7 +22011,9 @@ static bool metal_graph_decode_cuda_selected_load(
     float router_weights[DS4_MAX_EXPERT_USED] = {0};
     float original_weights[DS4_MAX_EXPERT_USED] = {0};
     float router_probs[DS4_MAX_EXPERT];
+    float router_logits[DS4_MAX_EXPERT];
     const bool trace_scores = ds4_routing_trace_wants_scores();
+    const bool trace_logits = ds4_routing_trace_wants_logits();
     const bool replay_requested = getenv("DS4_ROUTING_ORACLE_REPLAY_PATH") != NULL;
     bool ok = ds4_gpu_tensor_read(metal_graph_router_selected(g),
                                   0,
@@ -21965,6 +22028,12 @@ static bool metal_graph_decode_cuda_selected_load(
                                  0,
                                  router_probs,
                                  (uint64_t)DS4_N_EXPERT * sizeof(router_probs[0])) != 0;
+    }
+    if (ok && trace_logits) {
+        ok = ds4_gpu_tensor_read(metal_graph_router_logits(g),
+                                 0,
+                                 router_logits,
+                                 (uint64_t)DS4_N_EXPERT * sizeof(router_logits[0])) != 0;
     }
     const float *router_bias = layer->ffn_exp_probs_b ?
         tensor_data(model, layer->ffn_exp_probs_b) : NULL;
@@ -21988,6 +22057,7 @@ static bool metal_graph_decode_cuda_selected_load(
     if (ok) ok = ds4_routing_trace_record_decode(pos, token, il,
                                                  selected_ids, false,
                                                  trace_scores ? router_probs : NULL,
+                                                 trace_logits ? router_logits : NULL,
                                                  router_bias, router_weights,
                                                  replay_requested ? original_selected : NULL,
                                                  replay_requested ? original_weights : NULL);
@@ -25463,18 +25533,26 @@ static bool metal_graph_encode_decode_layer_phase(
                 metal_graph_selected_async_load_finish(&async_load);
             if (async_load.ids_ok) {
                 float router_probs[DS4_MAX_EXPERT];
+                float router_logits[DS4_MAX_EXPERT];
                 const bool trace_scores = ds4_routing_trace_wants_scores();
+                const bool trace_logits = ds4_routing_trace_wants_logits();
                 bool scores_ok = true;
                 if (trace_scores) {
                     scores_ok = ds4_gpu_tensor_read(metal_graph_router_probs(g), 0,
                                                     router_probs,
                                                     (uint64_t)DS4_N_EXPERT * sizeof(router_probs[0])) != 0;
                 }
+                if (scores_ok && trace_logits) {
+                    scores_ok = ds4_gpu_tensor_read(metal_graph_router_logits(g), 0,
+                                                    router_logits,
+                                                    (uint64_t)DS4_N_EXPERT * sizeof(router_logits[0])) != 0;
+                }
                 const float *router_bias = layer->ffn_exp_probs_b ?
                     tensor_data(model, layer->ffn_exp_probs_b) : NULL;
                 const bool trace_ok = ds4_routing_trace_record_decode(
                         pos, (uint32_t)token, il, async_load.selected_ids,
                         false, scores_ok && trace_scores ? router_probs : NULL,
+                        scores_ok && trace_logits ? router_logits : NULL,
                         router_bias, NULL, NULL, NULL);
                 finish_ok = finish_ok && scores_ok && trace_ok;
             }
@@ -25512,11 +25590,18 @@ static bool metal_graph_encode_decode_layer_phase(
                                                           DS4_N_EXPERT_USED) != 0;
             if (ok) {
                 float router_probs[DS4_MAX_EXPERT];
+                float router_logits[DS4_MAX_EXPERT];
                 const bool trace_scores = ds4_routing_trace_wants_scores();
+                const bool trace_logits = ds4_routing_trace_wants_logits();
                 if (trace_scores) {
                     ok = ds4_gpu_tensor_read(metal_graph_router_probs(g), 0,
                                              router_probs,
                                              (uint64_t)DS4_N_EXPERT * sizeof(router_probs[0])) != 0;
+                }
+                if (ok && trace_logits) {
+                    ok = ds4_gpu_tensor_read(metal_graph_router_logits(g), 0,
+                                             router_logits,
+                                             (uint64_t)DS4_N_EXPERT * sizeof(router_logits[0])) != 0;
                 }
                 const float *router_bias = layer->ffn_exp_probs_b ?
                     tensor_data(model, layer->ffn_exp_probs_b) : NULL;
@@ -25524,6 +25609,7 @@ static bool metal_graph_encode_decode_layer_phase(
                     ok = ds4_routing_trace_record_decode(pos, (uint32_t)token,
                                                          il, selected_ids, false,
                                                          trace_scores ? router_probs : NULL,
+                                                         trace_logits ? router_logits : NULL,
                                                          router_bias, NULL, NULL, NULL);
                 }
             }
@@ -31825,9 +31911,12 @@ static bool metal_graph_prefill_decode_streaming_range(
         display_progress(display_progress_ud, "prefill_display", (int)start, prompt->len);
     }
 
+    const bool previous_trace_prefill_phase = g_routing_trace_prefill_phase;
+    g_routing_trace_prefill_phase = true;
     for (uint32_t i = 0; i < n_tokens; i++) {
         if (cancel && cancel(cancel_ud)) {
             if (cancelled) *cancelled = true;
+            g_routing_trace_prefill_phase = previous_trace_prefill_phase;
             return true;
         }
         const uint32_t pos = start + i;
@@ -31842,6 +31931,7 @@ static bool metal_graph_prefill_decode_streaming_range(
             if (ds4_gpu_synchronize() == 0) {
                 fprintf(stderr, "ds4: Metal synchronize after decode-style streaming prefill failure also failed\n");
             }
+            g_routing_trace_prefill_phase = previous_trace_prefill_phase;
             return false;
         }
 
@@ -31853,6 +31943,7 @@ static bool metal_graph_prefill_decode_streaming_range(
         }
         if (cancel && cancel(cancel_ud)) {
             if (cancelled) *cancelled = true;
+            g_routing_trace_prefill_phase = previous_trace_prefill_phase;
             return true;
         }
         if (show_progress) {
@@ -31863,6 +31954,7 @@ static bool metal_graph_prefill_decode_streaming_range(
         }
     }
     if (show_progress) fputc('\n', stderr);
+    g_routing_trace_prefill_phase = previous_trace_prefill_phase;
 
     if (profile) {
         const double t1 = now_sec();
