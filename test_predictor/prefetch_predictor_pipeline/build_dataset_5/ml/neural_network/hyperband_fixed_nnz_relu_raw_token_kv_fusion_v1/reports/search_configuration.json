@@ -1,0 +1,56 @@
+{
+  "data": {
+    "state_data_dir": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/ablations/09_routing_layer_router_state_kv_current/arrays",
+    "fixed_nnz_state_data_dir": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/ablations/15_routing_layer_router_state_kv_current_fixed_nnz_state",
+    "quantized_hidden_data_dir": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/ablations/13_routing_layer_router_state_kv_current_materialized_raw_hidden_int8",
+    "kv_data_dir": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/ablations/14_routing_layer_router_state_kv_current_materialized_kv_f16",
+    "token_data_dir": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/ablations/10_routing_layer_router_state_kv_current_token_embedding/arrays",
+    "token_embedding_dir": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/token_embedding_artifacts"
+  },
+  "search_space": {
+    "raw_hidden_projection_dimension": [
+      64,
+      512,
+      1024
+    ],
+    "token_projection_dimension": [
+      64,
+      512,
+      1024
+    ],
+    "kv_projection": [
+      "direct",
+      "64",
+      "128",
+      "512"
+    ],
+    "fusion_hidden_units": [
+      0,
+      512
+    ],
+    "learning_rate": [
+      3e-05,
+      5e-05,
+      6.997208e-05,
+      0.0001,
+      0.00015
+    ],
+    "raw_hidden_projection_activation": "relu (fissa)",
+    "token_projection_activation": "relu (fissa)"
+  },
+  "fixed_hyperparameters": {
+    "state_hidden_units": 512,
+    "activation": "relu",
+    "dropout": 0.3,
+    "l2_regularization": 0.0,
+    "batch_size": 4096,
+    "shuffle_block_size": 65536
+  },
+  "hyperband": {
+    "max_epochs": 20,
+    "factor": 3,
+    "hyperband_iterations": 1,
+    "early_stopping_patience": 3,
+    "objective": "val_recall_at_6 (massimizzare)"
+  }
+}

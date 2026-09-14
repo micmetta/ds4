@@ -1,0 +1,4881 @@
+{
+  "saved_at_unix_seconds": 1789297114.050006,
+  "trials": [
+    {
+      "trial_id": "0000",
+      "status": "COMPLETED",
+      "score": 0.4138074219226837,
+      "best_step": 2,
+      "hyperparameters": {
+        "raw_hidden_projection_dimension": 512,
+        "token_projection_dimension": 64,
+        "kv_projection": "64",
+        "fusion_hidden_units": 0,
+        "learning_rate": 0.00015,
+        "tuner/epochs": 3,
+        "tuner/initial_epoch": 0,
+        "tuner/bracket": 2,
+        "tuner/round": 0
+      },
+      "state": {
+        "trial_id": "0000",
+        "hyperparameters": {
+          "space": [
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "raw_hidden_projection_dimension",
+                "default": 64,
+                "conditions": [],
+                "values": [
+                  64,
+                  512,
+                  1024
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "token_projection_dimension",
+                "default": 64,
+                "conditions": [],
+                "values": [
+                  64,
+                  512,
+                  1024
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "kv_projection",
+                "default": "direct",
+                "conditions": [],
+                "values": [
+                  "direct",
+                  "64",
+                  "128",
+                  "512"
+                ],
+                "ordered": false
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "fusion_hidden_units",
+                "default": 0,
+                "conditions": [],
+                "values": [
+                  0,
+                  512
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "learning_rate",
+                "default": 3e-05,
+                "conditions": [],
+                "values": [
+                  3e-05,
+                  5e-05,
+                  6.997208e-05,
+                  0.0001,
+                  0.00015
+                ],
+                "ordered": true
+              }
+            }
+          ],
+          "values": {
+            "raw_hidden_projection_dimension": 512,
+            "token_projection_dimension": 64,
+            "kv_projection": "64",
+            "fusion_hidden_units": 0,
+            "learning_rate": 0.00015,
+            "tuner/epochs": 3,
+            "tuner/initial_epoch": 0,
+            "tuner/bracket": 2,
+            "tuner/round": 0
+          }
+        },
+        "metrics": {
+          "metrics": {
+            "loss": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.08440013229846954
+                  ],
+                  "step": 2
+                }
+              ]
+            },
+            "recall_at_6": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.38284072279930115
+                  ],
+                  "step": 2
+                }
+              ]
+            },
+            "val_loss": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.08043009787797928
+                  ],
+                  "step": 2
+                }
+              ]
+            },
+            "val_recall_at_6": {
+              "direction": "max",
+              "observations": [
+                {
+                  "value": [
+                    0.4138074219226837
+                  ],
+                  "step": 2
+                }
+              ]
+            }
+          }
+        },
+        "score": 0.4138074219226837,
+        "best_step": 2,
+        "status": "COMPLETED",
+        "message": null
+      },
+      "epoch_progress_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_progress/0000.jsonl",
+      "timing_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_progress/0000_timing.json",
+      "checkpoint_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_checkpoints/0000/best.weights.h5"
+    },
+    {
+      "trial_id": "0001",
+      "status": "COMPLETED",
+      "score": 0.22423580288887024,
+      "best_step": 2,
+      "hyperparameters": {
+        "raw_hidden_projection_dimension": 512,
+        "token_projection_dimension": 512,
+        "kv_projection": "direct",
+        "fusion_hidden_units": 0,
+        "learning_rate": 5e-05,
+        "tuner/epochs": 3,
+        "tuner/initial_epoch": 0,
+        "tuner/bracket": 2,
+        "tuner/round": 0
+      },
+      "state": {
+        "trial_id": "0001",
+        "hyperparameters": {
+          "space": [
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "raw_hidden_projection_dimension",
+                "default": 64,
+                "conditions": [],
+                "values": [
+                  64,
+                  512,
+                  1024
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "token_projection_dimension",
+                "default": 64,
+                "conditions": [],
+                "values": [
+                  64,
+                  512,
+                  1024
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "kv_projection",
+                "default": "direct",
+                "conditions": [],
+                "values": [
+                  "direct",
+                  "64",
+                  "128",
+                  "512"
+                ],
+                "ordered": false
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "fusion_hidden_units",
+                "default": 0,
+                "conditions": [],
+                "values": [
+                  0,
+                  512
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "learning_rate",
+                "default": 3e-05,
+                "conditions": [],
+                "values": [
+                  3e-05,
+                  5e-05,
+                  6.997208e-05,
+                  0.0001,
+                  0.00015
+                ],
+                "ordered": true
+              }
+            }
+          ],
+          "values": {
+            "raw_hidden_projection_dimension": 512,
+            "token_projection_dimension": 512,
+            "kv_projection": "direct",
+            "fusion_hidden_units": 0,
+            "learning_rate": 5e-05,
+            "tuner/epochs": 3,
+            "tuner/initial_epoch": 0,
+            "tuner/bracket": 2,
+            "tuner/round": 0
+          }
+        },
+        "metrics": {
+          "metrics": {
+            "loss": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.10383806377649307
+                  ],
+                  "step": 2
+                }
+              ]
+            },
+            "recall_at_6": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.16614924371242523
+                  ],
+                  "step": 2
+                }
+              ]
+            },
+            "val_loss": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.09897776693105698
+                  ],
+                  "step": 2
+                }
+              ]
+            },
+            "val_recall_at_6": {
+              "direction": "max",
+              "observations": [
+                {
+                  "value": [
+                    0.22423580288887024
+                  ],
+                  "step": 2
+                }
+              ]
+            }
+          }
+        },
+        "score": 0.22423580288887024,
+        "best_step": 2,
+        "status": "COMPLETED",
+        "message": null
+      },
+      "epoch_progress_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_progress/0001.jsonl",
+      "timing_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_progress/0001_timing.json",
+      "checkpoint_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_checkpoints/0001/best.weights.h5"
+    },
+    {
+      "trial_id": "0002",
+      "status": "COMPLETED",
+      "score": 0.4267561137676239,
+      "best_step": 2,
+      "hyperparameters": {
+        "raw_hidden_projection_dimension": 1024,
+        "token_projection_dimension": 512,
+        "kv_projection": "512",
+        "fusion_hidden_units": 0,
+        "learning_rate": 0.00015,
+        "tuner/epochs": 3,
+        "tuner/initial_epoch": 0,
+        "tuner/bracket": 2,
+        "tuner/round": 0
+      },
+      "state": {
+        "trial_id": "0002",
+        "hyperparameters": {
+          "space": [
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "raw_hidden_projection_dimension",
+                "default": 64,
+                "conditions": [],
+                "values": [
+                  64,
+                  512,
+                  1024
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "token_projection_dimension",
+                "default": 64,
+                "conditions": [],
+                "values": [
+                  64,
+                  512,
+                  1024
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "kv_projection",
+                "default": "direct",
+                "conditions": [],
+                "values": [
+                  "direct",
+                  "64",
+                  "128",
+                  "512"
+                ],
+                "ordered": false
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "fusion_hidden_units",
+                "default": 0,
+                "conditions": [],
+                "values": [
+                  0,
+                  512
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "learning_rate",
+                "default": 3e-05,
+                "conditions": [],
+                "values": [
+                  3e-05,
+                  5e-05,
+                  6.997208e-05,
+                  0.0001,
+                  0.00015
+                ],
+                "ordered": true
+              }
+            }
+          ],
+          "values": {
+            "raw_hidden_projection_dimension": 1024,
+            "token_projection_dimension": 512,
+            "kv_projection": "512",
+            "fusion_hidden_units": 0,
+            "learning_rate": 0.00015,
+            "tuner/epochs": 3,
+            "tuner/initial_epoch": 0,
+            "tuner/bracket": 2,
+            "tuner/round": 0
+          }
+        },
+        "metrics": {
+          "metrics": {
+            "loss": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.08037508279085159
+                  ],
+                  "step": 2
+                }
+              ]
+            },
+            "recall_at_6": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.4039045572280884
+                  ],
+                  "step": 2
+                }
+              ]
+            },
+            "val_loss": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.0773949921131134
+                  ],
+                  "step": 2
+                }
+              ]
+            },
+            "val_recall_at_6": {
+              "direction": "max",
+              "observations": [
+                {
+                  "value": [
+                    0.4267561137676239
+                  ],
+                  "step": 2
+                }
+              ]
+            }
+          }
+        },
+        "score": 0.4267561137676239,
+        "best_step": 2,
+        "status": "COMPLETED",
+        "message": null
+      },
+      "epoch_progress_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_progress/0002.jsonl",
+      "timing_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_progress/0002_timing.json",
+      "checkpoint_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_checkpoints/0002/best.weights.h5"
+    },
+    {
+      "trial_id": "0003",
+      "status": "COMPLETED",
+      "score": 0.30755922198295593,
+      "best_step": 2,
+      "hyperparameters": {
+        "raw_hidden_projection_dimension": 64,
+        "token_projection_dimension": 512,
+        "kv_projection": "direct",
+        "fusion_hidden_units": 0,
+        "learning_rate": 6.997208e-05,
+        "tuner/epochs": 3,
+        "tuner/initial_epoch": 0,
+        "tuner/bracket": 2,
+        "tuner/round": 0
+      },
+      "state": {
+        "trial_id": "0003",
+        "hyperparameters": {
+          "space": [
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "raw_hidden_projection_dimension",
+                "default": 64,
+                "conditions": [],
+                "values": [
+                  64,
+                  512,
+                  1024
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "token_projection_dimension",
+                "default": 64,
+                "conditions": [],
+                "values": [
+                  64,
+                  512,
+                  1024
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "kv_projection",
+                "default": "direct",
+                "conditions": [],
+                "values": [
+                  "direct",
+                  "64",
+                  "128",
+                  "512"
+                ],
+                "ordered": false
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "fusion_hidden_units",
+                "default": 0,
+                "conditions": [],
+                "values": [
+                  0,
+                  512
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "learning_rate",
+                "default": 3e-05,
+                "conditions": [],
+                "values": [
+                  3e-05,
+                  5e-05,
+                  6.997208e-05,
+                  0.0001,
+                  0.00015
+                ],
+                "ordered": true
+              }
+            }
+          ],
+          "values": {
+            "raw_hidden_projection_dimension": 64,
+            "token_projection_dimension": 512,
+            "kv_projection": "direct",
+            "fusion_hidden_units": 0,
+            "learning_rate": 6.997208e-05,
+            "tuner/epochs": 3,
+            "tuner/initial_epoch": 0,
+            "tuner/bracket": 2,
+            "tuner/round": 0
+          }
+        },
+        "metrics": {
+          "metrics": {
+            "loss": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.09919741004705429
+                  ],
+                  "step": 2
+                }
+              ]
+            },
+            "recall_at_6": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.22894075512886047
+                  ],
+                  "step": 2
+                }
+              ]
+            },
+            "val_loss": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.09335801005363464
+                  ],
+                  "step": 2
+                }
+              ]
+            },
+            "val_recall_at_6": {
+              "direction": "max",
+              "observations": [
+                {
+                  "value": [
+                    0.30755922198295593
+                  ],
+                  "step": 2
+                }
+              ]
+            }
+          }
+        },
+        "score": 0.30755922198295593,
+        "best_step": 2,
+        "status": "COMPLETED",
+        "message": null
+      },
+      "epoch_progress_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_progress/0003.jsonl",
+      "timing_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_progress/0003_timing.json",
+      "checkpoint_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_checkpoints/0003/best.weights.h5"
+    },
+    {
+      "trial_id": "0004",
+      "status": "COMPLETED",
+      "score": 0.14462634921073914,
+      "best_step": 2,
+      "hyperparameters": {
+        "raw_hidden_projection_dimension": 1024,
+        "token_projection_dimension": 512,
+        "kv_projection": "64",
+        "fusion_hidden_units": 0,
+        "learning_rate": 3e-05,
+        "tuner/epochs": 3,
+        "tuner/initial_epoch": 0,
+        "tuner/bracket": 2,
+        "tuner/round": 0
+      },
+      "state": {
+        "trial_id": "0004",
+        "hyperparameters": {
+          "space": [
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "raw_hidden_projection_dimension",
+                "default": 64,
+                "conditions": [],
+                "values": [
+                  64,
+                  512,
+                  1024
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "token_projection_dimension",
+                "default": 64,
+                "conditions": [],
+                "values": [
+                  64,
+                  512,
+                  1024
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "kv_projection",
+                "default": "direct",
+                "conditions": [],
+                "values": [
+                  "direct",
+                  "64",
+                  "128",
+                  "512"
+                ],
+                "ordered": false
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "fusion_hidden_units",
+                "default": 0,
+                "conditions": [],
+                "values": [
+                  0,
+                  512
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "learning_rate",
+                "default": 3e-05,
+                "conditions": [],
+                "values": [
+                  3e-05,
+                  5e-05,
+                  6.997208e-05,
+                  0.0001,
+                  0.00015
+                ],
+                "ordered": true
+              }
+            }
+          ],
+          "values": {
+            "raw_hidden_projection_dimension": 1024,
+            "token_projection_dimension": 512,
+            "kv_projection": "64",
+            "fusion_hidden_units": 0,
+            "learning_rate": 3e-05,
+            "tuner/epochs": 3,
+            "tuner/initial_epoch": 0,
+            "tuner/bracket": 2,
+            "tuner/round": 0
+          }
+        },
+        "metrics": {
+          "metrics": {
+            "loss": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.10825099050998688
+                  ],
+                  "step": 2
+                }
+              ]
+            },
+            "recall_at_6": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.10867219418287277
+                  ],
+                  "step": 2
+                }
+              ]
+            },
+            "val_loss": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.10513252764940262
+                  ],
+                  "step": 2
+                }
+              ]
+            },
+            "val_recall_at_6": {
+              "direction": "max",
+              "observations": [
+                {
+                  "value": [
+                    0.14462634921073914
+                  ],
+                  "step": 2
+                }
+              ]
+            }
+          }
+        },
+        "score": 0.14462634921073914,
+        "best_step": 2,
+        "status": "COMPLETED",
+        "message": null
+      },
+      "epoch_progress_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_progress/0004.jsonl",
+      "timing_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_progress/0004_timing.json",
+      "checkpoint_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_checkpoints/0004/best.weights.h5"
+    },
+    {
+      "trial_id": "0005",
+      "status": "COMPLETED",
+      "score": 0.26789355278015137,
+      "best_step": 2,
+      "hyperparameters": {
+        "raw_hidden_projection_dimension": 64,
+        "token_projection_dimension": 1024,
+        "kv_projection": "128",
+        "fusion_hidden_units": 512,
+        "learning_rate": 5e-05,
+        "tuner/epochs": 3,
+        "tuner/initial_epoch": 0,
+        "tuner/bracket": 2,
+        "tuner/round": 0
+      },
+      "state": {
+        "trial_id": "0005",
+        "hyperparameters": {
+          "space": [
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "raw_hidden_projection_dimension",
+                "default": 64,
+                "conditions": [],
+                "values": [
+                  64,
+                  512,
+                  1024
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "token_projection_dimension",
+                "default": 64,
+                "conditions": [],
+                "values": [
+                  64,
+                  512,
+                  1024
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "kv_projection",
+                "default": "direct",
+                "conditions": [],
+                "values": [
+                  "direct",
+                  "64",
+                  "128",
+                  "512"
+                ],
+                "ordered": false
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "fusion_hidden_units",
+                "default": 0,
+                "conditions": [],
+                "values": [
+                  0,
+                  512
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "learning_rate",
+                "default": 3e-05,
+                "conditions": [],
+                "values": [
+                  3e-05,
+                  5e-05,
+                  6.997208e-05,
+                  0.0001,
+                  0.00015
+                ],
+                "ordered": true
+              }
+            }
+          ],
+          "values": {
+            "raw_hidden_projection_dimension": 64,
+            "token_projection_dimension": 1024,
+            "kv_projection": "128",
+            "fusion_hidden_units": 512,
+            "learning_rate": 5e-05,
+            "tuner/epochs": 3,
+            "tuner/initial_epoch": 0,
+            "tuner/bracket": 2,
+            "tuner/round": 0
+          }
+        },
+        "metrics": {
+          "metrics": {
+            "loss": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.10826335847377777
+                  ],
+                  "step": 2
+                }
+              ]
+            },
+            "recall_at_6": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.11709772050380707
+                  ],
+                  "step": 2
+                }
+              ]
+            },
+            "val_loss": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.09976457804441452
+                  ],
+                  "step": 2
+                }
+              ]
+            },
+            "val_recall_at_6": {
+              "direction": "max",
+              "observations": [
+                {
+                  "value": [
+                    0.26789355278015137
+                  ],
+                  "step": 2
+                }
+              ]
+            }
+          }
+        },
+        "score": 0.26789355278015137,
+        "best_step": 2,
+        "status": "COMPLETED",
+        "message": null
+      },
+      "epoch_progress_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_progress/0005.jsonl",
+      "timing_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_progress/0005_timing.json",
+      "checkpoint_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_checkpoints/0005/best.weights.h5"
+    },
+    {
+      "trial_id": "0006",
+      "status": "COMPLETED",
+      "score": 0.2782587707042694,
+      "best_step": 2,
+      "hyperparameters": {
+        "raw_hidden_projection_dimension": 64,
+        "token_projection_dimension": 64,
+        "kv_projection": "512",
+        "fusion_hidden_units": 0,
+        "learning_rate": 5e-05,
+        "tuner/epochs": 3,
+        "tuner/initial_epoch": 0,
+        "tuner/bracket": 2,
+        "tuner/round": 0
+      },
+      "state": {
+        "trial_id": "0006",
+        "hyperparameters": {
+          "space": [
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "raw_hidden_projection_dimension",
+                "default": 64,
+                "conditions": [],
+                "values": [
+                  64,
+                  512,
+                  1024
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "token_projection_dimension",
+                "default": 64,
+                "conditions": [],
+                "values": [
+                  64,
+                  512,
+                  1024
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "kv_projection",
+                "default": "direct",
+                "conditions": [],
+                "values": [
+                  "direct",
+                  "64",
+                  "128",
+                  "512"
+                ],
+                "ordered": false
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "fusion_hidden_units",
+                "default": 0,
+                "conditions": [],
+                "values": [
+                  0,
+                  512
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "learning_rate",
+                "default": 3e-05,
+                "conditions": [],
+                "values": [
+                  3e-05,
+                  5e-05,
+                  6.997208e-05,
+                  0.0001,
+                  0.00015
+                ],
+                "ordered": true
+              }
+            }
+          ],
+          "values": {
+            "raw_hidden_projection_dimension": 64,
+            "token_projection_dimension": 64,
+            "kv_projection": "512",
+            "fusion_hidden_units": 0,
+            "learning_rate": 5e-05,
+            "tuner/epochs": 3,
+            "tuner/initial_epoch": 0,
+            "tuner/bracket": 2,
+            "tuner/round": 0
+          }
+        },
+        "metrics": {
+          "metrics": {
+            "loss": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.10181973874568939
+                  ],
+                  "step": 2
+                }
+              ]
+            },
+            "recall_at_6": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.19471894204616547
+                  ],
+                  "step": 2
+                }
+              ]
+            },
+            "val_loss": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.09666739404201508
+                  ],
+                  "step": 2
+                }
+              ]
+            },
+            "val_recall_at_6": {
+              "direction": "max",
+              "observations": [
+                {
+                  "value": [
+                    0.2782587707042694
+                  ],
+                  "step": 2
+                }
+              ]
+            }
+          }
+        },
+        "score": 0.2782587707042694,
+        "best_step": 2,
+        "status": "COMPLETED",
+        "message": null
+      },
+      "epoch_progress_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_progress/0006.jsonl",
+      "timing_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_progress/0006_timing.json",
+      "checkpoint_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_checkpoints/0006/best.weights.h5"
+    },
+    {
+      "trial_id": "0007",
+      "status": "COMPLETED",
+      "score": 0.32492271065711975,
+      "best_step": 2,
+      "hyperparameters": {
+        "raw_hidden_projection_dimension": 1024,
+        "token_projection_dimension": 1024,
+        "kv_projection": "direct",
+        "fusion_hidden_units": 0,
+        "learning_rate": 6.997208e-05,
+        "tuner/epochs": 3,
+        "tuner/initial_epoch": 0,
+        "tuner/bracket": 2,
+        "tuner/round": 0
+      },
+      "state": {
+        "trial_id": "0007",
+        "hyperparameters": {
+          "space": [
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "raw_hidden_projection_dimension",
+                "default": 64,
+                "conditions": [],
+                "values": [
+                  64,
+                  512,
+                  1024
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "token_projection_dimension",
+                "default": 64,
+                "conditions": [],
+                "values": [
+                  64,
+                  512,
+                  1024
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "kv_projection",
+                "default": "direct",
+                "conditions": [],
+                "values": [
+                  "direct",
+                  "64",
+                  "128",
+                  "512"
+                ],
+                "ordered": false
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "fusion_hidden_units",
+                "default": 0,
+                "conditions": [],
+                "values": [
+                  0,
+                  512
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "learning_rate",
+                "default": 3e-05,
+                "conditions": [],
+                "values": [
+                  3e-05,
+                  5e-05,
+                  6.997208e-05,
+                  0.0001,
+                  0.00015
+                ],
+                "ordered": true
+              }
+            }
+          ],
+          "values": {
+            "raw_hidden_projection_dimension": 1024,
+            "token_projection_dimension": 1024,
+            "kv_projection": "direct",
+            "fusion_hidden_units": 0,
+            "learning_rate": 6.997208e-05,
+            "tuner/epochs": 3,
+            "tuner/initial_epoch": 0,
+            "tuner/bracket": 2,
+            "tuner/round": 0
+          }
+        },
+        "metrics": {
+          "metrics": {
+            "loss": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.0946556031703949
+                  ],
+                  "step": 2
+                }
+              ]
+            },
+            "recall_at_6": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.2689594328403473
+                  ],
+                  "step": 2
+                }
+              ]
+            },
+            "val_loss": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.08977994322776794
+                  ],
+                  "step": 2
+                }
+              ]
+            },
+            "val_recall_at_6": {
+              "direction": "max",
+              "observations": [
+                {
+                  "value": [
+                    0.32492271065711975
+                  ],
+                  "step": 2
+                }
+              ]
+            }
+          }
+        },
+        "score": 0.32492271065711975,
+        "best_step": 2,
+        "status": "COMPLETED",
+        "message": null
+      },
+      "epoch_progress_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_progress/0007.jsonl",
+      "timing_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_progress/0007_timing.json",
+      "checkpoint_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_checkpoints/0007/best.weights.h5"
+    },
+    {
+      "trial_id": "0008",
+      "status": "COMPLETED",
+      "score": 0.39501264691352844,
+      "best_step": 2,
+      "hyperparameters": {
+        "raw_hidden_projection_dimension": 64,
+        "token_projection_dimension": 512,
+        "kv_projection": "128",
+        "fusion_hidden_units": 0,
+        "learning_rate": 0.0001,
+        "tuner/epochs": 3,
+        "tuner/initial_epoch": 0,
+        "tuner/bracket": 2,
+        "tuner/round": 0
+      },
+      "state": {
+        "trial_id": "0008",
+        "hyperparameters": {
+          "space": [
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "raw_hidden_projection_dimension",
+                "default": 64,
+                "conditions": [],
+                "values": [
+                  64,
+                  512,
+                  1024
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "token_projection_dimension",
+                "default": 64,
+                "conditions": [],
+                "values": [
+                  64,
+                  512,
+                  1024
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "kv_projection",
+                "default": "direct",
+                "conditions": [],
+                "values": [
+                  "direct",
+                  "64",
+                  "128",
+                  "512"
+                ],
+                "ordered": false
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "fusion_hidden_units",
+                "default": 0,
+                "conditions": [],
+                "values": [
+                  0,
+                  512
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "learning_rate",
+                "default": 3e-05,
+                "conditions": [],
+                "values": [
+                  3e-05,
+                  5e-05,
+                  6.997208e-05,
+                  0.0001,
+                  0.00015
+                ],
+                "ordered": true
+              }
+            }
+          ],
+          "values": {
+            "raw_hidden_projection_dimension": 64,
+            "token_projection_dimension": 512,
+            "kv_projection": "128",
+            "fusion_hidden_units": 0,
+            "learning_rate": 0.0001,
+            "tuner/epochs": 3,
+            "tuner/initial_epoch": 0,
+            "tuner/bracket": 2,
+            "tuner/round": 0
+          }
+        },
+        "metrics": {
+          "metrics": {
+            "loss": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.09124278277158737
+                  ],
+                  "step": 2
+                }
+              ]
+            },
+            "recall_at_6": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.34268081188201904
+                  ],
+                  "step": 2
+                }
+              ]
+            },
+            "val_loss": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.08624286204576492
+                  ],
+                  "step": 2
+                }
+              ]
+            },
+            "val_recall_at_6": {
+              "direction": "max",
+              "observations": [
+                {
+                  "value": [
+                    0.39501264691352844
+                  ],
+                  "step": 2
+                }
+              ]
+            }
+          }
+        },
+        "score": 0.39501264691352844,
+        "best_step": 2,
+        "status": "COMPLETED",
+        "message": null
+      },
+      "epoch_progress_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_progress/0008.jsonl",
+      "timing_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_progress/0008_timing.json",
+      "checkpoint_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_checkpoints/0008/best.weights.h5"
+    },
+    {
+      "trial_id": "0009",
+      "status": "COMPLETED",
+      "score": 0.11435902118682861,
+      "best_step": 2,
+      "hyperparameters": {
+        "raw_hidden_projection_dimension": 64,
+        "token_projection_dimension": 512,
+        "kv_projection": "direct",
+        "fusion_hidden_units": 0,
+        "learning_rate": 3e-05,
+        "tuner/epochs": 3,
+        "tuner/initial_epoch": 0,
+        "tuner/bracket": 2,
+        "tuner/round": 0
+      },
+      "state": {
+        "trial_id": "0009",
+        "hyperparameters": {
+          "space": [
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "raw_hidden_projection_dimension",
+                "default": 64,
+                "conditions": [],
+                "values": [
+                  64,
+                  512,
+                  1024
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "token_projection_dimension",
+                "default": 64,
+                "conditions": [],
+                "values": [
+                  64,
+                  512,
+                  1024
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "kv_projection",
+                "default": "direct",
+                "conditions": [],
+                "values": [
+                  "direct",
+                  "64",
+                  "128",
+                  "512"
+                ],
+                "ordered": false
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "fusion_hidden_units",
+                "default": 0,
+                "conditions": [],
+                "values": [
+                  0,
+                  512
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "learning_rate",
+                "default": 3e-05,
+                "conditions": [],
+                "values": [
+                  3e-05,
+                  5e-05,
+                  6.997208e-05,
+                  0.0001,
+                  0.00015
+                ],
+                "ordered": true
+              }
+            }
+          ],
+          "values": {
+            "raw_hidden_projection_dimension": 64,
+            "token_projection_dimension": 512,
+            "kv_projection": "direct",
+            "fusion_hidden_units": 0,
+            "learning_rate": 3e-05,
+            "tuner/epochs": 3,
+            "tuner/initial_epoch": 0,
+            "tuner/bracket": 2,
+            "tuner/round": 0
+          }
+        },
+        "metrics": {
+          "metrics": {
+            "loss": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.11284761875867844
+                  ],
+                  "step": 2
+                }
+              ]
+            },
+            "recall_at_6": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.0791119784116745
+                  ],
+                  "step": 2
+                }
+              ]
+            },
+            "val_loss": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.10851745307445526
+                  ],
+                  "step": 2
+                }
+              ]
+            },
+            "val_recall_at_6": {
+              "direction": "max",
+              "observations": [
+                {
+                  "value": [
+                    0.11435902118682861
+                  ],
+                  "step": 2
+                }
+              ]
+            }
+          }
+        },
+        "score": 0.11435902118682861,
+        "best_step": 2,
+        "status": "COMPLETED",
+        "message": null
+      },
+      "epoch_progress_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_progress/0009.jsonl",
+      "timing_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_progress/0009_timing.json",
+      "checkpoint_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_checkpoints/0009/best.weights.h5"
+    },
+    {
+      "trial_id": "0010",
+      "status": "COMPLETED",
+      "score": 0.22857356071472168,
+      "best_step": 2,
+      "hyperparameters": {
+        "raw_hidden_projection_dimension": 512,
+        "token_projection_dimension": 1024,
+        "kv_projection": "128",
+        "fusion_hidden_units": 512,
+        "learning_rate": 5e-05,
+        "tuner/epochs": 3,
+        "tuner/initial_epoch": 0,
+        "tuner/bracket": 2,
+        "tuner/round": 0
+      },
+      "state": {
+        "trial_id": "0010",
+        "hyperparameters": {
+          "space": [
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "raw_hidden_projection_dimension",
+                "default": 64,
+                "conditions": [],
+                "values": [
+                  64,
+                  512,
+                  1024
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "token_projection_dimension",
+                "default": 64,
+                "conditions": [],
+                "values": [
+                  64,
+                  512,
+                  1024
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "kv_projection",
+                "default": "direct",
+                "conditions": [],
+                "values": [
+                  "direct",
+                  "64",
+                  "128",
+                  "512"
+                ],
+                "ordered": false
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "fusion_hidden_units",
+                "default": 0,
+                "conditions": [],
+                "values": [
+                  0,
+                  512
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "learning_rate",
+                "default": 3e-05,
+                "conditions": [],
+                "values": [
+                  3e-05,
+                  5e-05,
+                  6.997208e-05,
+                  0.0001,
+                  0.00015
+                ],
+                "ordered": true
+              }
+            }
+          ],
+          "values": {
+            "raw_hidden_projection_dimension": 512,
+            "token_projection_dimension": 1024,
+            "kv_projection": "128",
+            "fusion_hidden_units": 512,
+            "learning_rate": 5e-05,
+            "tuner/epochs": 3,
+            "tuner/initial_epoch": 0,
+            "tuner/bracket": 2,
+            "tuner/round": 0
+          }
+        },
+        "metrics": {
+          "metrics": {
+            "loss": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.10991815477609634
+                  ],
+                  "step": 2
+                }
+              ]
+            },
+            "recall_at_6": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.10294089466333389
+                  ],
+                  "step": 2
+                }
+              ]
+            },
+            "val_loss": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.10069937258958817
+                  ],
+                  "step": 2
+                }
+              ]
+            },
+            "val_recall_at_6": {
+              "direction": "max",
+              "observations": [
+                {
+                  "value": [
+                    0.22857356071472168
+                  ],
+                  "step": 2
+                }
+              ]
+            }
+          }
+        },
+        "score": 0.22857356071472168,
+        "best_step": 2,
+        "status": "COMPLETED",
+        "message": null
+      },
+      "epoch_progress_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_progress/0010.jsonl",
+      "timing_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_progress/0010_timing.json",
+      "checkpoint_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_checkpoints/0010/best.weights.h5"
+    },
+    {
+      "trial_id": "0011",
+      "status": "COMPLETED",
+      "score": 0.36574217677116394,
+      "best_step": 2,
+      "hyperparameters": {
+        "raw_hidden_projection_dimension": 64,
+        "token_projection_dimension": 512,
+        "kv_projection": "64",
+        "fusion_hidden_units": 0,
+        "learning_rate": 6.997208e-05,
+        "tuner/epochs": 3,
+        "tuner/initial_epoch": 0,
+        "tuner/bracket": 2,
+        "tuner/round": 0
+      },
+      "state": {
+        "trial_id": "0011",
+        "hyperparameters": {
+          "space": [
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "raw_hidden_projection_dimension",
+                "default": 64,
+                "conditions": [],
+                "values": [
+                  64,
+                  512,
+                  1024
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "token_projection_dimension",
+                "default": 64,
+                "conditions": [],
+                "values": [
+                  64,
+                  512,
+                  1024
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "kv_projection",
+                "default": "direct",
+                "conditions": [],
+                "values": [
+                  "direct",
+                  "64",
+                  "128",
+                  "512"
+                ],
+                "ordered": false
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "fusion_hidden_units",
+                "default": 0,
+                "conditions": [],
+                "values": [
+                  0,
+                  512
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "learning_rate",
+                "default": 3e-05,
+                "conditions": [],
+                "values": [
+                  3e-05,
+                  5e-05,
+                  6.997208e-05,
+                  0.0001,
+                  0.00015
+                ],
+                "ordered": true
+              }
+            }
+          ],
+          "values": {
+            "raw_hidden_projection_dimension": 64,
+            "token_projection_dimension": 512,
+            "kv_projection": "64",
+            "fusion_hidden_units": 0,
+            "learning_rate": 6.997208e-05,
+            "tuner/epochs": 3,
+            "tuner/initial_epoch": 0,
+            "tuner/bracket": 2,
+            "tuner/round": 0
+          }
+        },
+        "metrics": {
+          "metrics": {
+            "loss": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.09696707129478455
+                  ],
+                  "step": 2
+                }
+              ]
+            },
+            "recall_at_6": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.2812195420265198
+                  ],
+                  "step": 2
+                }
+              ]
+            },
+            "val_loss": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.09156788140535355
+                  ],
+                  "step": 2
+                }
+              ]
+            },
+            "val_recall_at_6": {
+              "direction": "max",
+              "observations": [
+                {
+                  "value": [
+                    0.36574217677116394
+                  ],
+                  "step": 2
+                }
+              ]
+            }
+          }
+        },
+        "score": 0.36574217677116394,
+        "best_step": 2,
+        "status": "COMPLETED",
+        "message": null
+      },
+      "epoch_progress_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_progress/0011.jsonl",
+      "timing_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_progress/0011_timing.json",
+      "checkpoint_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_checkpoints/0011/best.weights.h5"
+    },
+    {
+      "trial_id": "0012",
+      "status": "COMPLETED",
+      "score": 0.46955496072769165,
+      "best_step": 3,
+      "hyperparameters": {
+        "raw_hidden_projection_dimension": 1024,
+        "token_projection_dimension": 512,
+        "kv_projection": "512",
+        "fusion_hidden_units": 0,
+        "learning_rate": 0.00015,
+        "tuner/epochs": 7,
+        "tuner/initial_epoch": 3,
+        "tuner/bracket": 2,
+        "tuner/round": 1,
+        "tuner/trial_id": "0002"
+      },
+      "state": {
+        "trial_id": "0012",
+        "hyperparameters": {
+          "space": [
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "raw_hidden_projection_dimension",
+                "default": 64,
+                "conditions": [],
+                "values": [
+                  64,
+                  512,
+                  1024
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "token_projection_dimension",
+                "default": 64,
+                "conditions": [],
+                "values": [
+                  64,
+                  512,
+                  1024
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "kv_projection",
+                "default": "direct",
+                "conditions": [],
+                "values": [
+                  "direct",
+                  "64",
+                  "128",
+                  "512"
+                ],
+                "ordered": false
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "fusion_hidden_units",
+                "default": 0,
+                "conditions": [],
+                "values": [
+                  0,
+                  512
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "learning_rate",
+                "default": 3e-05,
+                "conditions": [],
+                "values": [
+                  3e-05,
+                  5e-05,
+                  6.997208e-05,
+                  0.0001,
+                  0.00015
+                ],
+                "ordered": true
+              }
+            }
+          ],
+          "values": {
+            "raw_hidden_projection_dimension": 1024,
+            "token_projection_dimension": 512,
+            "kv_projection": "512",
+            "fusion_hidden_units": 0,
+            "learning_rate": 0.00015,
+            "tuner/epochs": 7,
+            "tuner/initial_epoch": 3,
+            "tuner/bracket": 2,
+            "tuner/round": 1,
+            "tuner/trial_id": "0002"
+          }
+        },
+        "metrics": {
+          "metrics": {
+            "loss": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.06849145144224167
+                  ],
+                  "step": 3
+                }
+              ]
+            },
+            "recall_at_6": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.47995123267173767
+                  ],
+                  "step": 3
+                }
+              ]
+            },
+            "val_loss": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.07002873718738556
+                  ],
+                  "step": 3
+                }
+              ]
+            },
+            "val_recall_at_6": {
+              "direction": "max",
+              "observations": [
+                {
+                  "value": [
+                    0.46955496072769165
+                  ],
+                  "step": 3
+                }
+              ]
+            }
+          }
+        },
+        "score": 0.46955496072769165,
+        "best_step": 3,
+        "status": "COMPLETED",
+        "message": null
+      },
+      "epoch_progress_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_progress/0012.jsonl",
+      "timing_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_progress/0012_timing.json",
+      "checkpoint_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_checkpoints/0012/best.weights.h5"
+    },
+    {
+      "trial_id": "0013",
+      "status": "COMPLETED",
+      "score": 0.45912832021713257,
+      "best_step": 3,
+      "hyperparameters": {
+        "raw_hidden_projection_dimension": 512,
+        "token_projection_dimension": 64,
+        "kv_projection": "64",
+        "fusion_hidden_units": 0,
+        "learning_rate": 0.00015,
+        "tuner/epochs": 7,
+        "tuner/initial_epoch": 3,
+        "tuner/bracket": 2,
+        "tuner/round": 1,
+        "tuner/trial_id": "0000"
+      },
+      "state": {
+        "trial_id": "0013",
+        "hyperparameters": {
+          "space": [
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "raw_hidden_projection_dimension",
+                "default": 64,
+                "conditions": [],
+                "values": [
+                  64,
+                  512,
+                  1024
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "token_projection_dimension",
+                "default": 64,
+                "conditions": [],
+                "values": [
+                  64,
+                  512,
+                  1024
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "kv_projection",
+                "default": "direct",
+                "conditions": [],
+                "values": [
+                  "direct",
+                  "64",
+                  "128",
+                  "512"
+                ],
+                "ordered": false
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "fusion_hidden_units",
+                "default": 0,
+                "conditions": [],
+                "values": [
+                  0,
+                  512
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "learning_rate",
+                "default": 3e-05,
+                "conditions": [],
+                "values": [
+                  3e-05,
+                  5e-05,
+                  6.997208e-05,
+                  0.0001,
+                  0.00015
+                ],
+                "ordered": true
+              }
+            }
+          ],
+          "values": {
+            "raw_hidden_projection_dimension": 512,
+            "token_projection_dimension": 64,
+            "kv_projection": "64",
+            "fusion_hidden_units": 0,
+            "learning_rate": 0.00015,
+            "tuner/epochs": 7,
+            "tuner/initial_epoch": 3,
+            "tuner/bracket": 2,
+            "tuner/round": 1,
+            "tuner/trial_id": "0000"
+          }
+        },
+        "metrics": {
+          "metrics": {
+            "loss": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.07204564660787582
+                  ],
+                  "step": 3
+                }
+              ]
+            },
+            "recall_at_6": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.45740920305252075
+                  ],
+                  "step": 3
+                }
+              ]
+            },
+            "val_loss": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.07185082137584686
+                  ],
+                  "step": 3
+                }
+              ]
+            },
+            "val_recall_at_6": {
+              "direction": "max",
+              "observations": [
+                {
+                  "value": [
+                    0.45912832021713257
+                  ],
+                  "step": 3
+                }
+              ]
+            }
+          }
+        },
+        "score": 0.45912832021713257,
+        "best_step": 3,
+        "status": "COMPLETED",
+        "message": null
+      },
+      "epoch_progress_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_progress/0013.jsonl",
+      "timing_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_progress/0013_timing.json",
+      "checkpoint_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_checkpoints/0013/best.weights.h5"
+    },
+    {
+      "trial_id": "0014",
+      "status": "COMPLETED",
+      "score": 0.43176257610321045,
+      "best_step": 3,
+      "hyperparameters": {
+        "raw_hidden_projection_dimension": 64,
+        "token_projection_dimension": 512,
+        "kv_projection": "128",
+        "fusion_hidden_units": 0,
+        "learning_rate": 0.0001,
+        "tuner/epochs": 7,
+        "tuner/initial_epoch": 3,
+        "tuner/bracket": 2,
+        "tuner/round": 1,
+        "tuner/trial_id": "0008"
+      },
+      "state": {
+        "trial_id": "0014",
+        "hyperparameters": {
+          "space": [
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "raw_hidden_projection_dimension",
+                "default": 64,
+                "conditions": [],
+                "values": [
+                  64,
+                  512,
+                  1024
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "token_projection_dimension",
+                "default": 64,
+                "conditions": [],
+                "values": [
+                  64,
+                  512,
+                  1024
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "kv_projection",
+                "default": "direct",
+                "conditions": [],
+                "values": [
+                  "direct",
+                  "64",
+                  "128",
+                  "512"
+                ],
+                "ordered": false
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "fusion_hidden_units",
+                "default": 0,
+                "conditions": [],
+                "values": [
+                  0,
+                  512
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "learning_rate",
+                "default": 3e-05,
+                "conditions": [],
+                "values": [
+                  3e-05,
+                  5e-05,
+                  6.997208e-05,
+                  0.0001,
+                  0.00015
+                ],
+                "ordered": true
+              }
+            }
+          ],
+          "values": {
+            "raw_hidden_projection_dimension": 64,
+            "token_projection_dimension": 512,
+            "kv_projection": "128",
+            "fusion_hidden_units": 0,
+            "learning_rate": 0.0001,
+            "tuner/epochs": 7,
+            "tuner/initial_epoch": 3,
+            "tuner/bracket": 2,
+            "tuner/round": 1,
+            "tuner/trial_id": "0008"
+          }
+        },
+        "metrics": {
+          "metrics": {
+            "loss": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.07872356474399567
+                  ],
+                  "step": 3
+                }
+              ]
+            },
+            "recall_at_6": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.41969117522239685
+                  ],
+                  "step": 3
+                }
+              ]
+            },
+            "val_loss": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.07656591385602951
+                  ],
+                  "step": 3
+                }
+              ]
+            },
+            "val_recall_at_6": {
+              "direction": "max",
+              "observations": [
+                {
+                  "value": [
+                    0.43176257610321045
+                  ],
+                  "step": 3
+                }
+              ]
+            }
+          }
+        },
+        "score": 0.43176257610321045,
+        "best_step": 3,
+        "status": "COMPLETED",
+        "message": null
+      },
+      "epoch_progress_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_progress/0014.jsonl",
+      "timing_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_progress/0014_timing.json",
+      "checkpoint_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_checkpoints/0014/best.weights.h5"
+    },
+    {
+      "trial_id": "0015",
+      "status": "COMPLETED",
+      "score": 0.42174795269966125,
+      "best_step": 3,
+      "hyperparameters": {
+        "raw_hidden_projection_dimension": 64,
+        "token_projection_dimension": 512,
+        "kv_projection": "64",
+        "fusion_hidden_units": 0,
+        "learning_rate": 6.997208e-05,
+        "tuner/epochs": 7,
+        "tuner/initial_epoch": 3,
+        "tuner/bracket": 2,
+        "tuner/round": 1,
+        "tuner/trial_id": "0011"
+      },
+      "state": {
+        "trial_id": "0015",
+        "hyperparameters": {
+          "space": [
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "raw_hidden_projection_dimension",
+                "default": 64,
+                "conditions": [],
+                "values": [
+                  64,
+                  512,
+                  1024
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "token_projection_dimension",
+                "default": 64,
+                "conditions": [],
+                "values": [
+                  64,
+                  512,
+                  1024
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "kv_projection",
+                "default": "direct",
+                "conditions": [],
+                "values": [
+                  "direct",
+                  "64",
+                  "128",
+                  "512"
+                ],
+                "ordered": false
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "fusion_hidden_units",
+                "default": 0,
+                "conditions": [],
+                "values": [
+                  0,
+                  512
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "learning_rate",
+                "default": 3e-05,
+                "conditions": [],
+                "values": [
+                  3e-05,
+                  5e-05,
+                  6.997208e-05,
+                  0.0001,
+                  0.00015
+                ],
+                "ordered": true
+              }
+            }
+          ],
+          "values": {
+            "raw_hidden_projection_dimension": 64,
+            "token_projection_dimension": 512,
+            "kv_projection": "64",
+            "fusion_hidden_units": 0,
+            "learning_rate": 6.997208e-05,
+            "tuner/epochs": 7,
+            "tuner/initial_epoch": 3,
+            "tuner/bracket": 2,
+            "tuner/round": 1,
+            "tuner/trial_id": "0011"
+          }
+        },
+        "metrics": {
+          "metrics": {
+            "loss": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.0816861018538475
+                  ],
+                  "step": 3
+                }
+              ]
+            },
+            "recall_at_6": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.4063701629638672
+                  ],
+                  "step": 3
+                }
+              ]
+            },
+            "val_loss": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.07908295840024948
+                  ],
+                  "step": 3
+                }
+              ]
+            },
+            "val_recall_at_6": {
+              "direction": "max",
+              "observations": [
+                {
+                  "value": [
+                    0.42174795269966125
+                  ],
+                  "step": 3
+                }
+              ]
+            }
+          }
+        },
+        "score": 0.42174795269966125,
+        "best_step": 3,
+        "status": "COMPLETED",
+        "message": null
+      },
+      "epoch_progress_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_progress/0015.jsonl",
+      "timing_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_progress/0015_timing.json",
+      "checkpoint_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_checkpoints/0015/best.weights.h5"
+    },
+    {
+      "trial_id": "0016",
+      "status": "COMPLETED",
+      "score": 0.4853203296661377,
+      "best_step": 10,
+      "hyperparameters": {
+        "raw_hidden_projection_dimension": 1024,
+        "token_projection_dimension": 512,
+        "kv_projection": "512",
+        "fusion_hidden_units": 0,
+        "learning_rate": 0.00015,
+        "tuner/epochs": 20,
+        "tuner/initial_epoch": 7,
+        "tuner/bracket": 2,
+        "tuner/round": 2,
+        "tuner/trial_id": "0012"
+      },
+      "state": {
+        "trial_id": "0016",
+        "hyperparameters": {
+          "space": [
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "raw_hidden_projection_dimension",
+                "default": 64,
+                "conditions": [],
+                "values": [
+                  64,
+                  512,
+                  1024
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "token_projection_dimension",
+                "default": 64,
+                "conditions": [],
+                "values": [
+                  64,
+                  512,
+                  1024
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "kv_projection",
+                "default": "direct",
+                "conditions": [],
+                "values": [
+                  "direct",
+                  "64",
+                  "128",
+                  "512"
+                ],
+                "ordered": false
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "fusion_hidden_units",
+                "default": 0,
+                "conditions": [],
+                "values": [
+                  0,
+                  512
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "learning_rate",
+                "default": 3e-05,
+                "conditions": [],
+                "values": [
+                  3e-05,
+                  5e-05,
+                  6.997208e-05,
+                  0.0001,
+                  0.00015
+                ],
+                "ordered": true
+              }
+            }
+          ],
+          "values": {
+            "raw_hidden_projection_dimension": 1024,
+            "token_projection_dimension": 512,
+            "kv_projection": "512",
+            "fusion_hidden_units": 0,
+            "learning_rate": 0.00015,
+            "tuner/epochs": 20,
+            "tuner/initial_epoch": 7,
+            "tuner/bracket": 2,
+            "tuner/round": 2,
+            "tuner/trial_id": "0012"
+          }
+        },
+        "metrics": {
+          "metrics": {
+            "loss": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.06016533076763153
+                  ],
+                  "step": 10
+                }
+              ]
+            },
+            "recall_at_6": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.5356828570365906
+                  ],
+                  "step": 10
+                }
+              ]
+            },
+            "val_loss": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.06743733584880829
+                  ],
+                  "step": 10
+                }
+              ]
+            },
+            "val_recall_at_6": {
+              "direction": "max",
+              "observations": [
+                {
+                  "value": [
+                    0.4853203296661377
+                  ],
+                  "step": 10
+                }
+              ]
+            }
+          }
+        },
+        "score": 0.4853203296661377,
+        "best_step": 10,
+        "status": "COMPLETED",
+        "message": null
+      },
+      "epoch_progress_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_progress/0016.jsonl",
+      "timing_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_progress/0016_timing.json",
+      "checkpoint_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_checkpoints/0016/best.weights.h5"
+    },
+    {
+      "trial_id": "0017",
+      "status": "COMPLETED",
+      "score": 0.47787922620773315,
+      "best_step": 12,
+      "hyperparameters": {
+        "raw_hidden_projection_dimension": 512,
+        "token_projection_dimension": 64,
+        "kv_projection": "64",
+        "fusion_hidden_units": 0,
+        "learning_rate": 0.00015,
+        "tuner/epochs": 20,
+        "tuner/initial_epoch": 7,
+        "tuner/bracket": 2,
+        "tuner/round": 2,
+        "tuner/trial_id": "0013"
+      },
+      "state": {
+        "trial_id": "0017",
+        "hyperparameters": {
+          "space": [
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "raw_hidden_projection_dimension",
+                "default": 64,
+                "conditions": [],
+                "values": [
+                  64,
+                  512,
+                  1024
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "token_projection_dimension",
+                "default": 64,
+                "conditions": [],
+                "values": [
+                  64,
+                  512,
+                  1024
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "kv_projection",
+                "default": "direct",
+                "conditions": [],
+                "values": [
+                  "direct",
+                  "64",
+                  "128",
+                  "512"
+                ],
+                "ordered": false
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "fusion_hidden_units",
+                "default": 0,
+                "conditions": [],
+                "values": [
+                  0,
+                  512
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "learning_rate",
+                "default": 3e-05,
+                "conditions": [],
+                "values": [
+                  3e-05,
+                  5e-05,
+                  6.997208e-05,
+                  0.0001,
+                  0.00015
+                ],
+                "ordered": true
+              }
+            }
+          ],
+          "values": {
+            "raw_hidden_projection_dimension": 512,
+            "token_projection_dimension": 64,
+            "kv_projection": "64",
+            "fusion_hidden_units": 0,
+            "learning_rate": 0.00015,
+            "tuner/epochs": 20,
+            "tuner/initial_epoch": 7,
+            "tuner/bracket": 2,
+            "tuner/round": 2,
+            "tuner/trial_id": "0013"
+          }
+        },
+        "metrics": {
+          "metrics": {
+            "loss": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.06428536027669907
+                  ],
+                  "step": 12
+                }
+              ]
+            },
+            "recall_at_6": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.5059654712677002
+                  ],
+                  "step": 12
+                }
+              ]
+            },
+            "val_loss": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.06850244104862213
+                  ],
+                  "step": 12
+                }
+              ]
+            },
+            "val_recall_at_6": {
+              "direction": "max",
+              "observations": [
+                {
+                  "value": [
+                    0.47787922620773315
+                  ],
+                  "step": 12
+                }
+              ]
+            }
+          }
+        },
+        "score": 0.47787922620773315,
+        "best_step": 12,
+        "status": "COMPLETED",
+        "message": null
+      },
+      "epoch_progress_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_progress/0017.jsonl",
+      "timing_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_progress/0017_timing.json",
+      "checkpoint_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_checkpoints/0017/best.weights.h5"
+    },
+    {
+      "trial_id": "0018",
+      "status": "COMPLETED",
+      "score": 0.4207146167755127,
+      "best_step": 6,
+      "hyperparameters": {
+        "raw_hidden_projection_dimension": 64,
+        "token_projection_dimension": 1024,
+        "kv_projection": "512",
+        "fusion_hidden_units": 512,
+        "learning_rate": 0.0001,
+        "tuner/epochs": 7,
+        "tuner/initial_epoch": 0,
+        "tuner/bracket": 1,
+        "tuner/round": 0
+      },
+      "state": {
+        "trial_id": "0018",
+        "hyperparameters": {
+          "space": [
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "raw_hidden_projection_dimension",
+                "default": 64,
+                "conditions": [],
+                "values": [
+                  64,
+                  512,
+                  1024
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "token_projection_dimension",
+                "default": 64,
+                "conditions": [],
+                "values": [
+                  64,
+                  512,
+                  1024
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "kv_projection",
+                "default": "direct",
+                "conditions": [],
+                "values": [
+                  "direct",
+                  "64",
+                  "128",
+                  "512"
+                ],
+                "ordered": false
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "fusion_hidden_units",
+                "default": 0,
+                "conditions": [],
+                "values": [
+                  0,
+                  512
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "learning_rate",
+                "default": 3e-05,
+                "conditions": [],
+                "values": [
+                  3e-05,
+                  5e-05,
+                  6.997208e-05,
+                  0.0001,
+                  0.00015
+                ],
+                "ordered": true
+              }
+            }
+          ],
+          "values": {
+            "raw_hidden_projection_dimension": 64,
+            "token_projection_dimension": 1024,
+            "kv_projection": "512",
+            "fusion_hidden_units": 512,
+            "learning_rate": 0.0001,
+            "tuner/epochs": 7,
+            "tuner/initial_epoch": 0,
+            "tuner/bracket": 1,
+            "tuner/round": 0
+          }
+        },
+        "metrics": {
+          "metrics": {
+            "loss": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.08487144112586975
+                  ],
+                  "step": 6
+                }
+              ]
+            },
+            "recall_at_6": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.36913877725601196
+                  ],
+                  "step": 6
+                }
+              ]
+            },
+            "val_loss": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.07874933630228043
+                  ],
+                  "step": 6
+                }
+              ]
+            },
+            "val_recall_at_6": {
+              "direction": "max",
+              "observations": [
+                {
+                  "value": [
+                    0.4207146167755127
+                  ],
+                  "step": 6
+                }
+              ]
+            }
+          }
+        },
+        "score": 0.4207146167755127,
+        "best_step": 6,
+        "status": "COMPLETED",
+        "message": null
+      },
+      "epoch_progress_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_progress/0018.jsonl",
+      "timing_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_progress/0018_timing.json",
+      "checkpoint_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_checkpoints/0018/best.weights.h5"
+    },
+    {
+      "trial_id": "0019",
+      "status": "COMPLETED",
+      "score": 0.42703357338905334,
+      "best_step": 6,
+      "hyperparameters": {
+        "raw_hidden_projection_dimension": 64,
+        "token_projection_dimension": 64,
+        "kv_projection": "64",
+        "fusion_hidden_units": 512,
+        "learning_rate": 0.00015,
+        "tuner/epochs": 7,
+        "tuner/initial_epoch": 0,
+        "tuner/bracket": 1,
+        "tuner/round": 0
+      },
+      "state": {
+        "trial_id": "0019",
+        "hyperparameters": {
+          "space": [
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "raw_hidden_projection_dimension",
+                "default": 64,
+                "conditions": [],
+                "values": [
+                  64,
+                  512,
+                  1024
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "token_projection_dimension",
+                "default": 64,
+                "conditions": [],
+                "values": [
+                  64,
+                  512,
+                  1024
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "kv_projection",
+                "default": "direct",
+                "conditions": [],
+                "values": [
+                  "direct",
+                  "64",
+                  "128",
+                  "512"
+                ],
+                "ordered": false
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "fusion_hidden_units",
+                "default": 0,
+                "conditions": [],
+                "values": [
+                  0,
+                  512
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "learning_rate",
+                "default": 3e-05,
+                "conditions": [],
+                "values": [
+                  3e-05,
+                  5e-05,
+                  6.997208e-05,
+                  0.0001,
+                  0.00015
+                ],
+                "ordered": true
+              }
+            }
+          ],
+          "values": {
+            "raw_hidden_projection_dimension": 64,
+            "token_projection_dimension": 64,
+            "kv_projection": "64",
+            "fusion_hidden_units": 512,
+            "learning_rate": 0.00015,
+            "tuner/epochs": 7,
+            "tuner/initial_epoch": 0,
+            "tuner/bracket": 1,
+            "tuner/round": 0
+          }
+        },
+        "metrics": {
+          "metrics": {
+            "loss": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.08300679177045822
+                  ],
+                  "step": 6
+                }
+              ]
+            },
+            "recall_at_6": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.3847352862358093
+                  ],
+                  "step": 6
+                }
+              ]
+            },
+            "val_loss": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.07709217071533203
+                  ],
+                  "step": 6
+                }
+              ]
+            },
+            "val_recall_at_6": {
+              "direction": "max",
+              "observations": [
+                {
+                  "value": [
+                    0.42703357338905334
+                  ],
+                  "step": 6
+                }
+              ]
+            }
+          }
+        },
+        "score": 0.42703357338905334,
+        "best_step": 6,
+        "status": "COMPLETED",
+        "message": null
+      },
+      "epoch_progress_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_progress/0019.jsonl",
+      "timing_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_progress/0019_timing.json",
+      "checkpoint_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_checkpoints/0019/best.weights.h5"
+    },
+    {
+      "trial_id": "0020",
+      "status": "COMPLETED",
+      "score": 0.44439294934272766,
+      "best_step": 6,
+      "hyperparameters": {
+        "raw_hidden_projection_dimension": 512,
+        "token_projection_dimension": 64,
+        "kv_projection": "direct",
+        "fusion_hidden_units": 512,
+        "learning_rate": 0.00015,
+        "tuner/epochs": 7,
+        "tuner/initial_epoch": 0,
+        "tuner/bracket": 1,
+        "tuner/round": 0
+      },
+      "state": {
+        "trial_id": "0020",
+        "hyperparameters": {
+          "space": [
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "raw_hidden_projection_dimension",
+                "default": 64,
+                "conditions": [],
+                "values": [
+                  64,
+                  512,
+                  1024
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "token_projection_dimension",
+                "default": 64,
+                "conditions": [],
+                "values": [
+                  64,
+                  512,
+                  1024
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "kv_projection",
+                "default": "direct",
+                "conditions": [],
+                "values": [
+                  "direct",
+                  "64",
+                  "128",
+                  "512"
+                ],
+                "ordered": false
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "fusion_hidden_units",
+                "default": 0,
+                "conditions": [],
+                "values": [
+                  0,
+                  512
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "learning_rate",
+                "default": 3e-05,
+                "conditions": [],
+                "values": [
+                  3e-05,
+                  5e-05,
+                  6.997208e-05,
+                  0.0001,
+                  0.00015
+                ],
+                "ordered": true
+              }
+            }
+          ],
+          "values": {
+            "raw_hidden_projection_dimension": 512,
+            "token_projection_dimension": 64,
+            "kv_projection": "direct",
+            "fusion_hidden_units": 512,
+            "learning_rate": 0.00015,
+            "tuner/epochs": 7,
+            "tuner/initial_epoch": 0,
+            "tuner/bracket": 1,
+            "tuner/round": 0
+          }
+        },
+        "metrics": {
+          "metrics": {
+            "loss": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.08037978410720825
+                  ],
+                  "step": 6
+                }
+              ]
+            },
+            "recall_at_6": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.3975079655647278
+                  ],
+                  "step": 6
+                }
+              ]
+            },
+            "val_loss": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.07466153055429459
+                  ],
+                  "step": 6
+                }
+              ]
+            },
+            "val_recall_at_6": {
+              "direction": "max",
+              "observations": [
+                {
+                  "value": [
+                    0.44439294934272766
+                  ],
+                  "step": 6
+                }
+              ]
+            }
+          }
+        },
+        "score": 0.44439294934272766,
+        "best_step": 6,
+        "status": "COMPLETED",
+        "message": null
+      },
+      "epoch_progress_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_progress/0020.jsonl",
+      "timing_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_progress/0020_timing.json",
+      "checkpoint_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_checkpoints/0020/best.weights.h5"
+    },
+    {
+      "trial_id": "0021",
+      "status": "COMPLETED",
+      "score": 0.3374800682067871,
+      "best_step": 6,
+      "hyperparameters": {
+        "raw_hidden_projection_dimension": 64,
+        "token_projection_dimension": 1024,
+        "kv_projection": "512",
+        "fusion_hidden_units": 512,
+        "learning_rate": 3e-05,
+        "tuner/epochs": 7,
+        "tuner/initial_epoch": 0,
+        "tuner/bracket": 1,
+        "tuner/round": 0
+      },
+      "state": {
+        "trial_id": "0021",
+        "hyperparameters": {
+          "space": [
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "raw_hidden_projection_dimension",
+                "default": 64,
+                "conditions": [],
+                "values": [
+                  64,
+                  512,
+                  1024
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "token_projection_dimension",
+                "default": 64,
+                "conditions": [],
+                "values": [
+                  64,
+                  512,
+                  1024
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "kv_projection",
+                "default": "direct",
+                "conditions": [],
+                "values": [
+                  "direct",
+                  "64",
+                  "128",
+                  "512"
+                ],
+                "ordered": false
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "fusion_hidden_units",
+                "default": 0,
+                "conditions": [],
+                "values": [
+                  0,
+                  512
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "learning_rate",
+                "default": 3e-05,
+                "conditions": [],
+                "values": [
+                  3e-05,
+                  5e-05,
+                  6.997208e-05,
+                  0.0001,
+                  0.00015
+                ],
+                "ordered": true
+              }
+            }
+          ],
+          "values": {
+            "raw_hidden_projection_dimension": 64,
+            "token_projection_dimension": 1024,
+            "kv_projection": "512",
+            "fusion_hidden_units": 512,
+            "learning_rate": 3e-05,
+            "tuner/epochs": 7,
+            "tuner/initial_epoch": 0,
+            "tuner/bracket": 1,
+            "tuner/round": 0
+          }
+        },
+        "metrics": {
+          "metrics": {
+            "loss": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.09876643121242523
+                  ],
+                  "step": 6
+                }
+              ]
+            },
+            "recall_at_6": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.23105521500110626
+                  ],
+                  "step": 6
+                }
+              ]
+            },
+            "val_loss": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.09206881374120712
+                  ],
+                  "step": 6
+                }
+              ]
+            },
+            "val_recall_at_6": {
+              "direction": "max",
+              "observations": [
+                {
+                  "value": [
+                    0.3374800682067871
+                  ],
+                  "step": 6
+                }
+              ]
+            }
+          }
+        },
+        "score": 0.3374800682067871,
+        "best_step": 6,
+        "status": "COMPLETED",
+        "message": null
+      },
+      "epoch_progress_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_progress/0021.jsonl",
+      "timing_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_progress/0021_timing.json",
+      "checkpoint_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_checkpoints/0021/best.weights.h5"
+    },
+    {
+      "trial_id": "0022",
+      "status": "COMPLETED",
+      "score": 0.4089871048927307,
+      "best_step": 6,
+      "hyperparameters": {
+        "raw_hidden_projection_dimension": 512,
+        "token_projection_dimension": 64,
+        "kv_projection": "512",
+        "fusion_hidden_units": 512,
+        "learning_rate": 6.997208e-05,
+        "tuner/epochs": 7,
+        "tuner/initial_epoch": 0,
+        "tuner/bracket": 1,
+        "tuner/round": 0
+      },
+      "state": {
+        "trial_id": "0022",
+        "hyperparameters": {
+          "space": [
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "raw_hidden_projection_dimension",
+                "default": 64,
+                "conditions": [],
+                "values": [
+                  64,
+                  512,
+                  1024
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "token_projection_dimension",
+                "default": 64,
+                "conditions": [],
+                "values": [
+                  64,
+                  512,
+                  1024
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "kv_projection",
+                "default": "direct",
+                "conditions": [],
+                "values": [
+                  "direct",
+                  "64",
+                  "128",
+                  "512"
+                ],
+                "ordered": false
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "fusion_hidden_units",
+                "default": 0,
+                "conditions": [],
+                "values": [
+                  0,
+                  512
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "learning_rate",
+                "default": 3e-05,
+                "conditions": [],
+                "values": [
+                  3e-05,
+                  5e-05,
+                  6.997208e-05,
+                  0.0001,
+                  0.00015
+                ],
+                "ordered": true
+              }
+            }
+          ],
+          "values": {
+            "raw_hidden_projection_dimension": 512,
+            "token_projection_dimension": 64,
+            "kv_projection": "512",
+            "fusion_hidden_units": 512,
+            "learning_rate": 6.997208e-05,
+            "tuner/epochs": 7,
+            "tuner/initial_epoch": 0,
+            "tuner/bracket": 1,
+            "tuner/round": 0
+          }
+        },
+        "metrics": {
+          "metrics": {
+            "loss": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.08809749037027359
+                  ],
+                  "step": 6
+                }
+              ]
+            },
+            "recall_at_6": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.339678019285202
+                  ],
+                  "step": 6
+                }
+              ]
+            },
+            "val_loss": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.08130015432834625
+                  ],
+                  "step": 6
+                }
+              ]
+            },
+            "val_recall_at_6": {
+              "direction": "max",
+              "observations": [
+                {
+                  "value": [
+                    0.4089871048927307
+                  ],
+                  "step": 6
+                }
+              ]
+            }
+          }
+        },
+        "score": 0.4089871048927307,
+        "best_step": 6,
+        "status": "COMPLETED",
+        "message": null
+      },
+      "epoch_progress_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_progress/0022.jsonl",
+      "timing_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_progress/0022_timing.json",
+      "checkpoint_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_checkpoints/0022/best.weights.h5"
+    },
+    {
+      "trial_id": "0023",
+      "status": "COMPLETED",
+      "score": 0.4068273603916168,
+      "best_step": 6,
+      "hyperparameters": {
+        "raw_hidden_projection_dimension": 512,
+        "token_projection_dimension": 512,
+        "kv_projection": "64",
+        "fusion_hidden_units": 512,
+        "learning_rate": 6.997208e-05,
+        "tuner/epochs": 7,
+        "tuner/initial_epoch": 0,
+        "tuner/bracket": 1,
+        "tuner/round": 0
+      },
+      "state": {
+        "trial_id": "0023",
+        "hyperparameters": {
+          "space": [
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "raw_hidden_projection_dimension",
+                "default": 64,
+                "conditions": [],
+                "values": [
+                  64,
+                  512,
+                  1024
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "token_projection_dimension",
+                "default": 64,
+                "conditions": [],
+                "values": [
+                  64,
+                  512,
+                  1024
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "kv_projection",
+                "default": "direct",
+                "conditions": [],
+                "values": [
+                  "direct",
+                  "64",
+                  "128",
+                  "512"
+                ],
+                "ordered": false
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "fusion_hidden_units",
+                "default": 0,
+                "conditions": [],
+                "values": [
+                  0,
+                  512
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "learning_rate",
+                "default": 3e-05,
+                "conditions": [],
+                "values": [
+                  3e-05,
+                  5e-05,
+                  6.997208e-05,
+                  0.0001,
+                  0.00015
+                ],
+                "ordered": true
+              }
+            }
+          ],
+          "values": {
+            "raw_hidden_projection_dimension": 512,
+            "token_projection_dimension": 512,
+            "kv_projection": "64",
+            "fusion_hidden_units": 512,
+            "learning_rate": 6.997208e-05,
+            "tuner/epochs": 7,
+            "tuner/initial_epoch": 0,
+            "tuner/bracket": 1,
+            "tuner/round": 0
+          }
+        },
+        "metrics": {
+          "metrics": {
+            "loss": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.0879964753985405
+                  ],
+                  "step": 6
+                }
+              ]
+            },
+            "recall_at_6": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.3427121937274933
+                  ],
+                  "step": 6
+                }
+              ]
+            },
+            "val_loss": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.08151280879974365
+                  ],
+                  "step": 6
+                }
+              ]
+            },
+            "val_recall_at_6": {
+              "direction": "max",
+              "observations": [
+                {
+                  "value": [
+                    0.4068273603916168
+                  ],
+                  "step": 6
+                }
+              ]
+            }
+          }
+        },
+        "score": 0.4068273603916168,
+        "best_step": 6,
+        "status": "COMPLETED",
+        "message": null
+      },
+      "epoch_progress_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_progress/0023.jsonl",
+      "timing_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_progress/0023_timing.json",
+      "checkpoint_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_checkpoints/0023/best.weights.h5"
+    },
+    {
+      "trial_id": "0024",
+      "status": "COMPLETED",
+      "score": 0.49085259437561035,
+      "best_step": 12,
+      "hyperparameters": {
+        "raw_hidden_projection_dimension": 512,
+        "token_projection_dimension": 64,
+        "kv_projection": "direct",
+        "fusion_hidden_units": 512,
+        "learning_rate": 0.00015,
+        "tuner/epochs": 20,
+        "tuner/initial_epoch": 7,
+        "tuner/bracket": 1,
+        "tuner/round": 1,
+        "tuner/trial_id": "0020"
+      },
+      "state": {
+        "trial_id": "0024",
+        "hyperparameters": {
+          "space": [
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "raw_hidden_projection_dimension",
+                "default": 64,
+                "conditions": [],
+                "values": [
+                  64,
+                  512,
+                  1024
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "token_projection_dimension",
+                "default": 64,
+                "conditions": [],
+                "values": [
+                  64,
+                  512,
+                  1024
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "kv_projection",
+                "default": "direct",
+                "conditions": [],
+                "values": [
+                  "direct",
+                  "64",
+                  "128",
+                  "512"
+                ],
+                "ordered": false
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "fusion_hidden_units",
+                "default": 0,
+                "conditions": [],
+                "values": [
+                  0,
+                  512
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "learning_rate",
+                "default": 3e-05,
+                "conditions": [],
+                "values": [
+                  3e-05,
+                  5e-05,
+                  6.997208e-05,
+                  0.0001,
+                  0.00015
+                ],
+                "ordered": true
+              }
+            }
+          ],
+          "values": {
+            "raw_hidden_projection_dimension": 512,
+            "token_projection_dimension": 64,
+            "kv_projection": "direct",
+            "fusion_hidden_units": 512,
+            "learning_rate": 0.00015,
+            "tuner/epochs": 20,
+            "tuner/initial_epoch": 7,
+            "tuner/bracket": 1,
+            "tuner/round": 1,
+            "tuner/trial_id": "0020"
+          }
+        },
+        "metrics": {
+          "metrics": {
+            "loss": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.06910312920808792
+                  ],
+                  "step": 12
+                }
+              ]
+            },
+            "recall_at_6": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.47279414534568787
+                  ],
+                  "step": 12
+                }
+              ]
+            },
+            "val_loss": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.06685248762369156
+                  ],
+                  "step": 12
+                }
+              ]
+            },
+            "val_recall_at_6": {
+              "direction": "max",
+              "observations": [
+                {
+                  "value": [
+                    0.49085259437561035
+                  ],
+                  "step": 12
+                }
+              ]
+            }
+          }
+        },
+        "score": 0.49085259437561035,
+        "best_step": 12,
+        "status": "COMPLETED",
+        "message": null
+      },
+      "epoch_progress_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_progress/0024.jsonl",
+      "timing_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_progress/0024_timing.json",
+      "checkpoint_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_checkpoints/0024/best.weights.h5"
+    },
+    {
+      "trial_id": "0025",
+      "status": "COMPLETED",
+      "score": 0.468496710062027,
+      "best_step": 12,
+      "hyperparameters": {
+        "raw_hidden_projection_dimension": 64,
+        "token_projection_dimension": 64,
+        "kv_projection": "64",
+        "fusion_hidden_units": 512,
+        "learning_rate": 0.00015,
+        "tuner/epochs": 20,
+        "tuner/initial_epoch": 7,
+        "tuner/bracket": 1,
+        "tuner/round": 1,
+        "tuner/trial_id": "0019"
+      },
+      "state": {
+        "trial_id": "0025",
+        "hyperparameters": {
+          "space": [
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "raw_hidden_projection_dimension",
+                "default": 64,
+                "conditions": [],
+                "values": [
+                  64,
+                  512,
+                  1024
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "token_projection_dimension",
+                "default": 64,
+                "conditions": [],
+                "values": [
+                  64,
+                  512,
+                  1024
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "kv_projection",
+                "default": "direct",
+                "conditions": [],
+                "values": [
+                  "direct",
+                  "64",
+                  "128",
+                  "512"
+                ],
+                "ordered": false
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "fusion_hidden_units",
+                "default": 0,
+                "conditions": [],
+                "values": [
+                  0,
+                  512
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "learning_rate",
+                "default": 3e-05,
+                "conditions": [],
+                "values": [
+                  3e-05,
+                  5e-05,
+                  6.997208e-05,
+                  0.0001,
+                  0.00015
+                ],
+                "ordered": true
+              }
+            }
+          ],
+          "values": {
+            "raw_hidden_projection_dimension": 64,
+            "token_projection_dimension": 64,
+            "kv_projection": "64",
+            "fusion_hidden_units": 512,
+            "learning_rate": 0.00015,
+            "tuner/epochs": 20,
+            "tuner/initial_epoch": 7,
+            "tuner/bracket": 1,
+            "tuner/round": 1,
+            "tuner/trial_id": "0019"
+          }
+        },
+        "metrics": {
+          "metrics": {
+            "loss": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.07366690784692764
+                  ],
+                  "step": 12
+                }
+              ]
+            },
+            "recall_at_6": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.44087085127830505
+                  ],
+                  "step": 12
+                }
+              ]
+            },
+            "val_loss": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.06977362185716629
+                  ],
+                  "step": 12
+                }
+              ]
+            },
+            "val_recall_at_6": {
+              "direction": "max",
+              "observations": [
+                {
+                  "value": [
+                    0.468496710062027
+                  ],
+                  "step": 12
+                }
+              ]
+            }
+          }
+        },
+        "score": 0.468496710062027,
+        "best_step": 12,
+        "status": "COMPLETED",
+        "message": null
+      },
+      "epoch_progress_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_progress/0025.jsonl",
+      "timing_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_progress/0025_timing.json",
+      "checkpoint_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_checkpoints/0025/best.weights.h5"
+    },
+    {
+      "trial_id": "0026",
+      "status": "COMPLETED",
+      "score": 0.44895419478416443,
+      "best_step": 19,
+      "hyperparameters": {
+        "raw_hidden_projection_dimension": 64,
+        "token_projection_dimension": 64,
+        "kv_projection": "direct",
+        "fusion_hidden_units": 512,
+        "learning_rate": 6.997208e-05,
+        "tuner/epochs": 20,
+        "tuner/initial_epoch": 0,
+        "tuner/bracket": 0,
+        "tuner/round": 0
+      },
+      "state": {
+        "trial_id": "0026",
+        "hyperparameters": {
+          "space": [
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "raw_hidden_projection_dimension",
+                "default": 64,
+                "conditions": [],
+                "values": [
+                  64,
+                  512,
+                  1024
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "token_projection_dimension",
+                "default": 64,
+                "conditions": [],
+                "values": [
+                  64,
+                  512,
+                  1024
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "kv_projection",
+                "default": "direct",
+                "conditions": [],
+                "values": [
+                  "direct",
+                  "64",
+                  "128",
+                  "512"
+                ],
+                "ordered": false
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "fusion_hidden_units",
+                "default": 0,
+                "conditions": [],
+                "values": [
+                  0,
+                  512
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "learning_rate",
+                "default": 3e-05,
+                "conditions": [],
+                "values": [
+                  3e-05,
+                  5e-05,
+                  6.997208e-05,
+                  0.0001,
+                  0.00015
+                ],
+                "ordered": true
+              }
+            }
+          ],
+          "values": {
+            "raw_hidden_projection_dimension": 64,
+            "token_projection_dimension": 64,
+            "kv_projection": "direct",
+            "fusion_hidden_units": 512,
+            "learning_rate": 6.997208e-05,
+            "tuner/epochs": 20,
+            "tuner/initial_epoch": 0,
+            "tuner/bracket": 0,
+            "tuner/round": 0
+          }
+        },
+        "metrics": {
+          "metrics": {
+            "loss": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.0778392106294632
+                  ],
+                  "step": 19
+                }
+              ]
+            },
+            "recall_at_6": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.4136987328529358
+                  ],
+                  "step": 19
+                }
+              ]
+            },
+            "val_loss": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.07294311374425888
+                  ],
+                  "step": 19
+                }
+              ]
+            },
+            "val_recall_at_6": {
+              "direction": "max",
+              "observations": [
+                {
+                  "value": [
+                    0.44895419478416443
+                  ],
+                  "step": 19
+                }
+              ]
+            }
+          }
+        },
+        "score": 0.44895419478416443,
+        "best_step": 19,
+        "status": "COMPLETED",
+        "message": null
+      },
+      "epoch_progress_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_progress/0026.jsonl",
+      "timing_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_progress/0026_timing.json",
+      "checkpoint_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_checkpoints/0026/best.weights.h5"
+    },
+    {
+      "trial_id": "0027",
+      "status": "COMPLETED",
+      "score": 0.43126586079597473,
+      "best_step": 19,
+      "hyperparameters": {
+        "raw_hidden_projection_dimension": 512,
+        "token_projection_dimension": 1024,
+        "kv_projection": "64",
+        "fusion_hidden_units": 512,
+        "learning_rate": 3e-05,
+        "tuner/epochs": 20,
+        "tuner/initial_epoch": 0,
+        "tuner/bracket": 0,
+        "tuner/round": 0
+      },
+      "state": {
+        "trial_id": "0027",
+        "hyperparameters": {
+          "space": [
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "raw_hidden_projection_dimension",
+                "default": 64,
+                "conditions": [],
+                "values": [
+                  64,
+                  512,
+                  1024
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "token_projection_dimension",
+                "default": 64,
+                "conditions": [],
+                "values": [
+                  64,
+                  512,
+                  1024
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "kv_projection",
+                "default": "direct",
+                "conditions": [],
+                "values": [
+                  "direct",
+                  "64",
+                  "128",
+                  "512"
+                ],
+                "ordered": false
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "fusion_hidden_units",
+                "default": 0,
+                "conditions": [],
+                "values": [
+                  0,
+                  512
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "learning_rate",
+                "default": 3e-05,
+                "conditions": [],
+                "values": [
+                  3e-05,
+                  5e-05,
+                  6.997208e-05,
+                  0.0001,
+                  0.00015
+                ],
+                "ordered": true
+              }
+            }
+          ],
+          "values": {
+            "raw_hidden_projection_dimension": 512,
+            "token_projection_dimension": 1024,
+            "kv_projection": "64",
+            "fusion_hidden_units": 512,
+            "learning_rate": 3e-05,
+            "tuner/epochs": 20,
+            "tuner/initial_epoch": 0,
+            "tuner/bracket": 0,
+            "tuner/round": 0
+          }
+        },
+        "metrics": {
+          "metrics": {
+            "loss": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.08182346820831299
+                  ],
+                  "step": 19
+                }
+              ]
+            },
+            "recall_at_6": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.3884497284889221
+                  ],
+                  "step": 19
+                }
+              ]
+            },
+            "val_loss": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.07693421095609665
+                  ],
+                  "step": 19
+                }
+              ]
+            },
+            "val_recall_at_6": {
+              "direction": "max",
+              "observations": [
+                {
+                  "value": [
+                    0.43126586079597473
+                  ],
+                  "step": 19
+                }
+              ]
+            }
+          }
+        },
+        "score": 0.43126586079597473,
+        "best_step": 19,
+        "status": "COMPLETED",
+        "message": null
+      },
+      "epoch_progress_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_progress/0027.jsonl",
+      "timing_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_progress/0027_timing.json",
+      "checkpoint_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_checkpoints/0027/best.weights.h5"
+    },
+    {
+      "trial_id": "0028",
+      "status": "COMPLETED",
+      "score": 0.4791150987148285,
+      "best_step": 19,
+      "hyperparameters": {
+        "raw_hidden_projection_dimension": 512,
+        "token_projection_dimension": 512,
+        "kv_projection": "direct",
+        "fusion_hidden_units": 512,
+        "learning_rate": 0.0001,
+        "tuner/epochs": 20,
+        "tuner/initial_epoch": 0,
+        "tuner/bracket": 0,
+        "tuner/round": 0
+      },
+      "state": {
+        "trial_id": "0028",
+        "hyperparameters": {
+          "space": [
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "raw_hidden_projection_dimension",
+                "default": 64,
+                "conditions": [],
+                "values": [
+                  64,
+                  512,
+                  1024
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "token_projection_dimension",
+                "default": 64,
+                "conditions": [],
+                "values": [
+                  64,
+                  512,
+                  1024
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "kv_projection",
+                "default": "direct",
+                "conditions": [],
+                "values": [
+                  "direct",
+                  "64",
+                  "128",
+                  "512"
+                ],
+                "ordered": false
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "fusion_hidden_units",
+                "default": 0,
+                "conditions": [],
+                "values": [
+                  0,
+                  512
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "learning_rate",
+                "default": 3e-05,
+                "conditions": [],
+                "values": [
+                  3e-05,
+                  5e-05,
+                  6.997208e-05,
+                  0.0001,
+                  0.00015
+                ],
+                "ordered": true
+              }
+            }
+          ],
+          "values": {
+            "raw_hidden_projection_dimension": 512,
+            "token_projection_dimension": 512,
+            "kv_projection": "direct",
+            "fusion_hidden_units": 512,
+            "learning_rate": 0.0001,
+            "tuner/epochs": 20,
+            "tuner/initial_epoch": 0,
+            "tuner/bracket": 0,
+            "tuner/round": 0
+          }
+        },
+        "metrics": {
+          "metrics": {
+            "loss": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.07170175760984421
+                  ],
+                  "step": 19
+                }
+              ]
+            },
+            "recall_at_6": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.45564886927604675
+                  ],
+                  "step": 19
+                }
+              ]
+            },
+            "val_loss": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.06862599402666092
+                  ],
+                  "step": 19
+                }
+              ]
+            },
+            "val_recall_at_6": {
+              "direction": "max",
+              "observations": [
+                {
+                  "value": [
+                    0.4791150987148285
+                  ],
+                  "step": 19
+                }
+              ]
+            }
+          }
+        },
+        "score": 0.4791150987148285,
+        "best_step": 19,
+        "status": "COMPLETED",
+        "message": null
+      },
+      "epoch_progress_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_progress/0028.jsonl",
+      "timing_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_progress/0028_timing.json",
+      "checkpoint_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_checkpoints/0028/best.weights.h5"
+    },
+    {
+      "trial_id": "0029",
+      "status": "COMPLETED",
+      "score": 0.4748106002807617,
+      "best_step": 19,
+      "hyperparameters": {
+        "raw_hidden_projection_dimension": 1024,
+        "token_projection_dimension": 1024,
+        "kv_projection": "direct",
+        "fusion_hidden_units": 512,
+        "learning_rate": 6.997208e-05,
+        "tuner/epochs": 20,
+        "tuner/initial_epoch": 0,
+        "tuner/bracket": 0,
+        "tuner/round": 0
+      },
+      "state": {
+        "trial_id": "0029",
+        "hyperparameters": {
+          "space": [
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "raw_hidden_projection_dimension",
+                "default": 64,
+                "conditions": [],
+                "values": [
+                  64,
+                  512,
+                  1024
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "token_projection_dimension",
+                "default": 64,
+                "conditions": [],
+                "values": [
+                  64,
+                  512,
+                  1024
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "kv_projection",
+                "default": "direct",
+                "conditions": [],
+                "values": [
+                  "direct",
+                  "64",
+                  "128",
+                  "512"
+                ],
+                "ordered": false
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "fusion_hidden_units",
+                "default": 0,
+                "conditions": [],
+                "values": [
+                  0,
+                  512
+                ],
+                "ordered": true
+              }
+            },
+            {
+              "class_name": "Choice",
+              "config": {
+                "name": "learning_rate",
+                "default": 3e-05,
+                "conditions": [],
+                "values": [
+                  3e-05,
+                  5e-05,
+                  6.997208e-05,
+                  0.0001,
+                  0.00015
+                ],
+                "ordered": true
+              }
+            }
+          ],
+          "values": {
+            "raw_hidden_projection_dimension": 1024,
+            "token_projection_dimension": 1024,
+            "kv_projection": "direct",
+            "fusion_hidden_units": 512,
+            "learning_rate": 6.997208e-05,
+            "tuner/epochs": 20,
+            "tuner/initial_epoch": 0,
+            "tuner/bracket": 0,
+            "tuner/round": 0
+          }
+        },
+        "metrics": {
+          "metrics": {
+            "loss": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.07228799164295197
+                  ],
+                  "step": 19
+                }
+              ]
+            },
+            "recall_at_6": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.4519250690937042
+                  ],
+                  "step": 19
+                }
+              ]
+            },
+            "val_loss": {
+              "direction": "min",
+              "observations": [
+                {
+                  "value": [
+                    0.06953238695859909
+                  ],
+                  "step": 19
+                }
+              ]
+            },
+            "val_recall_at_6": {
+              "direction": "max",
+              "observations": [
+                {
+                  "value": [
+                    0.4748106002807617
+                  ],
+                  "step": 19
+                }
+              ]
+            }
+          }
+        },
+        "score": 0.4748106002807617,
+        "best_step": 19,
+        "status": "COMPLETED",
+        "message": null
+      },
+      "epoch_progress_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_progress/0029.jsonl",
+      "timing_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_progress/0029_timing.json",
+      "checkpoint_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_checkpoints/0029/best.weights.h5"
+    }
+  ]
+}

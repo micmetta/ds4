@@ -1,0 +1,22 @@
+40,5 MiB rappresentano già i pesi gate + up + down di sei expert selezionati in un singolo layer,
+non di un solo expert.
+
+Quindi:
+
+1 expert ≈ 40,5 MiB / 6 = 6,75 MiB
+
+Se volessimo caricare in RAM tutti i 256 expert di tutti i 43 layer:
+
+6,75 MiB × 256 expert × 43 layer
+= 74.304 MiB
+≈ 72,6 GiB
+
+Quindi servirebbero circa 72,6 GiB solo per i pesi MoE, più RAM per il resto del modello, buffer, sistema operativo e DS4.
+
+Se invece intendi caricare anticipatamente soltanto i sei expert scelti per ogni layer del prossimo token, allora sarebbe:
+
+40,5 MiB × 43 layer
+= 1.741,5 MiB
+≈ 1,7 GiB
+
+Ed è proprio perché il secondo caso è molto più realistico che stiamo studiando il prefetch mirato.
