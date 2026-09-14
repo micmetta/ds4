@@ -1,0 +1,237 @@
+#!/usr/bin/env python3
+"""Train the FFN with state, int8 hidden, token embedding and direct 512D KV."""
+
+from __future__ import annotations
+
+import argparse
+import math
+import time
+from pathlib import Path
+
+import numpy as np
+
+from ffn_utils import (
+    RANDOM_STATE,
+    build_raw_hidden_token_embedding_kv_ffn,
+    calculate_recall_at_6,
+    load_materialized_kv_inputs,
+    load_quantized_hidden_inputs,
+    load_split,
+    load_token_inputs,
+    make_quantized_hidden_token_embedding_kv_dataset,
+    parse_hidden_layers,
+    require_new_output_directory,
+    require_tensorflow,
+    save_json,
+)
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Addestra la FFN con state, hidden int8, embedding token e KV 512D diretto."
+    )
+    parser.add_argument("--state-data-dir", type=Path, required=True)
+    parser.add_argument("--quantized-hidden-data-dir", type=Path, required=True)
+    parser.add_argument("--kv-data-dir", type=Path, required=True)
+    parser.add_argument("--token-data-dir", type=Path, required=True)
+    parser.add_argument("--token-embedding-dir", type=Path, required=True)
+    parser.add_argument("--output-dir", type=Path, required=True)
+    parser.add_argument("--hidden-layers", default="512")
+    parser.add_argument("--activation", default="relu")
+    parser.add_argument("--dropout", type=float, default=0.3)
+    parser.add_argument("--learning-rate", type=float, default=0.00006997208)
+    parser.add_argument("--l2-regularization", type=float, default=0.0)
+    parser.add_argument("--hidden-projection-dimension", type=int, default=64)
+    parser.add_argument("--token-projection-dimension", type=int, default=64)
+    parser.add_argument("--batch-size", type=int, default=4096)
+    parser.add_argument("--shuffle-block-size", type=int, default=65536)
+    parser.add_argument(
+        "--mixed-precision",
+        action="store_true",
+        help="Usa la policy TensorFlow mixed_float16 per i calcoli compatibili con GPU.",
+    )
+    parser.add_argument("--epochs", type=int, default=1000)
+    parser.add_argument("--early-stopping-patience", type=int, default=5)
+    parser.add_argument(
+        "--profile-only-batches",
+        type=int,
+        default=0,
+        help="Esegue solo questo numero di batch train reali e salva un trace TensorBoard.",
+    )
+    parser.add_argument(
+        "--profile-warmup-batches",
+        type=int,
+        default=3,
+        help="Batch non profilati per inizializzare TensorFlow prima del trace.",
+    )
+    args = parser.parse_args()
+    require_new_output_directory(args.output_dir)
+    if (min(args.batch_size, args.epochs, args.hidden_projection_dimension,
+            args.token_projection_dimension) < 1
+            or args.shuffle_block_size < args.batch_size
+            or args.early_stopping_patience < 0
+            or args.profile_only_batches < 0
+            or args.profile_warmup_batches < 0):
+        raise ValueError("Batch, epoch, patience o dimensioni di proiezione non validi.")
+    embeddings_path = args.token_embedding_dir / "token_embeddings_f16.npy"
+    if not embeddings_path.is_file():
+        raise FileNotFoundError(f"Embedding token non trovati: {embeddings_path}")
+
+    tf = require_tensorflow()
+    compute_policy = "mixed_float16" if args.mixed_precision else "float32"
+    tf.keras.mixed_precision.set_global_policy(compute_policy)
+    tf.keras.utils.set_random_seed(RANDOM_STATE)
+    print("1) Carico state, hidden int8, token e KV 512D normalizzati...")
+    x_train, y_train = load_split(args.state_data_dir, "train")
+    x_validation, y_validation = load_split(args.state_data_dir, "validation")
+    train_token_indices, train_positions = load_token_inputs(args.token_data_dir, "train", x_train.shape[0])
+    validation_token_indices, validation_positions = load_token_inputs(
+        args.token_data_dir, "validation", x_validation.shape[0]
+    )
+    train_hidden, train_scale = load_quantized_hidden_inputs(
+        args.quantized_hidden_data_dir, "train", x_train.shape[0]
+    )
+    validation_hidden, validation_scale = load_quantized_hidden_inputs(
+        args.quantized_hidden_data_dir, "validation", x_validation.shape[0]
+    )
+    if train_scale != validation_scale:
+        raise ValueError("Train e validation usano scale di dequantizzazione diverse.")
+    train_kv = load_materialized_kv_inputs(args.kv_data_dir, "train", x_train.shape[0])
+    validation_kv = load_materialized_kv_inputs(args.kv_data_dir, "validation", x_validation.shape[0])
+    frozen_embeddings = np.load(embeddings_path, mmap_mode="r")
+    print(f"   train state: X={x_train.shape}, y={y_train.shape}; hidden={train_hidden.shape} int8; KV={train_kv.shape} float16")
+    print(f"   validation state: X={x_validation.shape}, y={y_validation.shape}; KV={validation_kv.shape}; scale={train_scale:.6g}")
+
+    print(
+        "2) Creo la FFN multi-input con KV 512D diretto "
+        f"(senza PCA o proiezione KV; policy={compute_policy})..."
+    )
+    model = build_raw_hidden_token_embedding_kv_ffn(
+        x_train.shape[1], frozen_embeddings, parse_hidden_layers(args.hidden_layers),
+        args.activation, args.dropout, args.learning_rate, args.l2_regularization, tf,
+        args.hidden_projection_dimension, args.token_projection_dimension,
+        raw_hidden_dequantization_scale=train_scale,
+    )
+    model.summary()
+    train_steps = math.ceil(x_train.shape[0] / args.batch_size)
+    validation_steps = math.ceil(x_validation.shape[0] / args.batch_size)
+    train_dataset = make_quantized_hidden_token_embedding_kv_dataset(
+        x_train, y_train, train_token_indices, train_positions, train_hidden, train_kv,
+        args.batch_size, True, tf, args.shuffle_block_size,
+    ).repeat()
+    if args.profile_only_batches:
+        profile_dir = args.output_dir / "tensorboard_profile"
+        args.output_dir.mkdir(parents=True)
+        iterator = iter(train_dataset)
+        print(
+            f"3) Profilo {args.profile_only_batches} batch train reali "
+            f"dopo {args.profile_warmup_batches} batch di warm-up..."
+        )
+        for _ in range(args.profile_warmup_batches):
+            batch_inputs, batch_labels = next(iterator)
+            model.train_on_batch(batch_inputs, batch_labels)
+        options = tf.profiler.experimental.ProfilerOptions(
+            host_tracer_level=2,
+            python_tracer_level=1,
+            device_tracer_level=1,
+        )
+        durations: list[float] = []
+        tf.profiler.experimental.start(str(profile_dir), options=options)
+        try:
+            for _ in range(args.profile_only_batches):
+                started_at = time.perf_counter()
+                batch_inputs, batch_labels = next(iterator)
+                model.train_on_batch(batch_inputs, batch_labels)
+                durations.append(time.perf_counter() - started_at)
+        finally:
+            tf.profiler.experimental.stop()
+        save_json(args.output_dir / "reports" / "profile_report.json", {
+            "experiment": "quantized_raw_hidden_token_embedding_direct_kv_ffn_profile",
+            "tensorflow_compute_policy": compute_policy,
+            "profile_only_batches": args.profile_only_batches,
+            "profile_warmup_batches": args.profile_warmup_batches,
+            "batch_size": args.batch_size,
+            "shuffle_block_size": args.shuffle_block_size,
+            "tensorboard_profile_dir": str(profile_dir),
+            "end_to_end_batch_seconds": {
+                "mean": float(np.mean(durations)),
+                "median": float(np.median(durations)),
+                "min": float(np.min(durations)),
+                "max": float(np.max(durations)),
+            },
+        })
+        print("\nProfiling completato senza eseguire validation/test o salvare un modello.")
+        print(f"Trace TensorBoard: {profile_dir}")
+        print(f"Tempo medio end-to-end per batch: {np.mean(durations):.3f}s")
+        return
+    validation_dataset = make_quantized_hidden_token_embedding_kv_dataset(
+        x_validation, y_validation, validation_token_indices, validation_positions,
+        validation_hidden, validation_kv, args.batch_size, False, tf, args.shuffle_block_size,
+    )
+    callbacks = [tf.keras.callbacks.EarlyStopping(
+        monitor="val_recall_at_6", mode="max",
+        patience=args.early_stopping_patience, restore_best_weights=True,
+    )]
+    print(f"3) Addestro con hidden int8, KV 512D e macro-block shuffle ({args.shuffle_block_size} esempi)...")
+    started_at = time.perf_counter()
+    history = model.fit(
+        train_dataset,
+        steps_per_epoch=train_steps,
+        validation_data=validation_dataset.repeat(),
+        validation_steps=validation_steps,
+        epochs=args.epochs,
+        callbacks=callbacks,
+        shuffle=False,
+        verbose=2,
+    )
+    elapsed_seconds = time.perf_counter() - started_at
+
+    print("4) Calcolo Recall@6 finale sul validation set...")
+    scores = model.predict(validation_dataset.repeat(), steps=validation_steps, verbose=0)
+    validation_recall = calculate_recall_at_6(scores, y_validation)
+    print(f"   validation Recall@6: {validation_recall:.4f}")
+    models_dir, reports_dir = args.output_dir / "models", args.output_dir / "reports"
+    models_dir.mkdir(parents=True)
+    model_path = models_dir / "ffn.keras"
+    model.save(model_path)
+    save_json(reports_dir / "training_report.json", {
+        "experiment": "quantized_raw_hidden_token_embedding_direct_kv_ffn_training",
+        "state_data_dir": str(args.state_data_dir),
+        "quantized_hidden_data_dir": str(args.quantized_hidden_data_dir),
+        "kv_data_dir": str(args.kv_data_dir),
+        "token_data_dir": str(args.token_data_dir),
+        "token_embedding_dir": str(args.token_embedding_dir),
+        "model_path": str(model_path),
+        "state_input_features": x_train.shape[1],
+        "hidden_storage": "contiguous normalized symmetric int8",
+        "hidden_dequantization_scale": train_scale,
+        "raw_hidden_compute_policy": "int8 input; dequantization and projection in mixed_float16",
+        "kv_compute_policy": "contiguous train-normalized float16 input; direct 512D concatenation; no PCA and no KV projection",
+        "tensorflow_compute_policy": compute_policy,
+        "projection_dimensions": {
+            "raw_hidden": args.hidden_projection_dimension,
+            "token_embedding": args.token_projection_dimension,
+            "kv_current": None,
+        },
+        "hyperparameters": {
+            "hidden_layers": parse_hidden_layers(args.hidden_layers),
+            "activation": args.activation,
+            "dropout": args.dropout,
+            "learning_rate": args.learning_rate,
+            "l2_regularization": args.l2_regularization,
+            "batch_size": args.batch_size,
+            "shuffle_block_size": args.shuffle_block_size,
+            "epochs_requested": args.epochs,
+            "early_stopping_patience": args.early_stopping_patience,
+        },
+        "epochs_completed": len(history.history["loss"]),
+        "validation_recall_at_6": validation_recall,
+        "elapsed_seconds": elapsed_seconds,
+        "history": history.history,
+    })
+    print("\nTraining FFN hidden int8 + token embedding + KV diretto completato.")
+    print(f"Modello: {model_path}")
+
+
+if __name__ == "__main__":
+    main()

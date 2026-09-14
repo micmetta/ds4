@@ -1,0 +1,14 @@
+[project]
+name = "ml-pipeline"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+    "gguf>=0.19.0",
+    "keras-tuner>=1.4.8",
+    "numpy>=2.4.6",
+    "pandas>=3.0.5",
+    "pyarrow>=25.0.1",
+    "scikit-learn>=1.9.0",
+    "tensorboard>=2.21.0",
+    "tensorflow[and-cuda]>=2.20.0",
+]
