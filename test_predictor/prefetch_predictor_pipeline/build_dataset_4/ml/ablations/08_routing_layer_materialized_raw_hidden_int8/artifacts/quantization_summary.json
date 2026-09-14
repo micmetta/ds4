@@ -1,0 +1,33 @@
+{
+  "experiment": "symmetric_int8_normalized_raw_hidden",
+  "source_float16_dir": "test_predictor/prefetch_predictor_pipeline/build_dataset_4/ml/ablations/07_routing_layer_materialized_raw_hidden_f16",
+  "calibration_split": "train",
+  "calibration_sample_rows": 4096,
+  "calibration_percentile": 99.99,
+  "clipping_limit": 3.875,
+  "dequantization_scale": 0.03051181102362205,
+  "formula": "q=clip(round(h/scale),-127,127); h_approx=q*scale",
+  "splits": {
+    "train": {
+      "examples": 1653000,
+      "path": "test_predictor/prefetch_predictor_pipeline/build_dataset_4/ml/ablations/08_routing_layer_materialized_raw_hidden_int8/arrays/raw_hidden_normalized_int8_train.npy",
+      "saturated_values": 735850,
+      "saturation_fraction": 0.00010868171742664852,
+      "reconstruction_rmse": 0.009489445361727347
+    },
+    "validation": {
+      "examples": 200520,
+      "path": "test_predictor/prefetch_predictor_pipeline/build_dataset_4/ml/ablations/08_routing_layer_materialized_raw_hidden_int8/arrays/raw_hidden_normalized_int8_validation.npy",
+      "saturated_values": 86991,
+      "saturation_fraction": 0.00010591480704854877,
+      "reconstruction_rmse": 0.009471686901831028
+    },
+    "test": {
+      "examples": 209200,
+      "path": "test_predictor/prefetch_predictor_pipeline/build_dataset_4/ml/ablations/08_routing_layer_materialized_raw_hidden_int8/arrays/raw_hidden_normalized_int8_test.npy",
+      "saturated_values": 96198,
+      "saturation_fraction": 0.00011226500881333652,
+      "reconstruction_rmse": 0.009522433366633429
+    }
+  }
+}

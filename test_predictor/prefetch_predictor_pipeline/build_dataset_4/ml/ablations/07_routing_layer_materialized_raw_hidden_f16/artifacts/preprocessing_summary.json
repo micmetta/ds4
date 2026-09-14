@@ -1,0 +1,23 @@
+{
+  "experiment": "materialized_normalized_raw_hidden_inputs",
+  "source_raw_hidden_input_dir": "test_predictor/prefetch_predictor_pipeline/build_dataset_4/ml/ablations/06_routing_layer_router_state_raw_hidden_token_embedding",
+  "storage_dtype": "float16",
+  "shape_per_example": [
+    4096
+  ],
+  "normalization": "already fit train-only per layer by source 06",
+  "splits": {
+    "train": {
+      "examples": 1653000,
+      "path": "test_predictor/prefetch_predictor_pipeline/build_dataset_4/ml/ablations/07_routing_layer_materialized_raw_hidden_f16/arrays/raw_hidden_normalized_train.npy"
+    },
+    "validation": {
+      "examples": 200520,
+      "path": "test_predictor/prefetch_predictor_pipeline/build_dataset_4/ml/ablations/07_routing_layer_materialized_raw_hidden_f16/arrays/raw_hidden_normalized_validation.npy"
+    },
+    "test": {
+      "examples": 209200,
+      "path": "test_predictor/prefetch_predictor_pipeline/build_dataset_4/ml/ablations/07_routing_layer_materialized_raw_hidden_f16/arrays/raw_hidden_normalized_test.npy"
+    }
+  }
+}

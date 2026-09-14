@@ -1,0 +1,23 @@
+{
+  "experiment": "token_embedding_ffn_inputs",
+  "training_parquet": "test_predictor/prefetch_predictor_pipeline/build_dataset_4/ml/training/prefetch_training.parquet",
+  "state_arrays_dir": "test_predictor/prefetch_predictor_pipeline/build_dataset_4/ml/ablations/04_routing_layer_router_state_hidden_pca64/arrays",
+  "token_embedding_dir": "test_predictor/prefetch_predictor_pipeline/build_dataset_4/ml/token_embedding_artifacts",
+  "embedding_table_shape": [
+    7136,
+    4096
+  ],
+  "token_embedding_index_dtype": "int32",
+  "token_position": {
+    "standardization": "(x - train_mean) / train_std",
+    "train_mean": 53.479201451905624,
+    "train_std": 18.400321792635715,
+    "fit_split": "train"
+  },
+  "split_examples": {
+    "train": 1653000,
+    "validation": 200520,
+    "test": 209200
+  },
+  "state_feature_source": "external sparse matrices; not copied into this ablation"
+}
