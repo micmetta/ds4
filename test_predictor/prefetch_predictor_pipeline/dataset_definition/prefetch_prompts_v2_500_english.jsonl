@@ -1,0 +1,500 @@
+{"id": 501, "category": "computer_science", "prompt": "When would a B-tree be preferred over a binary search tree for storing data on disk?"}
+{"id": 502, "category": "computer_science", "prompt": "Can you explain how a trie stores words and why prefix searches are efficient?"}
+{"id": 503, "category": "computer_science", "prompt": "What does a priority queue guarantee when elements are removed?"}
+{"id": 504, "category": "computer_science", "prompt": "Why is a heap useful for repeatedly finding the smallest or largest item?"}
+{"id": 505, "category": "computer_science", "prompt": "How does topological sorting help when tasks have dependencies?"}
+{"id": 506, "category": "computer_science", "prompt": "What problem does Dijkstra's algorithm solve, and what assumption does it make about edge weights?"}
+{"id": 507, "category": "computer_science", "prompt": "Why is union-find useful when tracking connected components?"}
+{"id": 508, "category": "computer_science", "prompt": "What is memoization, and how is it different from plain recursion?"}
+{"id": 509, "category": "computer_science", "prompt": "How does an LRU cache decide which entry to remove?"}
+{"id": 510, "category": "computer_science", "prompt": "Why can sequential disk access be faster than many random reads?"}
+{"id": 511, "category": "computer_science", "prompt": "What is write-ahead logging in a database, and why is it useful?"}
+{"id": 512, "category": "computer_science", "prompt": "How does multi-version concurrency control let database readers and writers coexist?"}
+{"id": 513, "category": "computer_science", "prompt": "What is database sharding, and what problem is it meant to address?"}
+{"id": 514, "category": "computer_science", "prompt": "Why might a service keep several replicas of the same data?"}
+{"id": 515, "category": "computer_science", "prompt": "What does a load balancer do when several servers can handle the same request?"}
+{"id": 516, "category": "computer_science", "prompt": "What is the basic idea behind consensus in a distributed system?"}
+{"id": 517, "category": "computer_science", "prompt": "Why is leader election needed in some distributed systems?"}
+{"id": 518, "category": "computer_science", "prompt": "Can you explain the CAP theorem in a few practical sentences?"}
+{"id": 519, "category": "computer_science", "prompt": "What is the difference between strong consistency and eventual consistency from a user's perspective?"}
+{"id": 520, "category": "computer_science", "prompt": "How does a message queue help two services communicate asynchronously?"}
+{"id": 521, "category": "computer_science", "prompt": "What does backpressure mean in a data-processing pipeline?"}
+{"id": 522, "category": "computer_science", "prompt": "Why are network packets split into smaller units instead of sending one huge block?"}
+{"id": 523, "category": "computer_science", "prompt": "What does NAT do on a typical home network?"}
+{"id": 524, "category": "computer_science", "prompt": "How is a socket different from an IP address?"}
+{"id": 525, "category": "computer_science", "prompt": "What does a subnet mask tell a computer about an IP network?"}
+{"id": 526, "category": "computer_science", "prompt": "Why can packet loss happen even when two machines are correctly connected?"}
+{"id": 527, "category": "computer_science", "prompt": "What is a network handshake used for?"}
+{"id": 528, "category": "computer_science", "prompt": "How does a firewall decide whether to allow or block traffic?"}
+{"id": 529, "category": "computer_science", "prompt": "What is the difference between user mode and kernel mode?"}
+{"id": 530, "category": "computer_science", "prompt": "Why do operating systems use interrupts?"}
+{"id": 531, "category": "computer_science", "prompt": "What role does DMA play when moving data between devices and memory?"}
+{"id": 532, "category": "computer_science", "prompt": "What does memory mapping a file allow a program to do?"}
+{"id": 533, "category": "computer_science", "prompt": "Why can branch prediction make a CPU faster?"}
+{"id": 534, "category": "computer_science", "prompt": "What is SIMD, and what kind of workload benefits from it?"}
+{"id": 535, "category": "computer_science", "prompt": "How does endianness affect the way multi-byte numbers are stored?"}
+{"id": 536, "category": "computer_science", "prompt": "What is instruction pipelining in a processor?"}
+{"id": 537, "category": "computer_science", "prompt": "Why do modern CPUs execute some instructions out of order?"}
+{"id": 538, "category": "computer_science", "prompt": "What is a cache line, and why can it matter for performance?"}
+{"id": 539, "category": "computer_science", "prompt": "What does NUMA mean on a multi-socket computer?"}
+{"id": 540, "category": "computer_science", "prompt": "How is a static library different from a dynamically linked library?"}
+{"id": 541, "category": "computer_science", "prompt": "What happens during linking after source code has been compiled?"}
+{"id": 542, "category": "computer_science", "prompt": "What is an abstract syntax tree used for inside a compiler?"}
+{"id": 543, "category": "computer_science", "prompt": "Why do programming languages have type systems?"}
+{"id": 544, "category": "computer_science", "prompt": "What is the difference between lexical analysis and parsing?"}
+{"id": 545, "category": "computer_science", "prompt": "What does garbage collection's mark-and-sweep strategy do?"}
+{"id": 546, "category": "computer_science", "prompt": "Why is immutability useful in concurrent programs?"}
+{"id": 547, "category": "computer_science", "prompt": "What is a semaphore, and how does it differ from a simple lock?"}
+{"id": 548, "category": "computer_science", "prompt": "How does a publish-subscribe system differ from a traditional request-response interaction?"}
+{"id": 549, "category": "computer_science", "prompt": "What is a content delivery network intended to improve?"}
+{"id": 550, "category": "computer_science", "prompt": "Why might a database use a composite index instead of several unrelated single-column indexes?"}
+{"id": 551, "category": "programming", "prompt": "Write a short Python function that returns the most frequent value in a non-empty list."}
+{"id": 552, "category": "programming", "prompt": "Can you show a JavaScript function that checks whether every number in an array is positive?"}
+{"id": 553, "category": "programming", "prompt": "Write a C function that counts how many elements of an integer array are greater than a given threshold."}
+{"id": 554, "category": "programming", "prompt": "Create a Java method that returns the sum of the digits of a positive integer."}
+{"id": 555, "category": "programming", "prompt": "Write a Python function that maps a list of words to their lengths."}
+{"id": 556, "category": "programming", "prompt": "Show a JavaScript function that removes the first occurrence of a value from an array."}
+{"id": 557, "category": "programming", "prompt": "Write a C function that finds the first position of a character in a null-terminated string."}
+{"id": 558, "category": "programming", "prompt": "Create a Python function that returns a new list with adjacent duplicate values removed."}
+{"id": 559, "category": "programming", "prompt": "Write a Java method that checks whether an integer array is sorted in ascending order."}
+{"id": 560, "category": "programming", "prompt": "Can you implement a JavaScript function that counts the number of true values in an array?"}
+{"id": 561, "category": "programming", "prompt": "Write a Python function that groups words by their first letter."}
+{"id": 562, "category": "programming", "prompt": "Show a C function that returns the larger of two floating-point values."}
+{"id": 563, "category": "programming", "prompt": "Create a Java method that repeats a string n times."}
+{"id": 564, "category": "programming", "prompt": "Write a JavaScript function that returns all numbers divisible by 3 from an array."}
+{"id": 565, "category": "programming", "prompt": "Can you write a Python function that swaps the keys and values of a dictionary with unique values?"}
+{"id": 566, "category": "programming", "prompt": "Write a C loop that prints the powers of two from 1 through 64."}
+{"id": 567, "category": "programming", "prompt": "Create a Java method that counts uppercase letters in a string."}
+{"id": 568, "category": "programming", "prompt": "Write a Python function that returns the common keys shared by two dictionaries."}
+{"id": 569, "category": "programming", "prompt": "Show a JavaScript function that converts an array of words into a comma-separated string."}
+{"id": 570, "category": "programming", "prompt": "Write a C function that checks whether an integer is a power of two."}
+{"id": 571, "category": "programming", "prompt": "Create a Python function that returns the running totals of a list of numbers."}
+{"id": 572, "category": "programming", "prompt": "Write a Java method that finds the first repeated character in a string."}
+{"id": 573, "category": "programming", "prompt": "Can you show a JavaScript function that replaces negative numbers in an array with zero?"}
+{"id": 574, "category": "programming", "prompt": "Write a Python function that returns the shortest word in a sentence."}
+{"id": 575, "category": "programming", "prompt": "Create a C function that copies one integer array into another."}
+{"id": 576, "category": "programming", "prompt": "Write a Java method that returns the number of occurrences of a target value in an array."}
+{"id": 577, "category": "programming", "prompt": "Show a Python function that creates a frequency dictionary for the characters in a string."}
+{"id": 578, "category": "programming", "prompt": "Write a JavaScript function that returns the last n elements of an array."}
+{"id": 579, "category": "programming", "prompt": "Create a C function that tests whether all values in an integer array are equal."}
+{"id": 580, "category": "programming", "prompt": "Write a Python function that returns the diagonal elements of a square matrix."}
+{"id": 581, "category": "programming", "prompt": "Can you show a Java method that replaces every space in a string with an underscore?"}
+{"id": 582, "category": "programming", "prompt": "Write a JavaScript function that finds the sum of values at even indexes in an array."}
+{"id": 583, "category": "programming", "prompt": "Create a Python function that removes empty strings from a list."}
+{"id": 584, "category": "programming", "prompt": "Write a C function that computes n squared by repeated addition rather than multiplication."}
+{"id": 585, "category": "programming", "prompt": "Show a Java method that returns the first character of each word in a sentence."}
+{"id": 586, "category": "programming", "prompt": "Write a Python function that partitions numbers into two lists: negative and non-negative."}
+{"id": 587, "category": "programming", "prompt": "Create a JavaScript function that checks whether an array contains any duplicate values."}
+{"id": 588, "category": "programming", "prompt": "Write a C function that counts the number of zero values in an integer array."}
+{"id": 589, "category": "programming", "prompt": "Can you implement a Python function that returns a dictionary mapping each number to its square?"}
+{"id": 590, "category": "programming", "prompt": "Write a Java method that finds the longest run of the same character in a string."}
+{"id": 591, "category": "programming", "prompt": "Show a JavaScript function that clips a number so it stays between a minimum and maximum."}
+{"id": 592, "category": "programming", "prompt": "Write a Python function that transposes a rectangular matrix represented as nested lists."}
+{"id": 593, "category": "programming", "prompt": "Create a C function that returns the index of the maximum element in an integer array."}
+{"id": 594, "category": "programming", "prompt": "Write a Java method that removes the first and last character from a string when its length is at least two."}
+{"id": 595, "category": "programming", "prompt": "Can you show a Python function that counts how many dictionary values are None?"}
+{"id": 596, "category": "programming", "prompt": "Write a JavaScript function that interleaves two arrays of the same length."}
+{"id": 597, "category": "programming", "prompt": "Create a C function that checks whether a string begins with a specified character."}
+{"id": 598, "category": "programming", "prompt": "Write a Python function that returns all unique pairs of adjacent elements from a list."}
+{"id": 599, "category": "programming", "prompt": "Show a Java method that converts an array of integers into a comma-separated string."}
+{"id": 600, "category": "programming", "prompt": "Write a JavaScript function that calculates the product of all non-zero numbers in an array."}
+{"id": 601, "category": "debugging_code_reasoning", "prompt": "Why does this Python code fail: numbers = [1,2,3]; print(numbers[3])?"}
+{"id": 602, "category": "debugging_code_reasoning", "prompt": "A Python function uses sum as a variable name and later sum(values) fails. What caused the problem?"}
+{"id": 603, "category": "debugging_code_reasoning", "prompt": "Why does this expression produce a string instead of a number in JavaScript: '5' + 2?"}
+{"id": 604, "category": "debugging_code_reasoning", "prompt": "This C code prints garbage from an uninitialized local variable. Why does that happen?"}
+{"id": 605, "category": "debugging_code_reasoning", "prompt": "A Java loop uses i-- while checking i < 10 starting from zero. Why will it not behave as intended?"}
+{"id": 606, "category": "debugging_code_reasoning", "prompt": "Why does this Python slice return an empty list: items[5:2]?"}
+{"id": 607, "category": "debugging_code_reasoning", "prompt": "My SQL query uses an aggregate function in WHERE and fails. Why should HAVING be considered instead?"}
+{"id": 608, "category": "debugging_code_reasoning", "prompt": "Why can using scanf('%s', buffer) without a width limit be dangerous in C?"}
+{"id": 609, "category": "debugging_code_reasoning", "prompt": "A Java method expects an int but I pass null. Why is that invalid for a primitive type?"}
+{"id": 610, "category": "debugging_code_reasoning", "prompt": "Why does this Python expression behave unexpectedly: bool('False')?"}
+{"id": 611, "category": "debugging_code_reasoning", "prompt": "This JavaScript loop creates callbacks that all see the same final value when var is used. What scope issue is involved?"}
+{"id": 612, "category": "debugging_code_reasoning", "prompt": "Why can a C string without a terminating null byte cause functions like printf to read too far?"}
+{"id": 613, "category": "debugging_code_reasoning", "prompt": "A Python set cannot contain a list. Why is the list rejected?"}
+{"id": 614, "category": "debugging_code_reasoning", "prompt": "Why does Math.round(2.5) not behave the same way as Python's round(2.5) in every case?"}
+{"id": 615, "category": "debugging_code_reasoning", "prompt": "My SQL GROUP BY query selects a non-aggregated column that is not in the GROUP BY clause. Why can this be invalid?"}
+{"id": 616, "category": "debugging_code_reasoning", "prompt": "Why does this Python code create one tuple instead of an integer: x = 5,?"}
+{"id": 617, "category": "debugging_code_reasoning", "prompt": "A Java switch falls through into the next case. What statement is probably missing?"}
+{"id": 618, "category": "debugging_code_reasoning", "prompt": "Why does this C comparison fail to compare string contents: if (a == b)?"}
+{"id": 619, "category": "debugging_code_reasoning", "prompt": "A Python file stays locked or unflushed because I never close it. What construct should I use instead?"}
+{"id": 620, "category": "debugging_code_reasoning", "prompt": "Why can recursively traversing a very deep tree hit Python's recursion limit?"}
+{"id": 621, "category": "debugging_code_reasoning", "prompt": "This JavaScript code tries to read obj.user.name when obj.user is undefined. How can I guard against it?"}
+{"id": 622, "category": "debugging_code_reasoning", "prompt": "Why does assigning a negative number to an unsigned C integer produce a large positive value?"}
+{"id": 623, "category": "debugging_code_reasoning", "prompt": "A Java integer calculation 5 / 2 gives 2. What type change would preserve the fractional part?"}
+{"id": 624, "category": "debugging_code_reasoning", "prompt": "Why does this Python dictionary lookup fail when I use a list as the key?"}
+{"id": 625, "category": "debugging_code_reasoning", "prompt": "My SQL query compares a DATE column to a badly formatted string. What kind of issue can that cause?"}
+{"id": 626, "category": "debugging_code_reasoning", "prompt": "Why can accessing memory after free in C produce unpredictable behavior?"}
+{"id": 627, "category": "debugging_code_reasoning", "prompt": "A Java method is marked static but tries to use an instance field directly. Why is that a problem?"}
+{"id": 628, "category": "debugging_code_reasoning", "prompt": "Why does this Python loop change only the local variable and not the list: for x in values: x *= 2?"}
+{"id": 629, "category": "debugging_code_reasoning", "prompt": "A JavaScript object key 1 and key '1' refer to the same property. Why?"}
+{"id": 630, "category": "debugging_code_reasoning", "prompt": "Why can integer overflow make a Java int become negative after adding two positive numbers?"}
+{"id": 631, "category": "debugging_code_reasoning", "prompt": "This Python regex matches more text than expected because I used .* greedily. What does greedy mean here?"}
+{"id": 632, "category": "debugging_code_reasoning", "prompt": "Why does a SQL INNER JOIN remove rows that have no matching record on the other side?"}
+{"id": 633, "category": "debugging_code_reasoning", "prompt": "A C function writes past the end of an array by one element. Why can that corrupt unrelated memory?"}
+{"id": 634, "category": "debugging_code_reasoning", "prompt": "Why does this Python comparison raise an error in Python 3: 3 < '4'?"}
+{"id": 635, "category": "debugging_code_reasoning", "prompt": "A Java StringBuilder is shared by several threads without coordination. What kind of problem might appear?"}
+{"id": 636, "category": "debugging_code_reasoning", "prompt": "Why can a missing await cause JavaScript code to use a Promise where a value was expected?"}
+{"id": 637, "category": "debugging_code_reasoning", "prompt": "This Python function catches Exception and silently ignores it. Why can that make debugging harder?"}
+{"id": 638, "category": "debugging_code_reasoning", "prompt": "Why does using a very large recursion depth risk a stack overflow in C?"}
+{"id": 639, "category": "debugging_code_reasoning", "prompt": "A SQL query returns duplicate customer rows because one customer has several orders. What relationship explains the duplicates?"}
+{"id": 640, "category": "debugging_code_reasoning", "prompt": "Why does this Java condition use && instead of || when checking whether a number lies outside a range?"}
+{"id": 641, "category": "debugging_code_reasoning", "prompt": "A Python path works on Linux but fails on Windows because it contains hard-coded separators. What is a portable fix?"}
+{"id": 642, "category": "debugging_code_reasoning", "prompt": "Why can comparing floating-point values with exact equality be unreliable in C?"}
+{"id": 643, "category": "debugging_code_reasoning", "prompt": "This JavaScript array is sorted as 1, 10, 2, 20. Why does the default sort behave that way?"}
+{"id": 644, "category": "debugging_code_reasoning", "prompt": "Why does a Python generator seem to become empty after I iterate over it once?"}
+{"id": 645, "category": "debugging_code_reasoning", "prompt": "A Java method changes an object passed to it, and the caller sees the change. Why does that happen?"}
+{"id": 646, "category": "debugging_code_reasoning", "prompt": "Why can using SELECT without ORDER BY return rows in a different order between executions?"}
+{"id": 647, "category": "debugging_code_reasoning", "prompt": "This C printf call uses %d for a double. Why is the format specifier important?"}
+{"id": 648, "category": "debugging_code_reasoning", "prompt": "Why does Python's range(5, 0) produce no numbers without a negative step?"}
+{"id": 649, "category": "debugging_code_reasoning", "prompt": "A Java HashMap lookup fails after I mutate a field used by the key's hashCode. Why is that dangerous?"}
+{"id": 650, "category": "debugging_code_reasoning", "prompt": "Why can a JavaScript event handler run later than the line of code that registered it?"}
+{"id": 651, "category": "mathematics", "prompt": "A taxi charges 4 euros plus 1.50 euros per kilometer. What does a 6 km ride cost?"}
+{"id": 652, "category": "mathematics", "prompt": "Solve 7x + 5 = 47 and check the result."}
+{"id": 653, "category": "mathematics", "prompt": "A store raises a 90 euro price by 10%. What is the new price?"}
+{"id": 654, "category": "mathematics", "prompt": "What is the mean of 6, 9, 11, 14, and 20?"}
+{"id": 655, "category": "mathematics", "prompt": "A square has perimeter 36 cm. What is its area?"}
+{"id": 656, "category": "mathematics", "prompt": "Convert 7/20 into a decimal and a percentage."}
+{"id": 657, "category": "mathematics", "prompt": "Two angles of a triangle are 35 degrees and 65 degrees. What is the third angle?"}
+{"id": 658, "category": "mathematics", "prompt": "What is the probability of drawing an ace from a standard 52-card deck?"}
+{"id": 659, "category": "mathematics", "prompt": "If 8 notebooks cost 28 euros, what is the price of 3 notebooks at the same rate?"}
+{"id": 660, "category": "mathematics", "prompt": "Solve the inequality 5x - 4 >= 21."}
+{"id": 661, "category": "mathematics", "prompt": "A cylinder has radius 2 and height 5. What is its volume in terms of pi?"}
+{"id": 662, "category": "mathematics", "prompt": "What is the next term in the sequence 5, 9, 17, 33, 65?"}
+{"id": 663, "category": "mathematics", "prompt": "A bank balance of 800 euros earns 5% simple interest for one year. How much interest is earned?"}
+{"id": 664, "category": "mathematics", "prompt": "Find the mode of 2, 4, 4, 5, 7, 7, 7, 9."}
+{"id": 665, "category": "mathematics", "prompt": "A map scale is 1 cm to 5 km. How many kilometers does 7.2 cm represent?"}
+{"id": 666, "category": "mathematics", "prompt": "What is 2/5 divided by 4/7?"}
+{"id": 667, "category": "mathematics", "prompt": "Solve x/3 + 4 = 9."}
+{"id": 668, "category": "mathematics", "prompt": "A regular pentagon has five equal sides of 8 cm. What is its perimeter?"}
+{"id": 669, "category": "mathematics", "prompt": "How many seconds are in 3 hours and 25 minutes?"}
+{"id": 670, "category": "mathematics", "prompt": "What is the probability of rolling a total of 7 with two fair six-sided dice?"}
+{"id": 671, "category": "mathematics", "prompt": "Factor x squared + 7x + 12."}
+{"id": 672, "category": "mathematics", "prompt": "A number is decreased by 30% and becomes 56. What was the original number?"}
+{"id": 673, "category": "mathematics", "prompt": "What is the slope of the line through points (2, 3) and (6, 11)?"}
+{"id": 674, "category": "mathematics", "prompt": "If 12 machines make 360 parts in an hour at the same rate, how many parts does one machine make?"}
+{"id": 675, "category": "mathematics", "prompt": "Evaluate 4 factorial divided by 2 factorial."}
+{"id": 676, "category": "mathematics", "prompt": "A rectangle has area 54 square units and width 6. What is its length?"}
+{"id": 677, "category": "mathematics", "prompt": "Convert 135 degrees to radians in terms of pi."}
+{"id": 678, "category": "mathematics", "prompt": "What is the sum of the first ten positive integers?"}
+{"id": 679, "category": "mathematics", "prompt": "If a coin is tossed twice, what is the probability of getting exactly one head?"}
+{"id": 680, "category": "mathematics", "prompt": "Solve 3(x - 2) = 2x + 5."}
+{"id": 681, "category": "mathematics", "prompt": "A 15 liter mixture is 40% juice. How many liters of juice does it contain?"}
+{"id": 682, "category": "mathematics", "prompt": "What is the midpoint between (1, 4) and (7, 10)?"}
+{"id": 683, "category": "mathematics", "prompt": "Simplify the ratio 45:60."}
+{"id": 684, "category": "mathematics", "prompt": "A cube has side length 4 cm. What is its total surface area?"}
+{"id": 685, "category": "mathematics", "prompt": "If a number is multiplied by 1.25, by what percentage has it increased?"}
+{"id": 686, "category": "mathematics", "prompt": "What is the smallest prime number greater than 50?"}
+{"id": 687, "category": "mathematics", "prompt": "How many diagonals does a pentagon have?"}
+{"id": 688, "category": "mathematics", "prompt": "A runner completes 400 meters in 80 seconds. What is the average speed in meters per second?"}
+{"id": 689, "category": "mathematics", "prompt": "The sum of two positive integers is 14 and their product is 45. What are the two integers?"}
+{"id": 690, "category": "mathematics", "prompt": "What is 0.04 multiplied by 0.5?"}
+{"id": 691, "category": "mathematics", "prompt": "A shop buys an item for 40 euros and sells it for 52 euros. What is the profit percentage relative to cost?"}
+{"id": 692, "category": "mathematics", "prompt": "What is the value of 2 cubed times 3 squared?"}
+{"id": 693, "category": "mathematics", "prompt": "If 3 pens and 2 pencils cost 11 euros, and each pen costs 3 euros, what does one pencil cost?"}
+{"id": 694, "category": "mathematics", "prompt": "A circle has diameter 14 cm. What is its circumference in terms of pi?"}
+{"id": 695, "category": "mathematics", "prompt": "What is the reciprocal of 2 1/2?"}
+{"id": 696, "category": "mathematics", "prompt": "A class has 18 girls and 12 boys. What fraction of the class are boys in simplest form?"}
+{"id": 697, "category": "mathematics", "prompt": "If an arithmetic sequence starts at 7 and increases by 4 each time, what is its sixth term?"}
+{"id": 698, "category": "mathematics", "prompt": "How many different three-letter arrangements can be made from A, B, and C without repetition?"}
+{"id": 699, "category": "mathematics", "prompt": "What is the absolute value of -17 plus the absolute value of 5?"}
+{"id": 700, "category": "mathematics", "prompt": "A tank is 3/5 full and contains 24 liters. What is the tank's total capacity?"}
+{"id": 701, "category": "logic_reasoning", "prompt": "Every ceramic mug in the cabinet is blue. This mug is ceramic and came from the cabinet. What color must it be?"}
+{"id": 702, "category": "logic_reasoning", "prompt": "Rita finished before Noah, and Noah finished before Ben. Who finished second?"}
+{"id": 703, "category": "logic_reasoning", "prompt": "No electric car in this parking area uses diesel. This vehicle uses diesel. Can it be one of those electric cars?"}
+{"id": 704, "category": "logic_reasoning", "prompt": "A locker code has two digits. The first is 3 more than the second, and the second is 4. What is the code?"}
+{"id": 705, "category": "logic_reasoning", "prompt": "Four people stand in a line. Maya is ahead of Ben, Ben is ahead of Kai, and Kai is ahead of Zoe. Who is last?"}
+{"id": 706, "category": "logic_reasoning", "prompt": "If a device starts only when both switches are on, and one switch is off, can the device start?"}
+{"id": 707, "category": "logic_reasoning", "prompt": "All red folders are archived. Folder X is red. What follows?"}
+{"id": 708, "category": "logic_reasoning", "prompt": "A package is in exactly one of rooms 1, 2, or 3. It is not in room 1 and room 2 is empty. Where is it?"}
+{"id": 709, "category": "logic_reasoning", "prompt": "If no mammals lay green eggs and this animal lays green eggs, can it be a mammal under the premise?"}
+{"id": 710, "category": "logic_reasoning", "prompt": "Sam is shorter than Priya but taller than Owen. Who is tallest?"}
+{"id": 711, "category": "logic_reasoning", "prompt": "A door opens only with both a key card and a PIN. The PIN is missing. Can the door open under the rule?"}
+{"id": 712, "category": "logic_reasoning", "prompt": "If all premium members receive free shipping and Nora is a premium member, what benefit does she receive?"}
+{"id": 713, "category": "logic_reasoning", "prompt": "Three boxes weigh different amounts. A is heavier than B and C is lighter than B. Which box is heaviest?"}
+{"id": 714, "category": "logic_reasoning", "prompt": "If a train leaves after the ferry but before the bus, which of those three leaves first?"}
+{"id": 715, "category": "logic_reasoning", "prompt": "Every valid ticket contains a barcode. This ticket has no barcode. Is it valid under the rule?"}
+{"id": 716, "category": "logic_reasoning", "prompt": "A number is a multiple of 5, greater than 40, and less than 50. What is it?"}
+{"id": 717, "category": "logic_reasoning", "prompt": "If a statement is true only when condition X holds, and X does not hold, can the statement be true?"}
+{"id": 718, "category": "logic_reasoning", "prompt": "There are four chairs numbered 1 to 4. Ana sits immediately to the right of chair 2. Which chair is hers?"}
+{"id": 719, "category": "logic_reasoning", "prompt": "If all squares have four sides and shape A is a square, how many sides must shape A have?"}
+{"id": 720, "category": "logic_reasoning", "prompt": "A parcel was delivered either Monday or Tuesday. It was not delivered Monday. When was it delivered?"}
+{"id": 721, "category": "logic_reasoning", "prompt": "If the sequence repeats circle, triangle, square, what shape appears in position 8?"}
+{"id": 722, "category": "logic_reasoning", "prompt": "Every employee with server access has completed training. Lee has server access. What can be inferred?"}
+{"id": 723, "category": "logic_reasoning", "prompt": "No wooden objects are magnetic. This object is magnetic. What does that imply about it being wooden?"}
+{"id": 724, "category": "logic_reasoning", "prompt": "A, B, and C finish a race with no ties. B beats C, and A loses to B but beats C. What is the order?"}
+{"id": 725, "category": "logic_reasoning", "prompt": "If the light is green whenever the machine is ready, and the light is not green, what follows under the stated rule?"}
+{"id": 726, "category": "logic_reasoning", "prompt": "A safe contains either cash or documents, but not both. It contains cash. What can you say about documents?"}
+{"id": 727, "category": "logic_reasoning", "prompt": "All approved invoices have a signature. Invoice 42 has a signature. Does that alone prove it is approved?"}
+{"id": 728, "category": "logic_reasoning", "prompt": "A person can enter only if they have both a badge and permission. Morgan has a badge but no permission. Can Morgan enter?"}
+{"id": 729, "category": "logic_reasoning", "prompt": "Three events happen in order: breakfast before the meeting, and the meeting before lunch. Which event is in the middle?"}
+{"id": 730, "category": "logic_reasoning", "prompt": "If P implies Q and both P and Q are true, is the implication satisfied?"}
+{"id": 731, "category": "logic_reasoning", "prompt": "Every blue card is numbered. This card is not numbered. Can it be blue?"}
+{"id": 732, "category": "logic_reasoning", "prompt": "A lamp is on exactly when the switch is up. The lamp is off. What position must the switch be in?"}
+{"id": 733, "category": "logic_reasoning", "prompt": "Four books are ordered by height. Red is taller than Green, Green is taller than White, and White is taller than Black. Which is second shortest?"}
+{"id": 734, "category": "logic_reasoning", "prompt": "A number is divisible by 3, greater than 13, and less than 17. What is the number?"}
+{"id": 735, "category": "logic_reasoning", "prompt": "If exactly one of A or B is true and A is false, what must be true about B?"}
+{"id": 736, "category": "logic_reasoning", "prompt": "All members of group K wear helmets. Pat is not wearing a helmet. Can Pat be in group K under the rule?"}
+{"id": 737, "category": "logic_reasoning", "prompt": "The blue train arrives later than the red train but earlier than the green train. Which arrives last?"}
+{"id": 738, "category": "logic_reasoning", "prompt": "If a file can be opened only when it is both present and readable, and it is unreadable, can it be opened?"}
+{"id": 739, "category": "logic_reasoning", "prompt": "There are two keys, silver and gold. Exactly one opens the door. The silver key does not work. Which key works?"}
+{"id": 740, "category": "logic_reasoning", "prompt": "If today is Wednesday, what day will it be 15 days from now?"}
+{"id": 741, "category": "logic_reasoning", "prompt": "Every triangle in the set is yellow. Shape Z is a triangle in the set. What color is it?"}
+{"id": 742, "category": "logic_reasoning", "prompt": "A conference room is either occupied or empty. It is not empty. What is its state?"}
+{"id": 743, "category": "logic_reasoning", "prompt": "Nora is older than Eli, and Eli is older than Mia, but Nora is younger than Dan. Who is oldest?"}
+{"id": 744, "category": "logic_reasoning", "prompt": "If all encrypted files require a password and this file is encrypted, what must be required to open it?"}
+{"id": 745, "category": "logic_reasoning", "prompt": "A bus arrives before a tram, while a taxi arrives after the tram. Which arrives second?"}
+{"id": 746, "category": "logic_reasoning", "prompt": "Exactly two of three sensors are active. Sensor A is active and sensor B is inactive. What is sensor C's state?"}
+{"id": 747, "category": "logic_reasoning", "prompt": "If no birds in a sanctuary can swim and this animal can swim, what can you infer about it being one of those birds?"}
+{"id": 748, "category": "logic_reasoning", "prompt": "A task must be completed after step X and before step Z. If X is first, which step must come last among X, the task, and Z?"}
+{"id": 749, "category": "logic_reasoning", "prompt": "If every password longer than 20 characters is rejected and this password has 24 characters, what happens?"}
+{"id": 750, "category": "logic_reasoning", "prompt": "Three cups are labeled 1, 2, and 3. A token is not in cup 1, and cup 3 is empty. Which cup contains the token?"}
+{"id": 751, "category": "science", "prompt": "Why does a metal spoon heat up when one end is left in hot soup?"}
+{"id": 752, "category": "science", "prompt": "What is the difference between speed and velocity?"}
+{"id": 753, "category": "science", "prompt": "Why does a parachute slow a falling person?"}
+{"id": 754, "category": "science", "prompt": "What happens to the wavelength of light when its frequency increases in a vacuum?"}
+{"id": 755, "category": "science", "prompt": "Why does a pressure cooker cook food faster than an open pot?"}
+{"id": 756, "category": "science", "prompt": "What is electrical resistance in simple physical terms?"}
+{"id": 757, "category": "science", "prompt": "Why can static electricity make small pieces of paper move?"}
+{"id": 758, "category": "science", "prompt": "What is the difference between reflection and refraction of light?"}
+{"id": 759, "category": "science", "prompt": "Why does a black surface usually absorb more visible light than a white surface?"}
+{"id": 760, "category": "science", "prompt": "What causes an object to accelerate according to Newton's second law?"}
+{"id": 761, "category": "science", "prompt": "What is the role of neutrons inside an atomic nucleus?"}
+{"id": 762, "category": "science", "prompt": "How does an ionic bond form between atoms?"}
+{"id": 763, "category": "science", "prompt": "Why does a catalyst speed up a chemical reaction without being consumed?"}
+{"id": 764, "category": "science", "prompt": "What is the difference between an acid and a base in terms of pH?"}
+{"id": 765, "category": "science", "prompt": "Why can dissolving sugar in water be considered a physical change?"}
+{"id": 766, "category": "science", "prompt": "What does conservation of mass mean during a chemical reaction?"}
+{"id": 767, "category": "science", "prompt": "Why do gases expand to fill their container?"}
+{"id": 768, "category": "science", "prompt": "How does concentration affect the rate of many chemical reactions?"}
+{"id": 769, "category": "science", "prompt": "What is the difference between an atom and an ion?"}
+{"id": 770, "category": "science", "prompt": "Why does table salt dissolve in water?"}
+{"id": 771, "category": "science", "prompt": "What is the main function of the cell membrane?"}
+{"id": 772, "category": "science", "prompt": "How do ribosomes contribute to protein production?"}
+{"id": 773, "category": "science", "prompt": "What is the difference between mitosis and meiosis?"}
+{"id": 774, "category": "science", "prompt": "Why are white blood cells important to the immune system?"}
+{"id": 775, "category": "science", "prompt": "What does insulin help regulate in the human body?"}
+{"id": 776, "category": "science", "prompt": "How do stomata help a plant exchange gases?"}
+{"id": 777, "category": "science", "prompt": "What is the role of the nucleus in a eukaryotic cell?"}
+{"id": 778, "category": "science", "prompt": "Why are decomposers important in an ecosystem?"}
+{"id": 779, "category": "science", "prompt": "What is the difference between a food chain and a food web?"}
+{"id": 780, "category": "science", "prompt": "How does genetic mutation create new variation in a population?"}
+{"id": 781, "category": "science", "prompt": "Why do earthquakes occur near many tectonic plate boundaries?"}
+{"id": 782, "category": "science", "prompt": "How are igneous rocks formed?"}
+{"id": 783, "category": "science", "prompt": "What drives the water cycle between oceans, land, and the atmosphere?"}
+{"id": 784, "category": "science", "prompt": "Why can coastal areas have milder temperatures than inland areas?"}
+{"id": 785, "category": "science", "prompt": "What is the difference between weathering and erosion?"}
+{"id": 786, "category": "science", "prompt": "How does Earth's magnetic field help protect the planet?"}
+{"id": 787, "category": "science", "prompt": "What causes a solar eclipse?"}
+{"id": 788, "category": "science", "prompt": "Why does the Moon show different phases during a month?"}
+{"id": 789, "category": "science", "prompt": "What is a light-year actually a measure of?"}
+{"id": 790, "category": "science", "prompt": "Why do stars appear to twinkle more than planets when viewed from Earth?"}
+{"id": 791, "category": "science", "prompt": "How does a simple electric motor convert electrical energy into motion?"}
+{"id": 792, "category": "science", "prompt": "Why does a charged battery have stored chemical energy?"}
+{"id": 793, "category": "science", "prompt": "What is the difference between renewable solar energy and stored fossil-fuel energy?"}
+{"id": 794, "category": "science", "prompt": "Why does adding insulation to a cup help keep a drink warm?"}
+{"id": 795, "category": "science", "prompt": "What happens to the density of most materials when they are heated and expand?"}
+{"id": 796, "category": "science", "prompt": "Why can a boat made of steel float even though steel itself is denser than water?"}
+{"id": 797, "category": "science", "prompt": "How does a microphone convert sound into an electrical signal?"}
+{"id": 798, "category": "science", "prompt": "What is the basic purpose of a transformer in an electrical power system?"}
+{"id": 799, "category": "science", "prompt": "Why does the human body sweat when it becomes hot?"}
+{"id": 800, "category": "science", "prompt": "How do kidneys help maintain the body's internal chemical balance?"}
+{"id": 801, "category": "general_knowledge", "prompt": "Why was the invention of paper important for recording and sharing information?"}
+{"id": 802, "category": "general_knowledge", "prompt": "What was the main purpose of the ancient Roman road network?"}
+{"id": 803, "category": "general_knowledge", "prompt": "Why is the Magna Carta historically significant?"}
+{"id": 804, "category": "general_knowledge", "prompt": "What did the Silk Road connect, and why was it important?"}
+{"id": 805, "category": "general_knowledge", "prompt": "What was one major effect of the invention of the steam engine?"}
+{"id": 806, "category": "general_knowledge", "prompt": "Why is the city of Mecca significant in world history and culture?"}
+{"id": 807, "category": "general_knowledge", "prompt": "What was the basic purpose of medieval guilds?"}
+{"id": 808, "category": "general_knowledge", "prompt": "Why is the Rosetta Stone important to historians?"}
+{"id": 809, "category": "general_knowledge", "prompt": "What did the term 'Cold War' describe?"}
+{"id": 810, "category": "general_knowledge", "prompt": "Why was the first successful powered flight historically important?"}
+{"id": 811, "category": "general_knowledge", "prompt": "Which river flows through London?"}
+{"id": 812, "category": "general_knowledge", "prompt": "What mountain range separates much of Europe from Asia in the traditional geographic definition?"}
+{"id": 813, "category": "general_knowledge", "prompt": "What is the largest island in the Mediterranean Sea?"}
+{"id": 814, "category": "general_knowledge", "prompt": "Why are river deltas often fertile areas?"}
+{"id": 815, "category": "general_knowledge", "prompt": "What is the difference between an island and a peninsula?"}
+{"id": 816, "category": "general_knowledge", "prompt": "Why are ports usually located on coasts or navigable rivers?"}
+{"id": 817, "category": "general_knowledge", "prompt": "What is a landlocked country?"}
+{"id": 818, "category": "general_knowledge", "prompt": "Which continent contains the Andes mountain range?"}
+{"id": 819, "category": "general_knowledge", "prompt": "What is the difference between a strait and a canal?"}
+{"id": 820, "category": "general_knowledge", "prompt": "Why do major cities often develop near rivers?"}
+{"id": 821, "category": "general_knowledge", "prompt": "What does gross national income measure in broad terms?"}
+{"id": 822, "category": "general_knowledge", "prompt": "What is the basic idea of supply and demand?"}
+{"id": 823, "category": "general_knowledge", "prompt": "Why can inflation reduce purchasing power?"}
+{"id": 824, "category": "general_knowledge", "prompt": "What is a progressive tax system?"}
+{"id": 825, "category": "general_knowledge", "prompt": "What does a government budget deficit mean?"}
+{"id": 826, "category": "general_knowledge", "prompt": "Why do businesses calculate profit margins?"}
+{"id": 827, "category": "general_knowledge", "prompt": "What is the difference between a loan's principal and its interest?"}
+{"id": 828, "category": "general_knowledge", "prompt": "What does diversification mean in investing?"}
+{"id": 829, "category": "general_knowledge", "prompt": "Why do governments issue bonds?"}
+{"id": 830, "category": "general_knowledge", "prompt": "What is the purpose of an insurance premium?"}
+{"id": 831, "category": "general_knowledge", "prompt": "What is the role of a jury in a typical jury trial?"}
+{"id": 832, "category": "general_knowledge", "prompt": "Why do many legal systems separate civil and criminal cases?"}
+{"id": 833, "category": "general_knowledge", "prompt": "What is a referendum?"}
+{"id": 834, "category": "general_knowledge", "prompt": "What does separation of powers try to prevent?"}
+{"id": 835, "category": "general_knowledge", "prompt": "What is the purpose of local government?"}
+{"id": 836, "category": "general_knowledge", "prompt": "Why are public records important in a government?"}
+{"id": 837, "category": "general_knowledge", "prompt": "What does diplomatic immunity broadly mean?"}
+{"id": 838, "category": "general_knowledge", "prompt": "What is the purpose of an embassy?"}
+{"id": 839, "category": "general_knowledge", "prompt": "What is a treaty between countries?"}
+{"id": 840, "category": "general_knowledge", "prompt": "Why do countries conduct population censuses at regular intervals?"}
+{"id": 841, "category": "general_knowledge", "prompt": "Who composed The Four Seasons?"}
+{"id": 842, "category": "general_knowledge", "prompt": "What is a sonnet in literature?"}
+{"id": 843, "category": "general_knowledge", "prompt": "Why is perspective important in Renaissance painting?"}
+{"id": 844, "category": "general_knowledge", "prompt": "What is the basic difference between a novel and a short story?"}
+{"id": 845, "category": "general_knowledge", "prompt": "Who wrote Pride and Prejudice?"}
+{"id": 846, "category": "general_knowledge", "prompt": "What is a symphony?"}
+{"id": 847, "category": "general_knowledge", "prompt": "What does archaeology study?"}
+{"id": 848, "category": "general_knowledge", "prompt": "What is the difference between a primary historical source and a secondary source?"}
+{"id": 849, "category": "general_knowledge", "prompt": "Why do museums preserve artifacts under controlled temperature and humidity?"}
+{"id": 850, "category": "general_knowledge", "prompt": "What is the purpose of a bibliography in an academic work?"}
+{"id": 851, "category": "language_tasks", "prompt": "Correct the grammar in this sentence: 'Neither of the answers are correct.'"}
+{"id": 852, "category": "language_tasks", "prompt": "Rewrite 'You need to fix this today' as a courteous professional request."}
+{"id": 853, "category": "language_tasks", "prompt": "Give two synonyms for 'brief' and use one in a sentence."}
+{"id": 854, "category": "language_tasks", "prompt": "Change this sentence to the future tense: 'The team meets on Thursday.'"}
+{"id": 855, "category": "language_tasks", "prompt": "Turn this statement into a question: 'They have approved the proposal.'"}
+{"id": 856, "category": "language_tasks", "prompt": "Rewrite this in simpler English: 'The device exhibits intermittent connectivity failures.'"}
+{"id": 857, "category": "language_tasks", "prompt": "Correct the punctuation: 'If you finish early call me otherwise send an email.'"}
+{"id": 858, "category": "language_tasks", "prompt": "Change to passive voice: 'The storm damaged several houses.'"}
+{"id": 859, "category": "language_tasks", "prompt": "Give one antonym for 'transparent' and use it naturally."}
+{"id": 860, "category": "language_tasks", "prompt": "Rewrite this sentence so it sounds more diplomatic: 'Your explanation is unclear.'"}
+{"id": 861, "category": "language_tasks", "prompt": "Correct the error: 'She has less assignments this week.'"}
+{"id": 862, "category": "language_tasks", "prompt": "Identify the noun and adjective in: 'The narrow path reached the village.'"}
+{"id": 863, "category": "language_tasks", "prompt": "Turn this direct statement into reported speech: He said, 'I will call tomorrow.'"}
+{"id": 864, "category": "language_tasks", "prompt": "Replace 'very angry' with a more precise adjective."}
+{"id": 865, "category": "language_tasks", "prompt": "Change this sentence from plural to singular: 'The children carry heavy backpacks.'"}
+{"id": 866, "category": "language_tasks", "prompt": "Rewrite in a friendlier tone: 'Your payment was declined.'"}
+{"id": 867, "category": "language_tasks", "prompt": "Explain the difference between 'then' and 'than' with one short example."}
+{"id": 868, "category": "language_tasks", "prompt": "Correct the spelling and grammar: 'We seperated the files into there folders.'"}
+{"id": 869, "category": "language_tasks", "prompt": "Give two natural alternatives to 'That makes sense.'"}
+{"id": 870, "category": "language_tasks", "prompt": "Change to active voice: 'The contract was signed by both parties.'"}
+{"id": 871, "category": "language_tasks", "prompt": "Rewrite this informal sentence in professional English: 'The numbers look kind of weird.'"}
+{"id": 872, "category": "language_tasks", "prompt": "Explain the difference between 'accept' and 'except' with a brief example."}
+{"id": 873, "category": "language_tasks", "prompt": "Make this request more polite: 'Stop talking during the presentation.'"}
+{"id": 874, "category": "language_tasks", "prompt": "Identify the direct object in: 'The student opened the window.'"}
+{"id": 875, "category": "language_tasks", "prompt": "Rewrite without the double negative: 'She hasn't never visited the city.'"}
+{"id": 876, "category": "language_tasks", "prompt": "Change this sentence to the present perfect: 'They completed three tests.'"}
+{"id": 877, "category": "language_tasks", "prompt": "Give one synonym and one antonym for 'frequent'."}
+{"id": 878, "category": "language_tasks", "prompt": "Correct the sentence: 'I seen that movie last year.'"}
+{"id": 879, "category": "language_tasks", "prompt": "Turn this command into a polite request: 'Wait outside.'"}
+{"id": 880, "category": "language_tasks", "prompt": "Explain the difference between 'principal' and 'principle' with a short example."}
+{"id": 881, "category": "language_tasks", "prompt": "Rewrite to avoid repetition: 'The manager reviewed the report, and the manager approved the report.'"}
+{"id": 882, "category": "language_tasks", "prompt": "Change this sentence from third person to first person: 'She checks the logs every morning.'"}
+{"id": 883, "category": "language_tasks", "prompt": "Correct the word choice: 'The new policy will effect all employees.'"}
+{"id": 884, "category": "language_tasks", "prompt": "Make this sentence more concise: 'At the present moment, the system is currently offline.'"}
+{"id": 885, "category": "language_tasks", "prompt": "Identify the conjunction in: 'I stayed inside because it was raining.'"}
+{"id": 886, "category": "language_tasks", "prompt": "Rewrite this to sound more certain: 'I guess the update probably fixed the issue.'"}
+{"id": 887, "category": "language_tasks", "prompt": "Turn this affirmative sentence into a negative one: 'The files were copied successfully.'"}
+{"id": 888, "category": "language_tasks", "prompt": "Correct the sentence: 'One of the machines are broken.'"}
+{"id": 889, "category": "language_tasks", "prompt": "Replace 'a lot of' with a more formal phrase in: 'The experiment generated a lot of data.'"}
+{"id": 890, "category": "language_tasks", "prompt": "Explain the difference between 'lay' and 'lie' using a short example."}
+{"id": 891, "category": "language_tasks", "prompt": "Change this sentence into the comparative form: 'This route is fast.'"}
+{"id": 892, "category": "language_tasks", "prompt": "Rewrite this as a concise email subject: 'Question about the invoice I received yesterday.'"}
+{"id": 893, "category": "language_tasks", "prompt": "Correct the capitalization: 'we visited central park during our trip to new york.'"}
+{"id": 894, "category": "language_tasks", "prompt": "Replace the vague word 'thing' with a more precise noun in: 'The main thing is data security.'"}
+{"id": 895, "category": "language_tasks", "prompt": "Turn this sentence into the conditional mood: 'I help you if I have time.'"}
+{"id": 896, "category": "language_tasks", "prompt": "Identify the pronoun in: 'They left their bags near the door.'"}
+{"id": 897, "category": "language_tasks", "prompt": "Rewrite this to remove unnecessary hedging: 'It seems possible that perhaps the server may be overloaded.'"}
+{"id": 898, "category": "language_tasks", "prompt": "Correct the sentence: 'There is two files missing from the folder.'"}
+{"id": 899, "category": "language_tasks", "prompt": "Give a more formal alternative to 'get rid of' in the sentence 'We need to get rid of duplicate records.'"}
+{"id": 900, "category": "language_tasks", "prompt": "Rewrite this sentence so the modifier is unambiguous: 'Walking to work, the rain soaked Daniel's jacket.'"}
+{"id": 901, "category": "text_transformation", "prompt": "Summarize in one sentence: 'The university added more evening classes because daytime sections were full and many students work during the day.'"}
+{"id": 902, "category": "text_transformation", "prompt": "Rewrite this in a calmer tone: 'The update completely broke the application and caused a mess.'"}
+{"id": 903, "category": "text_transformation", "prompt": "Extract the person's name, department, and extension: 'Helen Carter works in Finance and can be reached at extension 418.'"}
+{"id": 904, "category": "text_transformation", "prompt": "Turn this into a checklist: 'Charge the laptop, pack the adapter, and download the presentation before the trip.'"}
+{"id": 905, "category": "text_transformation", "prompt": "Shorten this message: 'We are writing to inform you that your reservation has been successfully confirmed.'"}
+{"id": 906, "category": "text_transformation", "prompt": "Paraphrase: 'The road remained closed because workers had not finished the repairs.'"}
+{"id": 907, "category": "text_transformation", "prompt": "Create a short headline for: 'City council approves funding for three new public parks.'"}
+{"id": 908, "category": "text_transformation", "prompt": "Extract the start time and end time: 'The workshop runs from 09:15 until 12:45.'"}
+{"id": 909, "category": "text_transformation", "prompt": "Rewrite these two sentences as one clear cause-and-effect sentence: 'The database was unavailable. The application could not load user profiles.'"}
+{"id": 910, "category": "text_transformation", "prompt": "Turn this note into an email subject: 'Please review the draft contract before Thursday.'"}
+{"id": 911, "category": "text_transformation", "prompt": "Summarize in one sentence: 'A software patch will be installed tonight, and users may be disconnected for several minutes during the restart.'"}
+{"id": 912, "category": "text_transformation", "prompt": "Rewrite this to sound more empathetic: 'Your shipment is late because the carrier missed the connection.'"}
+{"id": 913, "category": "text_transformation", "prompt": "Extract the order number and amount: 'Order 84721 was charged 63.90 dollars.'"}
+{"id": 914, "category": "text_transformation", "prompt": "Convert this into two numbered steps: 'Sign in to the portal, then upload the completed form.'"}
+{"id": 915, "category": "text_transformation", "prompt": "Make this notification shorter: 'Your account will be locked after five unsuccessful login attempts.'"}
+{"id": 916, "category": "text_transformation", "prompt": "Paraphrase: 'The study found that participants remembered images better than isolated words.'"}
+{"id": 917, "category": "text_transformation", "prompt": "Create a concise title for: 'Instructions for connecting a laptop to an external monitor.'"}
+{"id": 918, "category": "text_transformation", "prompt": "Extract all measurements: 'The box is 40 cm long, 25 cm wide, and 18 cm high.'"}
+{"id": 919, "category": "text_transformation", "prompt": "Rewrite to remove repetition: 'The meeting started late because the meeting room was still occupied.'"}
+{"id": 920, "category": "text_transformation", "prompt": "Combine into one sentence: 'The temperature dropped overnight. Ice formed on several roads.'"}
+{"id": 921, "category": "text_transformation", "prompt": "Make this criticism more constructive: 'The documentation is disorganized and hard to follow.'"}
+{"id": 922, "category": "text_transformation", "prompt": "Extract the item and serial number: 'The returned router has serial number XR-55291.'"}
+{"id": 923, "category": "text_transformation", "prompt": "Rewrite this as a neutral statement: 'The careless operator ruined the entire batch.'"}
+{"id": 924, "category": "text_transformation", "prompt": "Turn this into a concise safety warning: 'Do not touch the exposed contacts while the device is connected to power.'"}
+{"id": 925, "category": "text_transformation", "prompt": "Summarize: 'Researchers tested four configurations, measured latency for each one, and selected the fastest configuration for further experiments.'"}
+{"id": 926, "category": "text_transformation", "prompt": "Rewrite for a non-technical reader: 'The server rejected the request because the authentication token had expired.'"}
+{"id": 927, "category": "text_transformation", "prompt": "Extract the airport codes: 'The flight travels from JFK to ORD and then continues to SFO.'"}
+{"id": 928, "category": "text_transformation", "prompt": "Turn this into a yes-or-no question: 'The invoice includes tax.'"}
+{"id": 929, "category": "text_transformation", "prompt": "Create a short setting label for: 'Automatically save a copy of every uploaded file.'"}
+{"id": 930, "category": "text_transformation", "prompt": "Remove unnecessary words: 'The final outcome at the end was exactly the same.'"}
+{"id": 931, "category": "text_transformation", "prompt": "Summarize in one sentence: 'The café will open an hour later on Sunday because the building is undergoing electrical maintenance.'"}
+{"id": 932, "category": "text_transformation", "prompt": "Rewrite this more professionally: 'We ran out of disk space and had to clean things up fast.'"}
+{"id": 933, "category": "text_transformation", "prompt": "Extract the customer name, ticket number, and priority: 'Customer Jordan Lee opened ticket 5827 with high priority.'"}
+{"id": 934, "category": "text_transformation", "prompt": "Turn this into bullet points: 'The subscription includes cloud backup, email support, and monthly reports.'"}
+{"id": 935, "category": "text_transformation", "prompt": "Shorten while preserving meaning: 'Because of scheduled maintenance, users may experience brief interruptions between midnight and 2 AM.'"}
+{"id": 936, "category": "text_transformation", "prompt": "Paraphrase: 'The new processor completed the benchmark in less time while using less power.'"}
+{"id": 937, "category": "text_transformation", "prompt": "Create a short title for: 'Steps to enable two-factor authentication on an account.'"}
+{"id": 938, "category": "text_transformation", "prompt": "Extract all quantities: 'The order contains 6 keyboards, 3 webcams, and 10 mouse pads.'"}
+{"id": 939, "category": "text_transformation", "prompt": "Rewrite in a neutral tone: 'The terrible interface made a simple task unnecessarily painful.'"}
+{"id": 940, "category": "text_transformation", "prompt": "Turn this into a closed question: 'The backup includes the database files.'"}
+{"id": 941, "category": "text_transformation", "prompt": "Summarize in one sentence: 'The train service added extra departures on Friday evening to handle increased passenger demand.'"}
+{"id": 942, "category": "text_transformation", "prompt": "Rewrite this in a more reassuring tone: 'Some files were temporarily unavailable, but the storage system is now recovering them.'"}
+{"id": 943, "category": "text_transformation", "prompt": "Extract the deadline and responsible person: 'Priya must submit the final report by March 18.'"}
+{"id": 944, "category": "text_transformation", "prompt": "Convert this into three short instructions: 'Open Settings, choose Privacy, and disable location sharing.'"}
+{"id": 945, "category": "text_transformation", "prompt": "Make this sentence more concise: 'The reason for the delay was due to a shortage of replacement parts.'"}
+{"id": 946, "category": "text_transformation", "prompt": "Paraphrase: 'The team postponed the release so they could investigate a newly discovered defect.'"}
+{"id": 947, "category": "text_transformation", "prompt": "Create a headline from: 'Regional hospital opens a new emergency care wing.'"}
+{"id": 948, "category": "text_transformation", "prompt": "Extract the version numbers: 'The server runs 3.8.2, while the client was upgraded from 3.7.9 to 3.8.1.'"}
+{"id": 949, "category": "text_transformation", "prompt": "Rewrite this to sound objective: 'The brilliant new design is obviously better than the old one.'"}
+{"id": 950, "category": "text_transformation", "prompt": "Turn this statement into a direct question: 'The delivery is expected to arrive before noon.'"}
+{"id": 951, "category": "sql_structured_output", "prompt": "Write a SQL query that returns the usernames of accounts created after January 1, 2026."}
+{"id": 952, "category": "sql_structured_output", "prompt": "Return a JSON object for a device with id 'd42', status 'idle', and battery 87."}
+{"id": 953, "category": "sql_structured_output", "prompt": "Create a regular expression that matches a string containing exactly eight digits."}
+{"id": 954, "category": "sql_structured_output", "prompt": "Write a SQL query that lists invoices whose paid_at value is null."}
+{"id": 955, "category": "sql_structured_output", "prompt": "Return a JSON array containing the numbers 5, 10, 15, and 20."}
+{"id": 956, "category": "sql_structured_output", "prompt": "Write a SQL query that returns the newest ten messages ordered by created_at."}
+{"id": 957, "category": "sql_structured_output", "prompt": "Create a regex that matches a word made only of lowercase letters and hyphens."}
+{"id": 958, "category": "sql_structured_output", "prompt": "Return valid JSON for a course with code 'CS101', credits 6, and active true."}
+{"id": 959, "category": "sql_structured_output", "prompt": "Write a SQL query that calculates the total quantity across all rows in the inventory table."}
+{"id": 960, "category": "sql_structured_output", "prompt": "Write a SQL statement that updates products and increases price by 5 percent where category is 'books'."}
+{"id": 961, "category": "sql_structured_output", "prompt": "Return a JSON object with x set to 12 and y set to -4."}
+{"id": 962, "category": "sql_structured_output", "prompt": "Create a regex that matches exactly either 'open', 'closed', or 'pending'."}
+{"id": 963, "category": "sql_structured_output", "prompt": "Write a SQL query that returns each unique department from the employees table."}
+{"id": 964, "category": "sql_structured_output", "prompt": "Return a JSON array of three objects representing ids 10, 20, and 30."}
+{"id": 965, "category": "sql_structured_output", "prompt": "Write a SQL query joining books to authors by author_id and returning book title and author name."}
+{"id": 966, "category": "sql_structured_output", "prompt": "Create a regex that matches filenames ending in '.log'."}
+{"id": 967, "category": "sql_structured_output", "prompt": "Return JSON for a notification with message 'Ready', unread true, and priority 1."}
+{"id": 968, "category": "sql_structured_output", "prompt": "Write a SQL statement that sets archived to true for records older than January 1, 2024."}
+{"id": 969, "category": "sql_structured_output", "prompt": "Return a JSON object with a profile field containing username 'nova' and level 7."}
+{"id": 970, "category": "sql_structured_output", "prompt": "Write a SQL query that returns product categories whose average price is above 50."}
+{"id": 971, "category": "sql_structured_output", "prompt": "Create a regex that matches an optional minus sign followed by one to three digits."}
+{"id": 972, "category": "sql_structured_output", "prompt": "Write a SQL query that returns the latest updated_at value from the documents table."}
+{"id": 973, "category": "sql_structured_output", "prompt": "Return a JSON object whose permissions field contains 'read' and 'write'."}
+{"id": 974, "category": "sql_structured_output", "prompt": "Write a SQL query that selects events occurring between June 1 and June 30, 2026."}
+{"id": 975, "category": "sql_structured_output", "prompt": "Create a regex that matches a six-character lowercase hexadecimal string without a leading hash."}
+{"id": 976, "category": "sql_structured_output", "prompt": "Return valid JSON for a reading with sensor 'A9', humidity 44.2, and valid true."}
+{"id": 977, "category": "sql_structured_output", "prompt": "Write a SQL query that counts distinct product_id values in the order_items table."}
+{"id": 978, "category": "sql_structured_output", "prompt": "Create a SQL query that returns region and maximum salary, grouped by region."}
+{"id": 979, "category": "sql_structured_output", "prompt": "Return a JSON object with settings containing retry_count 3 and debug false."}
+{"id": 980, "category": "sql_structured_output", "prompt": "Create a regex that matches strings made only of lowercase letters, digits, and underscores."}
+{"id": 981, "category": "sql_structured_output", "prompt": "Write a SQL query that returns customers who have placed no orders using a LEFT JOIN."}
+{"id": 982, "category": "sql_structured_output", "prompt": "Return JSON for a rectangle with width 8, height 5, and unit 'cm'."}
+{"id": 983, "category": "sql_structured_output", "prompt": "Create a regex that matches a date in the form YYYY-MM-DD using digits only."}
+{"id": 984, "category": "sql_structured_output", "prompt": "Write a SQL query that returns the second highest distinct salary from employees."}
+{"id": 985, "category": "sql_structured_output", "prompt": "Return a JSON array containing two coordinate objects: (1,2) and (3,4)."}
+{"id": 986, "category": "sql_structured_output", "prompt": "Write a SQL query that finds duplicate email values in a users table."}
+{"id": 987, "category": "sql_structured_output", "prompt": "Create a regex that matches strings beginning with 'INV-' followed by four digits."}
+{"id": 988, "category": "sql_structured_output", "prompt": "Return valid JSON for a build with number 128, branch 'main', and successful true."}
+{"id": 989, "category": "sql_structured_output", "prompt": "Write a SQL query that returns each customer_id with the sum of total from orders."}
+{"id": 990, "category": "sql_structured_output", "prompt": "Create a SQL query that removes duplicate rows from a result by selecting distinct country and city pairs."}
+{"id": 991, "category": "sql_structured_output", "prompt": "Return a JSON object with an empty errors array and status 'ok'."}
+{"id": 992, "category": "sql_structured_output", "prompt": "Create a regex that matches one uppercase letter followed by any number of lowercase letters."}
+{"id": 993, "category": "sql_structured_output", "prompt": "Write a SQL query that selects products whose name contains the substring 'pro'."}
+{"id": 994, "category": "sql_structured_output", "prompt": "Return JSON for a calendar event with title 'Review', duration_minutes 30, and remote false."}
+{"id": 995, "category": "sql_structured_output", "prompt": "Write a SQL query that ranks employees by salary within each department using a window function."}
+{"id": 996, "category": "sql_structured_output", "prompt": "Create a regex that matches an IPv4-like pattern of four dot-separated numeric groups without validating the numeric ranges."}
+{"id": 997, "category": "sql_structured_output", "prompt": "Return a JSON object with keys min, max, and average set to 2, 10, and 6."}
+{"id": 998, "category": "sql_structured_output", "prompt": "Write a SQL query using EXISTS to return customers who have at least one order."}
+{"id": 999, "category": "sql_structured_output", "prompt": "Create a SQL query that returns the number of rows per status and sorts the counts from highest to lowest."}
+{"id": 1000, "category": "sql_structured_output", "prompt": "Return valid JSON for a server with hostname 'node-3', ports [80,443], and maintenance false."}

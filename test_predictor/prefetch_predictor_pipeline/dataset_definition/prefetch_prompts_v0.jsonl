@@ -1,0 +1,100 @@
+{"id": 1, "category": "computer_science", "prompt": "Explain what a binary search is in one short paragraph."}
+{"id": 2, "category": "computer_science", "prompt": "Compare a stack and a queue using a simple real-world analogy."}
+{"id": 3, "category": "computer_science", "prompt": "What is the purpose of a hash table? Answer briefly."}
+{"id": 4, "category": "computer_science", "prompt": "Describe how TCP differs from UDP in three concise points."}
+{"id": 5, "category": "computer_science", "prompt": "Why does a computer use virtual memory? Give a practical explanation."}
+{"id": 6, "category": "computer_science", "prompt": "Define recursion and mention one common use case."}
+{"id": 7, "category": "computer_science", "prompt": "Explain what a deadlock is in operating systems without using formulas."}
+{"id": 8, "category": "computer_science", "prompt": "Name three differences between a process and a thread."}
+{"id": 9, "category": "computer_science", "prompt": "What problem does a cache solve in computer architecture? Answer in a few sentences."}
+{"id": 10, "category": "computer_science", "prompt": "Explain the basic idea behind public-key cryptography to a beginner."}
+{"id": 11, "category": "programming", "prompt": "Write a short Python function that returns the largest number in a list."}
+{"id": 12, "category": "programming", "prompt": "Create a JavaScript function that checks whether a string is a palindrome."}
+{"id": 13, "category": "programming", "prompt": "Show a minimal C function that swaps two integers using pointers."}
+{"id": 14, "category": "programming", "prompt": "Write a Python list comprehension that keeps only the even numbers from a list."}
+{"id": 15, "category": "programming", "prompt": "Implement a simple recursive factorial function in Python."}
+{"id": 16, "category": "programming", "prompt": "Give a short Java method that counts the vowels in a string."}
+{"id": 17, "category": "programming", "prompt": "Write a SQL-like pseudocode loop that prints the numbers from 1 to 5."}
+{"id": 18, "category": "programming", "prompt": "Create a concise Python function that merges two dictionaries."}
+{"id": 19, "category": "programming", "prompt": "Show how to reverse a string in JavaScript with a short code example."}
+{"id": 20, "category": "programming", "prompt": "Write a C function that returns the minimum of three integers."}
+{"id": 21, "category": "debugging_code_reasoning", "prompt": "Find the bug in this Python code and explain the fix briefly: for i in range(5): print(i+1"}
+{"id": 22, "category": "debugging_code_reasoning", "prompt": "Why does this JavaScript expression return false? Explain briefly: 0 == '0' && 0 === '0'."}
+{"id": 23, "category": "debugging_code_reasoning", "prompt": "This Python function returns None unexpectedly: def add(a,b): c=a+b. What is missing?"}
+{"id": 24, "category": "debugging_code_reasoning", "prompt": "Identify the error in this C snippet: int *p = NULL; printf(\"%d\", *p);"}
+{"id": 25, "category": "debugging_code_reasoning", "prompt": "Explain why this loop never ends: while x > 0: x = x + 1."}
+{"id": 26, "category": "debugging_code_reasoning", "prompt": "A Python list changes after assigning b = a and modifying b. Explain why and how to avoid it."}
+{"id": 27, "category": "debugging_code_reasoning", "prompt": "Spot the off-by-one issue: for i in range(len(items)+1): print(items[i])."}
+{"id": 28, "category": "debugging_code_reasoning", "prompt": "Why can dividing two integers in C produce an unexpected truncated result? Give a short example."}
+{"id": 29, "category": "debugging_code_reasoning", "prompt": "This SQL condition matches no rows: WHERE value = NULL. Explain the correct form."}
+{"id": 30, "category": "debugging_code_reasoning", "prompt": "Explain why modifying a dictionary while iterating over it can cause problems in Python."}
+{"id": 31, "category": "mathematics", "prompt": "Solve for x: 3x + 7 = 22. Give only the result and one short verification."}
+{"id": 32, "category": "mathematics", "prompt": "A product costs 80 euros and is discounted by 25%. What is the final price?"}
+{"id": 33, "category": "mathematics", "prompt": "What is the probability of rolling an even number on a fair six-sided die?"}
+{"id": 34, "category": "mathematics", "prompt": "A rectangle has sides 8 cm and 5 cm. Compute its area and perimeter."}
+{"id": 35, "category": "mathematics", "prompt": "Simplify the fraction 42/56 and show the final reduced form."}
+{"id": 36, "category": "mathematics", "prompt": "If a car travels 150 km in 2.5 hours, what is its average speed?"}
+{"id": 37, "category": "mathematics", "prompt": "What is 15% of 240? Answer with the calculation."}
+{"id": 38, "category": "mathematics", "prompt": "The sequence is 2, 6, 12, 20, 30. What is the next term and why?"}
+{"id": 39, "category": "mathematics", "prompt": "A circle has radius 3. What is its area in terms of pi?"}
+{"id": 40, "category": "mathematics", "prompt": "Compare 7/12 and 5/8 and state which fraction is larger."}
+{"id": 41, "category": "logic_reasoning", "prompt": "All roses are flowers. Some flowers fade quickly. Can we conclude that some roses fade quickly? Answer briefly."}
+{"id": 42, "category": "logic_reasoning", "prompt": "Anna is older than Luca, and Luca is older than Marco. Who is the youngest?"}
+{"id": 43, "category": "logic_reasoning", "prompt": "If every blue box is heavy and this box is not heavy, what can you infer about its color?"}
+{"id": 44, "category": "logic_reasoning", "prompt": "A train leaves before a bus, and the bus leaves before a taxi. Which leaves last?"}
+{"id": 45, "category": "logic_reasoning", "prompt": "Three switches are labeled A, B, and C. Only one is on. A is off and B is off. Which switch is on?"}
+{"id": 46, "category": "logic_reasoning", "prompt": "If statement P implies Q and Q is false, what can be concluded about P?"}
+{"id": 47, "category": "logic_reasoning", "prompt": "A number is greater than 10, even, and less than 14. What number is it?"}
+{"id": 48, "category": "logic_reasoning", "prompt": "Mia, Leo, and Nora each choose a different fruit: apple, pear, banana. Mia does not choose apple, Leo chooses pear, and Nora does not choose banana. Who chooses what?"}
+{"id": 49, "category": "logic_reasoning", "prompt": "A box contains only red and green balls. If a ball is not red, what color must it be?"}
+{"id": 50, "category": "logic_reasoning", "prompt": "If today is Tuesday, what day of the week will it be 10 days from now?"}
+{"id": 51, "category": "science", "prompt": "Explain why ice floats on liquid water in two sentences."}
+{"id": 52, "category": "science", "prompt": "Name three main differences between DNA and RNA."}
+{"id": 53, "category": "science", "prompt": "What happens to gas pressure when volume decreases at constant temperature?"}
+{"id": 54, "category": "science", "prompt": "Classify a dolphin as a fish or a mammal and briefly justify the answer."}
+{"id": 55, "category": "science", "prompt": "Why do objects fall toward Earth? Give a concise physical explanation."}
+{"id": 56, "category": "science", "prompt": "Describe photosynthesis using no more than three short sentences."}
+{"id": 57, "category": "science", "prompt": "What role do mitochondria play in a eukaryotic cell?"}
+{"id": 58, "category": "science", "prompt": "Why does the sky appear blue during the day? Answer briefly."}
+{"id": 59, "category": "science", "prompt": "State the difference between an element and a compound with one example of each."}
+{"id": 60, "category": "science", "prompt": "What causes the seasons on Earth? Correct a common misconception if relevant."}
+{"id": 61, "category": "general_knowledge", "prompt": "What is the capital of Canada, and in which province is it located?"}
+{"id": 62, "category": "general_knowledge", "prompt": "Briefly explain what inflation means in everyday economic terms."}
+{"id": 63, "category": "general_knowledge", "prompt": "Name the three branches of government commonly distinguished in democratic systems."}
+{"id": 64, "category": "general_knowledge", "prompt": "What is the main purpose of the United Nations? Answer in two sentences."}
+{"id": 65, "category": "general_knowledge", "prompt": "Explain the difference between weather and climate."}
+{"id": 66, "category": "general_knowledge", "prompt": "Which ocean is the largest on Earth, and what makes it geographically significant?"}
+{"id": 67, "category": "general_knowledge", "prompt": "What does GDP measure? Give a concise definition."}
+{"id": 68, "category": "general_knowledge", "prompt": "Who wrote the novel Frankenstein, and in which century was it published?"}
+{"id": 69, "category": "general_knowledge", "prompt": "What is the difference between a renewable and a non-renewable energy source?"}
+{"id": 70, "category": "general_knowledge", "prompt": "Why are time zones necessary? Give a practical explanation."}
+{"id": 71, "category": "language_tasks", "prompt": "Translate into Italian: 'The meeting has been moved to tomorrow morning.'"}
+{"id": 72, "category": "language_tasks", "prompt": "Translate into English: 'Il treno arriverà con dieci minuti di ritardo.'"}
+{"id": 73, "category": "language_tasks", "prompt": "Give two synonyms for the word 'rapid' and use one in a short sentence."}
+{"id": 74, "category": "language_tasks", "prompt": "Correct the grammar in this sentence: 'She don't like working on weekends.'"}
+{"id": 75, "category": "language_tasks", "prompt": "Rewrite 'The task was difficult, but we completed it successfully' in simpler English."}
+{"id": 76, "category": "language_tasks", "prompt": "Identify the adjective in this sentence: 'The old bridge crosses the narrow river.'"}
+{"id": 77, "category": "language_tasks", "prompt": "Turn this statement into a polite question: 'Send me the report by Friday.'"}
+{"id": 78, "category": "language_tasks", "prompt": "Change this sentence from active to passive voice: 'The team released the update yesterday.'"}
+{"id": 79, "category": "language_tasks", "prompt": "Give the plural forms of: analysis, child, mouse, criterion."}
+{"id": 80, "category": "language_tasks", "prompt": "Explain the difference between 'affect' and 'effect' with one short example."}
+{"id": 81, "category": "text_transformation", "prompt": "Summarize in one sentence: Regular exercise can improve cardiovascular health, strengthen muscles, reduce stress, and support better sleep."}
+{"id": 82, "category": "text_transformation", "prompt": "Rewrite this in a more formal tone: 'We fixed the problem and everything works now.'"}
+{"id": 83, "category": "text_transformation", "prompt": "Extract the city and date from this sentence: 'The conference will take place in Berlin on 14 October 2026.'"}
+{"id": 84, "category": "text_transformation", "prompt": "Convert this sentence into three bullet points: 'The app is fast, easy to use, and works offline.'"}
+{"id": 85, "category": "text_transformation", "prompt": "Shorten this message while preserving its meaning: 'Please remember that the office will be closed tomorrow because of scheduled maintenance.'"}
+{"id": 86, "category": "text_transformation", "prompt": "Paraphrase: 'The experiment failed because the input data were incomplete.'"}
+{"id": 87, "category": "text_transformation", "prompt": "Turn this note into a concise title: 'Discussion about reducing memory usage during model inference.'"}
+{"id": 88, "category": "text_transformation", "prompt": "Extract the names and roles: 'Sara is the project manager, David is the backend developer, and Lina is the designer.'"}
+{"id": 89, "category": "text_transformation", "prompt": "Rewrite this sentence to remove ambiguity: 'Alex told Jordan that he had missed the deadline.'"}
+{"id": 90, "category": "text_transformation", "prompt": "Convert this informal sentence into professional language: 'The server went down and we had to fix it really fast.'"}
+{"id": 91, "category": "sql_structured_output", "prompt": "Write a SQL query that selects all users older than 30 from a table named users."}
+{"id": 92, "category": "sql_structured_output", "prompt": "Return a JSON object with the keys name, age, and city for a person named Alice, age 28, living in Rome."}
+{"id": 93, "category": "sql_structured_output", "prompt": "Write a SQL query that counts how many orders have status equal to 'completed'."}
+{"id": 94, "category": "sql_structured_output", "prompt": "Create a regular expression that matches a simple integer with an optional leading minus sign."}
+{"id": 95, "category": "sql_structured_output", "prompt": "Write a SQL query that returns the five highest salaries from a table named employees."}
+{"id": 96, "category": "sql_structured_output", "prompt": "Return a compact JSON array containing the strings red, green, and blue."}
+{"id": 97, "category": "sql_structured_output", "prompt": "Write a SQL query that selects product names where price is between 10 and 50."}
+{"id": 98, "category": "sql_structured_output", "prompt": "Create a regular expression that matches strings starting with 'ABC' followed by exactly three digits."}
+{"id": 99, "category": "sql_structured_output", "prompt": "Write a SQL query that groups orders by customer_id and counts the orders for each customer."}
+{"id": 100, "category": "sql_structured_output", "prompt": "Return a JSON object representing a book with title 'Dune', author 'Frank Herbert', and year 1965."}

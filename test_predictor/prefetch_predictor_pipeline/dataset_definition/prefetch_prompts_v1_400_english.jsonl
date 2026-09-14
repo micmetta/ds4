@@ -1,0 +1,400 @@
+{"id": 101, "category": "computer_science", "prompt": "Why is a balanced binary search tree usually faster than a linked list for lookups?"}
+{"id": 102, "category": "computer_science", "prompt": "Can you explain what an operating system scheduler actually does?"}
+{"id": 103, "category": "computer_science", "prompt": "What happens behind the scenes when I type a website address into a browser and press Enter?"}
+{"id": 104, "category": "computer_science", "prompt": "In simple terms, why are database indexes useful?"}
+{"id": 105, "category": "computer_science", "prompt": "How is a compiler different from an interpreter?"}
+{"id": 106, "category": "computer_science", "prompt": "What does Big O notation tell me about an algorithm?"}
+{"id": 107, "category": "computer_science", "prompt": "Why can two programs that produce the same output have very different running times?"}
+{"id": 108, "category": "computer_science", "prompt": "Could you explain the difference between RAM and persistent storage?"}
+{"id": 109, "category": "computer_science", "prompt": "What is a race condition, and why can it be hard to reproduce?"}
+{"id": 110, "category": "computer_science", "prompt": "Why do CPUs have multiple levels of cache instead of one large cache?"}
+{"id": 111, "category": "computer_science", "prompt": "What is the basic idea of dynamic programming?"}
+{"id": 112, "category": "computer_science", "prompt": "How does a Bloom filter save memory, and what trade-off does it make?"}
+{"id": 113, "category": "computer_science", "prompt": "What does it mean for an algorithm to be stable when sorting data?"}
+{"id": 114, "category": "computer_science", "prompt": "Why is random access fast in an array but slow in a linked list?"}
+{"id": 115, "category": "computer_science", "prompt": "Can you briefly explain what a system call is?"}
+{"id": 116, "category": "computer_science", "prompt": "What is a page fault, and when does one occur?"}
+{"id": 117, "category": "computer_science", "prompt": "How does a mutex help when several threads share the same data?"}
+{"id": 118, "category": "computer_science", "prompt": "What is the difference between horizontal and vertical scaling?"}
+{"id": 119, "category": "computer_science", "prompt": "Why is DNS often described as the phone book of the internet?"}
+{"id": 120, "category": "computer_science", "prompt": "What does eventual consistency mean in a distributed system?"}
+{"id": 121, "category": "computer_science", "prompt": "How is a graph different from a tree in data structures?"}
+{"id": 122, "category": "computer_science", "prompt": "When would you choose breadth-first search instead of depth-first search?"}
+{"id": 123, "category": "computer_science", "prompt": "What problem does memory fragmentation cause?"}
+{"id": 124, "category": "computer_science", "prompt": "Why do many hash tables resize when they become too full?"}
+{"id": 125, "category": "computer_science", "prompt": "What is the difference between authentication and authorization?"}
+{"id": 126, "category": "computer_science", "prompt": "Can you explain what an API is without using too much technical jargon?"}
+{"id": 127, "category": "computer_science", "prompt": "How does a checksum help detect corrupted data?"}
+{"id": 128, "category": "computer_science", "prompt": "What does idempotent mean in the context of an HTTP request?"}
+{"id": 129, "category": "computer_science", "prompt": "Why is HTTPS safer than plain HTTP?"}
+{"id": 130, "category": "computer_science", "prompt": "What is a database transaction supposed to guarantee?"}
+{"id": 131, "category": "computer_science", "prompt": "How does a CPU decide which memory address to read or write?"}
+{"id": 132, "category": "computer_science", "prompt": "Why does binary representation work well for digital computers?"}
+{"id": 133, "category": "computer_science", "prompt": "What is the practical difference between a file system and a database?"}
+{"id": 134, "category": "computer_science", "prompt": "Why can too many context switches reduce system performance?"}
+{"id": 135, "category": "computer_science", "prompt": "What is the role of a network router in moving packets between networks?"}
+{"id": 136, "category": "computer_science", "prompt": "Why are primary keys important when designing relational tables?"}
+{"id": 137, "category": "computer_science", "prompt": "What makes a hash collision possible, and how can a hash table handle it?"}
+{"id": 138, "category": "computer_science", "prompt": "How is a software library different from a standalone application?"}
+{"id": 139, "category": "computer_science", "prompt": "Why can compression reduce storage size without changing the meaning of the original data?"}
+{"id": 140, "category": "computer_science", "prompt": "What is the main difference between symmetric and asymmetric encryption?"}
+{"id": 141, "category": "programming", "prompt": "Write a Python function that removes duplicate values from a list while keeping the original order."}
+{"id": 142, "category": "programming", "prompt": "Can you show me a small JavaScript function that converts Celsius to Fahrenheit?"}
+{"id": 143, "category": "programming", "prompt": "Write a C function that checks whether an integer is positive, negative, or zero."}
+{"id": 144, "category": "programming", "prompt": "How would you write a Python function that counts how many times each word appears in a sentence?"}
+{"id": 145, "category": "programming", "prompt": "Create a short Java method that returns true if a number is even."}
+{"id": 146, "category": "programming", "prompt": "Write a JavaScript function that finds the longest string in an array."}
+{"id": 147, "category": "programming", "prompt": "Show me a Python function that safely divides two numbers and handles division by zero."}
+{"id": 148, "category": "programming", "prompt": "Write a small C loop that prints the first ten multiples of 3."}
+{"id": 149, "category": "programming", "prompt": "Can you implement a Python function that returns the second largest distinct number in a list?"}
+{"id": 150, "category": "programming", "prompt": "Create a Java method that reverses the elements of an integer array."}
+{"id": 151, "category": "programming", "prompt": "Write a JavaScript function that removes all whitespace from a string."}
+{"id": 152, "category": "programming", "prompt": "Show a Python example that sorts a list of dictionaries by the key 'age'."}
+{"id": 153, "category": "programming", "prompt": "Write a C function that counts the number of characters in a string without using strlen."}
+{"id": 154, "category": "programming", "prompt": "Can you write a Python function that checks whether two strings are anagrams?"}
+{"id": 155, "category": "programming", "prompt": "Create a JavaScript function that sums only the positive numbers in an array."}
+{"id": 156, "category": "programming", "prompt": "Write a short Java method that returns the maximum value in an integer array."}
+{"id": 157, "category": "programming", "prompt": "Show me how to read a text file line by line in Python."}
+{"id": 158, "category": "programming", "prompt": "Write a Python function that splits a list into chunks of a given size."}
+{"id": 159, "category": "programming", "prompt": "Can you create a JavaScript function that capitalizes the first letter of every word?"}
+{"id": 160, "category": "programming", "prompt": "Write a C function that computes the greatest common divisor of two positive integers."}
+{"id": 161, "category": "programming", "prompt": "Give me a Python function that flattens a list containing one level of nested lists."}
+{"id": 162, "category": "programming", "prompt": "Write a Java method that counts how many digits are in a positive integer."}
+{"id": 163, "category": "programming", "prompt": "Create a short JavaScript function that returns the intersection of two arrays."}
+{"id": 164, "category": "programming", "prompt": "How would you implement a simple FIFO queue using a Python list or deque?"}
+{"id": 165, "category": "programming", "prompt": "Write a Python function that returns all keys whose dictionary value is greater than a threshold."}
+{"id": 166, "category": "programming", "prompt": "Create a C function that checks if a character is an uppercase English letter."}
+{"id": 167, "category": "programming", "prompt": "Write a JavaScript function that rotates an array one position to the right."}
+{"id": 168, "category": "programming", "prompt": "Show a compact Python function that computes the mean of a non-empty list of numbers."}
+{"id": 169, "category": "programming", "prompt": "Write a Java method that removes spaces from a string."}
+{"id": 170, "category": "programming", "prompt": "Create a Python function that returns the index of the first negative number, or -1 if none exists."}
+{"id": 171, "category": "programming", "prompt": "Write a Python function that counts the vowels in a sentence."}
+{"id": 172, "category": "programming", "prompt": "Show a JavaScript function that returns the smallest number in an array."}
+{"id": 173, "category": "programming", "prompt": "Write a C function that computes the sum of all integers from 1 to n."}
+{"id": 174, "category": "programming", "prompt": "How can I build a Python dictionary from one list of keys and another list of values?"}
+{"id": 175, "category": "programming", "prompt": "Write a Java method that checks whether a string is empty or contains only whitespace."}
+{"id": 176, "category": "programming", "prompt": "Create a Python function that returns only words longer than five characters."}
+{"id": 177, "category": "programming", "prompt": "Write a JavaScript function that counts how many times a given letter appears in a string."}
+{"id": 178, "category": "programming", "prompt": "Create a C function that returns the absolute value of an integer without using abs."}
+{"id": 179, "category": "programming", "prompt": "Write a Python function that converts every string in a list to lowercase."}
+{"id": 180, "category": "programming", "prompt": "Show a short Java example that swaps the first and last elements of an array."}
+{"id": 181, "category": "debugging_code_reasoning", "prompt": "Why does this Python code print the same list twice after I change b: a=[1,2]; b=a; b.append(3)?"}
+{"id": 182, "category": "debugging_code_reasoning", "prompt": "What is wrong with this loop: for i in range(1, 10, 0): print(i)?"}
+{"id": 183, "category": "debugging_code_reasoning", "prompt": "This function always returns after the first iteration: def total(xs):\n    s=0\n    for x in xs:\n        s+=x\n        return s\nWhat should change?"}
+{"id": 184, "category": "debugging_code_reasoning", "prompt": "Why can this C code overflow even if the final mathematical result seems small: int x = 50000 * 50000?"}
+{"id": 185, "category": "debugging_code_reasoning", "prompt": "I get a KeyError from data['name'] when some records have no name. What's a safer Python approach?"}
+{"id": 186, "category": "debugging_code_reasoning", "prompt": "Why does ['a','b','c'].sort() return None in Python?"}
+{"id": 187, "category": "debugging_code_reasoning", "prompt": "What is the issue with using = instead of == inside this C condition: if (x = 5)?"}
+{"id": 188, "category": "debugging_code_reasoning", "prompt": "This JavaScript comparison behaves strangely: [] == false. Can you explain the type coercion involved?"}
+{"id": 189, "category": "debugging_code_reasoning", "prompt": "Why does this Python code skip some items: for x in values: if x < 0: values.remove(x)?"}
+{"id": 190, "category": "debugging_code_reasoning", "prompt": "A Java method throws NullPointerException when calling user.getName(). What should I check first?"}
+{"id": 191, "category": "debugging_code_reasoning", "prompt": "Why is this recursive Python function broken: def countdown(n): print(n); countdown(n-1)?"}
+{"id": 192, "category": "debugging_code_reasoning", "prompt": "This SQL query duplicates rows after a JOIN. What is the first relationship between the tables I should inspect?"}
+{"id": 193, "category": "debugging_code_reasoning", "prompt": "Why might fopen return NULL in C even though the filename looks correct?"}
+{"id": 194, "category": "debugging_code_reasoning", "prompt": "My Python condition if x == 1 or 2 is always true. How should it be written?"}
+{"id": 195, "category": "debugging_code_reasoning", "prompt": "What bug is in this Java loop: for (int i=0; i<=array.length; i++) System.out.println(array[i]);?"}
+{"id": 196, "category": "debugging_code_reasoning", "prompt": "Why does parseInt('08px') in JavaScript return a number instead of failing completely?"}
+{"id": 197, "category": "debugging_code_reasoning", "prompt": "This Python dictionary comprehension overwrites values: {x[0]: x for x in names}. Why can that happen?"}
+{"id": 198, "category": "debugging_code_reasoning", "prompt": "I expected 0.1 + 0.2 == 0.3 to be true in JavaScript. Why isn't it?"}
+{"id": 199, "category": "debugging_code_reasoning", "prompt": "What can go wrong if two threads increment the same counter without synchronization?"}
+{"id": 200, "category": "debugging_code_reasoning", "prompt": "Why does this C function return a pointer to invalid memory: char* f(){ char s[10]=\"hi\"; return s; }?"}
+{"id": 201, "category": "debugging_code_reasoning", "prompt": "My Python list index is out of range when I access items[len(items)]. Which index should be the last valid one?"}
+{"id": 202, "category": "debugging_code_reasoning", "prompt": "Why does a while loop using a floating-point equality test sometimes fail to terminate?"}
+{"id": 203, "category": "debugging_code_reasoning", "prompt": "A SQL LEFT JOIN behaves like an INNER JOIN after I add a condition on the right table in WHERE. Why?"}
+{"id": 204, "category": "debugging_code_reasoning", "prompt": "What is wrong with this Python default argument: def add_item(x, items=[]): items.append(x); return items?"}
+{"id": 205, "category": "debugging_code_reasoning", "prompt": "Why can calling free twice on the same C pointer crash a program?"}
+{"id": 206, "category": "debugging_code_reasoning", "prompt": "This Java code compares two strings with == and gives an unexpected result. What should be used instead?"}
+{"id": 207, "category": "debugging_code_reasoning", "prompt": "Why does deleting a key from a Python dictionary during iteration raise an error?"}
+{"id": 208, "category": "debugging_code_reasoning", "prompt": "My JavaScript async function returns a Promise instead of the final value. What am I forgetting to do?"}
+{"id": 209, "category": "debugging_code_reasoning", "prompt": "A Python variable defined inside a function isn't visible outside it. Is this a scope issue?"}
+{"id": 210, "category": "debugging_code_reasoning", "prompt": "Why can SELECT * FROM users WHERE age > '20' be risky if age is stored as text?"}
+{"id": 211, "category": "debugging_code_reasoning", "prompt": "This Python loop never starts: x=5; while x<0: x-=1. What is the logical mistake?"}
+{"id": 212, "category": "debugging_code_reasoning", "prompt": "Why can this C expression cause division by zero: int y = 10 / (x - x)?"}
+{"id": 213, "category": "debugging_code_reasoning", "prompt": "I use input() in Python and then do value + 1, but I get a TypeError. What conversion is missing?"}
+{"id": 214, "category": "debugging_code_reasoning", "prompt": "A SQL query using WHERE name = 'mario' does not match the stored value 'Mario'. What could explain this?"}
+{"id": 215, "category": "debugging_code_reasoning", "prompt": "Why can modifying a Java ArrayList inside a for-each loop raise ConcurrentModificationException?"}
+{"id": 216, "category": "debugging_code_reasoning", "prompt": "In Python, when does the condition if my_list: evaluate to false?"}
+{"id": 217, "category": "debugging_code_reasoning", "prompt": "This JavaScript code declares const x = 3 and later executes x = 4. Why does it fail?"}
+{"id": 218, "category": "debugging_code_reasoning", "prompt": "Why does a Python function with no explicit return statement produce None?"}
+{"id": 219, "category": "debugging_code_reasoning", "prompt": "In C, why is reading a[5] invalid when the array was declared as int a[5]?"}
+{"id": 220, "category": "debugging_code_reasoning", "prompt": "A SELECT COUNT(*) query returns zero even though the table has rows. Which filters or joins should I inspect first?"}
+{"id": 221, "category": "mathematics", "prompt": "If I split 84 euros equally among 7 people, how much does each person get?"}
+{"id": 222, "category": "mathematics", "prompt": "A jacket costs 120 euros after a 20% discount. What was its original price?"}
+{"id": 223, "category": "mathematics", "prompt": "Solve 5x - 9 = 31 and give a quick check of the result."}
+{"id": 224, "category": "mathematics", "prompt": "A recipe for 4 people needs 300 grams of flour. How much flour do I need for 10 people?"}
+{"id": 225, "category": "mathematics", "prompt": "What is the least common multiple of 12 and 18?"}
+{"id": 226, "category": "mathematics", "prompt": "A triangle has base 10 cm and height 6 cm. What's its area?"}
+{"id": 227, "category": "mathematics", "prompt": "If a savings account grows from 500 to 540 euros, what percentage increase is that?"}
+{"id": 228, "category": "mathematics", "prompt": "What is the median of 3, 7, 8, 10, 15, 21, 30?"}
+{"id": 229, "category": "mathematics", "prompt": "Convert 2.75 hours into hours and minutes."}
+{"id": 230, "category": "mathematics", "prompt": "A fair coin is tossed three times. What is the probability of getting three heads?"}
+{"id": 231, "category": "mathematics", "prompt": "Solve the inequality 2x + 3 < 11."}
+{"id": 232, "category": "mathematics", "prompt": "What is the square root of 144, and why are there two solutions to x squared equals 144?"}
+{"id": 233, "category": "mathematics", "prompt": "A shop adds 22% VAT to a 50 euro item. What total price does the customer pay?"}
+{"id": 234, "category": "mathematics", "prompt": "If 5 workers finish a job in 12 days at the same rate, how many worker-days does the job require?"}
+{"id": 235, "category": "mathematics", "prompt": "Find the next two numbers in the pattern 1, 1, 2, 3, 5, 8."}
+{"id": 236, "category": "mathematics", "prompt": "A right triangle has legs of length 6 and 8. How long is the hypotenuse?"}
+{"id": 237, "category": "mathematics", "prompt": "What is 3 to the power of 5?"}
+{"id": 238, "category": "mathematics", "prompt": "How many different pairs can be chosen from 6 people?"}
+{"id": 239, "category": "mathematics", "prompt": "A train covers 90 km in 45 minutes. What is its average speed in km/h?"}
+{"id": 240, "category": "mathematics", "prompt": "Convert the decimal 0.375 into a simplified fraction."}
+{"id": 241, "category": "mathematics", "prompt": "If x:y = 3:5 and x = 18, what is y?"}
+{"id": 242, "category": "mathematics", "prompt": "What is the sum of the interior angles of a hexagon?"}
+{"id": 243, "category": "mathematics", "prompt": "A number increases from 64 to 80. By what percentage did it increase?"}
+{"id": 244, "category": "mathematics", "prompt": "Solve the system x + y = 10 and x - y = 4."}
+{"id": 245, "category": "mathematics", "prompt": "What is the remainder when 137 is divided by 9?"}
+{"id": 246, "category": "mathematics", "prompt": "A bag has 4 red, 3 blue, and 3 green balls. What's the probability of drawing a blue ball?"}
+{"id": 247, "category": "mathematics", "prompt": "Find the average of 12, 17, 19, 22, and 30."}
+{"id": 248, "category": "mathematics", "prompt": "How many minutes are there in 2 days and 6 hours?"}
+{"id": 249, "category": "mathematics", "prompt": "If the circumference of a circle is 10 pi, what is its radius?"}
+{"id": 250, "category": "mathematics", "prompt": "Factor the expression x squared minus 9."}
+{"id": 251, "category": "mathematics", "prompt": "If 72 dollars pay for 6 identical tickets, how much does one ticket cost?"}
+{"id": 252, "category": "mathematics", "prompt": "A price falls from 200 to 170. What percentage discount is that?"}
+{"id": 253, "category": "mathematics", "prompt": "Solve 4x + 2 = 26 and verify the answer briefly."}
+{"id": 254, "category": "mathematics", "prompt": "A room is 4.5 meters long and 3 meters wide. What is its floor area?"}
+{"id": 255, "category": "mathematics", "prompt": "What is the greatest common divisor of 48 and 60?"}
+{"id": 256, "category": "mathematics", "prompt": "If I travel 18 km in 90 minutes, what is my average speed in km/h?"}
+{"id": 257, "category": "mathematics", "prompt": "What is one third of three quarters?"}
+{"id": 258, "category": "mathematics", "prompt": "In a class of 25 students, 15 are present. What percentage of the class is present?"}
+{"id": 259, "category": "mathematics", "prompt": "What is the next number in the sequence 3, 6, 12, 24, 48?"}
+{"id": 260, "category": "mathematics", "prompt": "A fair die is rolled once. What is the probability of getting a number greater than 4?"}
+{"id": 261, "category": "logic_reasoning", "prompt": "Every laptop in the office has a sticker. This device has no sticker. Can it be one of those office laptops?"}
+{"id": 262, "category": "logic_reasoning", "prompt": "Nina arrived before Omar but after Paolo. Who arrived first?"}
+{"id": 263, "category": "logic_reasoning", "prompt": "If no reptiles have fur and this animal has fur, what can you conclude about it being a reptile?"}
+{"id": 264, "category": "logic_reasoning", "prompt": "A code is a three-digit number. The first digit is 4, the last is 7, and the middle digit is twice 3. What is the code?"}
+{"id": 265, "category": "logic_reasoning", "prompt": "Four books are stacked. The red book is above the blue one, and the blue one is above the green one. Which of those three is lowest?"}
+{"id": 266, "category": "logic_reasoning", "prompt": "If the alarm sounds whenever the door opens, and the alarm did not sound, what does that imply under the stated rule?"}
+{"id": 267, "category": "logic_reasoning", "prompt": "Tom is taller than Eva, Eva is taller than Sam, and Sam is taller than Li. Who is second tallest?"}
+{"id": 268, "category": "logic_reasoning", "prompt": "A box can contain only circles or squares. This item is not a square. What shape must it be?"}
+{"id": 269, "category": "logic_reasoning", "prompt": "If all approved requests have an ID and this request has no ID, can it be approved?"}
+{"id": 270, "category": "logic_reasoning", "prompt": "There are three cups: red, white, and black. The coin is not under red or white. Where is it?"}
+{"id": 271, "category": "logic_reasoning", "prompt": "A meeting is after lunch but before a 4 PM call. Which event happens last?"}
+{"id": 272, "category": "logic_reasoning", "prompt": "If A is true only when B is true, and B is false, can A be true?"}
+{"id": 273, "category": "logic_reasoning", "prompt": "Three runners finish in different positions. Lea beats Max, and Max beats Zoe. What is the finishing order?"}
+{"id": 274, "category": "logic_reasoning", "prompt": "If a password must contain a digit and this password has no digits, does it satisfy the rule?"}
+{"id": 275, "category": "logic_reasoning", "prompt": "A number is odd, greater than 20, and less than 24. Which number fits?"}
+{"id": 276, "category": "logic_reasoning", "prompt": "Every employee in team X works remotely. Dana works in team X. What can be concluded about Dana?"}
+{"id": 277, "category": "logic_reasoning", "prompt": "If some cats are black, does it follow that all black animals are cats? Explain briefly."}
+{"id": 278, "category": "logic_reasoning", "prompt": "A parcel is either in locker A or locker B. Locker A is empty. Where must the parcel be?"}
+{"id": 279, "category": "logic_reasoning", "prompt": "If Monday's task must happen before Tuesday's task, can Tuesday's task legally be completed first?"}
+{"id": 280, "category": "logic_reasoning", "prompt": "Three lights are numbered 1, 2, and 3. Exactly two are on. Light 1 is off. What do you know about lights 2 and 3?"}
+{"id": 281, "category": "logic_reasoning", "prompt": "If P implies Q and P is true, what follows about Q?"}
+{"id": 282, "category": "logic_reasoning", "prompt": "Alex is not younger than Bea, and Bea is older than Chris. Can Chris be the oldest of the three?"}
+{"id": 283, "category": "logic_reasoning", "prompt": "A card is either red or black. It is not black. What color is it?"}
+{"id": 284, "category": "logic_reasoning", "prompt": "If all metal objects conduct electricity and this object is metal, what property should it have according to the premise?"}
+{"id": 285, "category": "logic_reasoning", "prompt": "A bus leaves at 8:10, a train at 8:05, and a tram at 8:20. Which leaves in the middle?"}
+{"id": 286, "category": "logic_reasoning", "prompt": "There are five seats in a row. Mia sits immediately left of Leo. If Leo is in seat 3, where is Mia?"}
+{"id": 287, "category": "logic_reasoning", "prompt": "If exactly one statement is true and statement A is false while statement B is true, what must be true about any remaining statements?"}
+{"id": 288, "category": "logic_reasoning", "prompt": "A store is open only if both the lights are on and the door is unlocked. The door is locked. Can the store be open under that rule?"}
+{"id": 289, "category": "logic_reasoning", "prompt": "If a sequence alternates red, blue, red, blue, what color should position 11 be?"}
+{"id": 290, "category": "logic_reasoning", "prompt": "No square is a circle. Shape X is a square. Can Shape X be a circle?"}
+{"id": 291, "category": "logic_reasoning", "prompt": "Julia arrived after Mark but before Helen. Who arrived last?"}
+{"id": 292, "category": "logic_reasoning", "prompt": "If every valid file ends in .csv and this file ends in .txt, can it be valid under that rule?"}
+{"id": 293, "category": "logic_reasoning", "prompt": "A number is even, greater than 30, and less than 34. What is it?"}
+{"id": 294, "category": "logic_reasoning", "prompt": "There are three boxes, A, B, and C. The object is not in A and not in C. Where is it?"}
+{"id": 295, "category": "logic_reasoning", "prompt": "If every enrolled student has a badge and Luke has no badge, what can be inferred using only that rule?"}
+{"id": 296, "category": "logic_reasoning", "prompt": "Anna is faster than Paul but slower than Sarah. Who is the fastest?"}
+{"id": 297, "category": "logic_reasoning", "prompt": "A switch can only be on or off. If it is not on, what state must it be in?"}
+{"id": 298, "category": "logic_reasoning", "prompt": "If P implies Q and Q is false, what logical conclusion can you draw about P?"}
+{"id": 299, "category": "logic_reasoning", "prompt": "In a race, B finishes after A and C finishes after B. What is the order of the three runners?"}
+{"id": 300, "category": "logic_reasoning", "prompt": "If today is Friday, what day of the week will it be 9 days from now?"}
+{"id": 301, "category": "science", "prompt": "Why does metal usually feel colder than wood even when both are in the same room?"}
+{"id": 302, "category": "science", "prompt": "What is the main job of red blood cells?"}
+{"id": 303, "category": "science", "prompt": "Why does salt lower the freezing point of water?"}
+{"id": 304, "category": "science", "prompt": "How does a vaccine help the immune system prepare for an infection?"}
+{"id": 305, "category": "science", "prompt": "What is the difference between mass and weight?"}
+{"id": 306, "category": "science", "prompt": "Why can we see the Moon even though it does not produce its own visible light?"}
+{"id": 307, "category": "science", "prompt": "What happens to water molecules when liquid water boils?"}
+{"id": 308, "category": "science", "prompt": "Why is carbon dioxide considered a greenhouse gas?"}
+{"id": 309, "category": "science", "prompt": "What is the role of chlorophyll in plants?"}
+{"id": 310, "category": "science", "prompt": "How do antibiotics differ from antiviral drugs?"}
+{"id": 311, "category": "science", "prompt": "Why does a balloon expand when the air inside it is heated?"}
+{"id": 312, "category": "science", "prompt": "What is an isotope in simple terms?"}
+{"id": 313, "category": "science", "prompt": "Why are enzymes important for biological reactions?"}
+{"id": 314, "category": "science", "prompt": "How is a physical change different from a chemical change?"}
+{"id": 315, "category": "science", "prompt": "What keeps planets in orbit around the Sun?"}
+{"id": 316, "category": "science", "prompt": "Why does sound travel differently through air and water?"}
+{"id": 317, "category": "science", "prompt": "What is the purpose of the ozone layer?"}
+{"id": 318, "category": "science", "prompt": "How does natural selection change a population over generations?"}
+{"id": 319, "category": "science", "prompt": "Why can iron rust while gold generally does not?"}
+{"id": 320, "category": "science", "prompt": "What is the difference between a virus and a bacterium?"}
+{"id": 321, "category": "science", "prompt": "Why does increasing temperature usually speed up a chemical reaction?"}
+{"id": 322, "category": "science", "prompt": "What happens during cellular respiration?"}
+{"id": 323, "category": "science", "prompt": "How are arteries and veins different?"}
+{"id": 324, "category": "science", "prompt": "Why are noble gases relatively unreactive?"}
+{"id": 325, "category": "science", "prompt": "What causes an eclipse of the Moon?"}
+{"id": 326, "category": "science", "prompt": "How does insulation reduce heat transfer in a house?"}
+{"id": 327, "category": "science", "prompt": "Why is freshwater less dense than most rocks?"}
+{"id": 328, "category": "science", "prompt": "What does pH measure, and what does a value below 7 indicate?"}
+{"id": 329, "category": "science", "prompt": "How does the human eye focus on objects at different distances?"}
+{"id": 330, "category": "science", "prompt": "What is the basic difference between nuclear fission and nuclear fusion?"}
+{"id": 331, "category": "science", "prompt": "Why does ice melt faster in a warm room than in a cold one?"}
+{"id": 332, "category": "science", "prompt": "What role does hemoglobin play in the blood?"}
+{"id": 333, "category": "science", "prompt": "Why do we see lightning before we hear thunder?"}
+{"id": 334, "category": "science", "prompt": "What is the difference between evaporation and boiling?"}
+{"id": 335, "category": "science", "prompt": "How does a plant move water from its roots to its leaves?"}
+{"id": 336, "category": "science", "prompt": "Why does atmospheric pressure decrease as altitude increases?"}
+{"id": 337, "category": "science", "prompt": "What is one key difference between prokaryotic and eukaryotic cells?"}
+{"id": 338, "category": "science", "prompt": "Why is copper a good conductor of electricity?"}
+{"id": 339, "category": "science", "prompt": "What happens to the frequency of a wave when its period decreases?"}
+{"id": 340, "category": "science", "prompt": "Why are ocean tides influenced mainly by the Moon?"}
+{"id": 341, "category": "general_knowledge", "prompt": "Why was the printing press such an important invention in European history?"}
+{"id": 342, "category": "general_knowledge", "prompt": "What is the difference between a country and a continent?"}
+{"id": 343, "category": "general_knowledge", "prompt": "What does a central bank generally do?"}
+{"id": 344, "category": "general_knowledge", "prompt": "Why is the Suez Canal important for international trade?"}
+{"id": 345, "category": "general_knowledge", "prompt": "What is meant by a constitutional monarchy?"}
+{"id": 346, "category": "general_knowledge", "prompt": "Which language has the most native speakers worldwide, and which has the widest international use?"}
+{"id": 347, "category": "general_knowledge", "prompt": "What is the purpose of a census?"}
+{"id": 348, "category": "general_knowledge", "prompt": "Why is the Equator important in geography?"}
+{"id": 349, "category": "general_knowledge", "prompt": "What does UNESCO do?"}
+{"id": 350, "category": "general_knowledge", "prompt": "What was the Renaissance, in a couple of sentences?"}
+{"id": 351, "category": "general_knowledge", "prompt": "Why do countries use different currencies?"}
+{"id": 352, "category": "general_knowledge", "prompt": "What is the main difference between a republic and a monarchy?"}
+{"id": 353, "category": "general_knowledge", "prompt": "Which continent contains the Sahara Desert?"}
+{"id": 354, "category": "general_knowledge", "prompt": "What is a trade deficit in simple terms?"}
+{"id": 355, "category": "general_knowledge", "prompt": "Why is the Panama Canal strategically important?"}
+{"id": 356, "category": "general_knowledge", "prompt": "What is meant by freedom of the press?"}
+{"id": 357, "category": "general_knowledge", "prompt": "What is the difference between a city, a state, and a country in the United States?"}
+{"id": 358, "category": "general_knowledge", "prompt": "Why is the Nile historically important to Egypt?"}
+{"id": 359, "category": "general_knowledge", "prompt": "What does the term 'industrial revolution' refer to?"}
+{"id": 360, "category": "general_knowledge", "prompt": "What is the purpose of a national constitution?"}
+{"id": 361, "category": "general_knowledge", "prompt": "Why are leap years added to the calendar?"}
+{"id": 362, "category": "general_knowledge", "prompt": "What is the difference between latitude and longitude?"}
+{"id": 363, "category": "general_knowledge", "prompt": "What is an exchange rate?"}
+{"id": 364, "category": "general_knowledge", "prompt": "Why is Antarctica considered a desert?"}
+{"id": 365, "category": "general_knowledge", "prompt": "Who painted The Starry Night, and what art movement is he commonly associated with?"}
+{"id": 366, "category": "general_knowledge", "prompt": "What is the basic purpose of the World Health Organization?"}
+{"id": 367, "category": "general_knowledge", "prompt": "What does 'open source' mean for software?"}
+{"id": 368, "category": "general_knowledge", "prompt": "Why do many countries have a parliament?"}
+{"id": 369, "category": "general_knowledge", "prompt": "What is the difference between importing and exporting goods?"}
+{"id": 370, "category": "general_knowledge", "prompt": "What is cultural heritage, and why do societies try to preserve it?"}
+{"id": 371, "category": "general_knowledge", "prompt": "Why do leap years exist?"}
+{"id": 372, "category": "general_knowledge", "prompt": "What is the difference between a lake and a sea?"}
+{"id": 373, "category": "general_knowledge", "prompt": "What is the general role of a central bank?"}
+{"id": 374, "category": "general_knowledge", "prompt": "Why is the Panama Canal important to global trade?"}
+{"id": 375, "category": "general_knowledge", "prompt": "What does representative democracy mean?"}
+{"id": 376, "category": "general_knowledge", "prompt": "On which continent is the Gobi Desert located?"}
+{"id": 377, "category": "general_knowledge", "prompt": "What does the unemployment rate measure?"}
+{"id": 378, "category": "general_knowledge", "prompt": "Why is Greenwich used as a reference for world time zones?"}
+{"id": 379, "category": "general_knowledge", "prompt": "What is the difference between importing and exporting?"}
+{"id": 380, "category": "general_knowledge", "prompt": "What is a UNESCO World Heritage Site in simple terms?"}
+{"id": 381, "category": "language_tasks", "prompt": "Correct the grammar in this sentence: 'She don't know where the station is.'"}
+{"id": 382, "category": "language_tasks", "prompt": "Rewrite 'I need this now' as a polite workplace request."}
+{"id": 383, "category": "language_tasks", "prompt": "Give two synonyms for 'accurate' and use one in a short sentence."}
+{"id": 384, "category": "language_tasks", "prompt": "Change this sentence to the past tense: 'They meet every Friday after work.'"}
+{"id": 385, "category": "language_tasks", "prompt": "Turn this statement into a question: 'The package has arrived.'"}
+{"id": 386, "category": "language_tasks", "prompt": "Rewrite this in simpler English: 'The implementation requires substantial computational resources.'"}
+{"id": 387, "category": "language_tasks", "prompt": "Correct the punctuation: 'Before we leave lets check the doors windows and lights.'"}
+{"id": 388, "category": "language_tasks", "prompt": "Change to passive voice: 'The technician replaced the damaged cable.'"}
+{"id": 389, "category": "language_tasks", "prompt": "Give one antonym for 'temporary' and use it in a sentence."}
+{"id": 390, "category": "language_tasks", "prompt": "Rewrite this sentence so it sounds less demanding: 'Send the report before lunch.'"}
+{"id": 391, "category": "language_tasks", "prompt": "Correct the error: 'There are less people here today.'"}
+{"id": 392, "category": "language_tasks", "prompt": "Identify the adjective and adverb in: 'The careful driver stopped suddenly.'"}
+{"id": 393, "category": "language_tasks", "prompt": "Turn this direct question into reported speech: Tom asked, 'Did you finish the task?'"}
+{"id": 394, "category": "language_tasks", "prompt": "Replace 'very big' with a more precise adjective in: 'They built a very big warehouse.'"}
+{"id": 395, "category": "language_tasks", "prompt": "Change this sentence from singular to plural: 'The child carries a heavy box.'"}
+{"id": 396, "category": "language_tasks", "prompt": "Rewrite in a warmer tone: 'Your application was received.'"}
+{"id": 397, "category": "language_tasks", "prompt": "Explain the difference between 'fewer' and 'less' with a short example."}
+{"id": 398, "category": "language_tasks", "prompt": "Correct the spelling and grammar: 'Your definately going to recieve an answer soon.'"}
+{"id": 399, "category": "language_tasks", "prompt": "Give two natural alternatives to 'I completely agree.'"}
+{"id": 400, "category": "language_tasks", "prompt": "Change to active voice: 'The final decision was made by the committee.'"}
+{"id": 401, "category": "language_tasks", "prompt": "Rewrite this informal sentence in professional English: 'We messed up the schedule.'"}
+{"id": 402, "category": "language_tasks", "prompt": "Explain the difference between 'its' and 'it's' using one example of each."}
+{"id": 403, "category": "language_tasks", "prompt": "Make this request friendlier: 'Move your car.'"}
+{"id": 404, "category": "language_tasks", "prompt": "Identify the subject, verb, and object in: 'The mechanic repaired the engine.'"}
+{"id": 405, "category": "language_tasks", "prompt": "Rewrite without the double negative: 'I didn't see nobody there.'"}
+{"id": 406, "category": "language_tasks", "prompt": "Change this sentence to future tense: 'She starts the new job on Monday.'"}
+{"id": 407, "category": "language_tasks", "prompt": "Give one synonym and one antonym for 'complex'."}
+{"id": 408, "category": "language_tasks", "prompt": "Correct the sentence: 'He has wrote three emails this morning.'"}
+{"id": 409, "category": "language_tasks", "prompt": "Turn this command into a polite question: 'Open the window.'"}
+{"id": 410, "category": "language_tasks", "prompt": "Explain the difference between 'advice' and 'advise' with a brief example."}
+{"id": 411, "category": "language_tasks", "prompt": "Rewrite this sentence to avoid repetition: 'The project was delayed because the project lacked funding.'"}
+{"id": 412, "category": "language_tasks", "prompt": "Change this sentence from first person to third person: 'I check my email every morning.'"}
+{"id": 413, "category": "language_tasks", "prompt": "Correct the word choice: 'The weather had a big affect on attendance.'"}
+{"id": 414, "category": "language_tasks", "prompt": "Make this sentence more concise: 'The reason is because the server was unavailable.'"}
+{"id": 415, "category": "language_tasks", "prompt": "Identify the preposition in: 'The keys are under the notebook.'"}
+{"id": 416, "category": "language_tasks", "prompt": "Rewrite this to sound more confident: 'I think maybe this approach could work.'"}
+{"id": 417, "category": "language_tasks", "prompt": "Turn this statement into a negative sentence: 'They have completed the migration.'"}
+{"id": 418, "category": "language_tasks", "prompt": "Correct the sentence: 'Each of the students have a laptop.'"}
+{"id": 419, "category": "language_tasks", "prompt": "Replace the phrase 'a lot of' with a more formal alternative in: 'We received a lot of requests.'"}
+{"id": 420, "category": "language_tasks", "prompt": "Explain the difference between 'who' and 'whom' with one short example."}
+{"id": 421, "category": "text_transformation", "prompt": "Summarize this in one sentence: The library extended its opening hours during exam week so students can study later in the evening."}
+{"id": 422, "category": "text_transformation", "prompt": "Rewrite in a more casual tone: 'We appreciate your prompt response to our inquiry.'"}
+{"id": 423, "category": "text_transformation", "prompt": "Extract the person's name, company, and role: 'Marta Rossi joined Vega Labs as a data analyst.'"}
+{"id": 424, "category": "text_transformation", "prompt": "Turn this into a short checklist: 'Before leaving, lock the door, switch off the lights, and close the windows.'"}
+{"id": 425, "category": "text_transformation", "prompt": "Make this sentence more concise: 'At this point in time, we are currently unable to provide a definitive answer.'"}
+{"id": 426, "category": "text_transformation", "prompt": "Paraphrase without changing the meaning: 'Remote work can reduce commuting time for employees.'"}
+{"id": 427, "category": "text_transformation", "prompt": "Create a short headline from: 'Local school opens a new science laboratory for students.'"}
+{"id": 428, "category": "text_transformation", "prompt": "Extract the two prices from: 'The basic plan costs 12 euros, while the premium plan costs 25 euros.'"}
+{"id": 429, "category": "text_transformation", "prompt": "Rewrite to make the cause clearer: 'The flight was delayed. Heavy fog covered the airport.'"}
+{"id": 430, "category": "text_transformation", "prompt": "Convert this note into a professional email subject: 'Need approval for next week's software release.'"}
+{"id": 431, "category": "text_transformation", "prompt": "Summarize in one sentence: 'The company will migrate its servers on Saturday, so the service may be unavailable for two hours.'"}
+{"id": 432, "category": "text_transformation", "prompt": "Rewrite this message to sound reassuring: 'We found an issue in the payment system and engineers are working on it.'"}
+{"id": 433, "category": "text_transformation", "prompt": "Extract the date, time, and place: 'Your appointment is on 8 November at 14:30 in Room 204.'"}
+{"id": 434, "category": "text_transformation", "prompt": "Turn this sentence into two clear steps: 'Download the installer and then restart the computer after installation.'"}
+{"id": 435, "category": "text_transformation", "prompt": "Shorten this notification: 'Your password will expire in three days, so please update it before then.'"}
+{"id": 436, "category": "text_transformation", "prompt": "Paraphrase: 'Demand increased faster than the factory could expand production.'"}
+{"id": 437, "category": "text_transformation", "prompt": "Create a descriptive title for: 'A guide explaining how to back up photos before replacing a phone.'"}
+{"id": 438, "category": "text_transformation", "prompt": "Extract all quantities: 'Add 250 ml of milk, 2 eggs, and 100 grams of sugar.'"}
+{"id": 439, "category": "text_transformation", "prompt": "Rewrite this to avoid repetition: 'The report was long, and because the report was long, few people read the report completely.'"}
+{"id": 440, "category": "text_transformation", "prompt": "Turn this paragraph into one sentence: 'The road is closed for repairs. Buses are using a temporary route. Delays are expected.'"}
+{"id": 441, "category": "text_transformation", "prompt": "Make this feedback more constructive: 'This interface is confusing and badly organized.'"}
+{"id": 442, "category": "text_transformation", "prompt": "Extract the product, quantity, and destination: 'Ship 12 monitors to the Turin office.'"}
+{"id": 443, "category": "text_transformation", "prompt": "Rewrite this as a neutral factual statement: 'The ridiculous update made everything worse.'"}
+{"id": 444, "category": "text_transformation", "prompt": "Turn this into a concise warning: 'If you unplug the device while the update is running, the installation may fail.'"}
+{"id": 445, "category": "text_transformation", "prompt": "Summarize: 'The experiment was repeated three times, produced similar measurements each time, and supported the original hypothesis.'"}
+{"id": 446, "category": "text_transformation", "prompt": "Rewrite this sentence for a beginner: 'The application authenticates users through cryptographic credentials.'"}
+{"id": 447, "category": "text_transformation", "prompt": "Extract the names of all cities: 'The train travels from Milan through Bologna and ends in Florence.'"}
+{"id": 448, "category": "text_transformation", "prompt": "Convert this into a yes-or-no question: 'The backup completed successfully.'"}
+{"id": 449, "category": "text_transformation", "prompt": "Write a short label for this setting: 'Choose whether notifications should make a sound.'"}
+{"id": 450, "category": "text_transformation", "prompt": "Remove unnecessary words: 'In my personal opinion, I think that the second option is better.'"}
+{"id": 451, "category": "text_transformation", "prompt": "Summarize in one sentence: 'The museum will be closed on Monday for maintenance and will reopen normally on Tuesday morning.'"}
+{"id": 452, "category": "text_transformation", "prompt": "Rewrite this more professionally: 'The program crashed and we had to fix it really quickly.'"}
+{"id": 453, "category": "text_transformation", "prompt": "Extract the name, date, and city: 'Lucas Brown will attend the event on May 12 in Boston.'"}
+{"id": 454, "category": "text_transformation", "prompt": "Turn this into three bullet points: 'To register you need an email address, a password, and a phone number.'"}
+{"id": 455, "category": "text_transformation", "prompt": "Shorten this while preserving the meaning: 'Your delivery may be delayed because of severe weather conditions.'"}
+{"id": 456, "category": "text_transformation", "prompt": "Paraphrase: 'The new system uses less memory than the previous version.'"}
+{"id": 457, "category": "text_transformation", "prompt": "Create a short title for: 'Instructions for recovering an account after forgetting the password.'"}
+{"id": 458, "category": "text_transformation", "prompt": "Extract all quantities: 'We need 4 batteries, 2 USB cables, and one 64 GB memory card.'"}
+{"id": 459, "category": "text_transformation", "prompt": "Rewrite in a neutral tone: 'This ridiculous decision wasted everyone's time.'"}
+{"id": 460, "category": "text_transformation", "prompt": "Turn this into a yes-or-no question: 'The server restarted successfully.'"}
+{"id": 461, "category": "sql_structured_output", "prompt": "Write a SQL query to return the names of customers whose country is 'Italy'."}
+{"id": 462, "category": "sql_structured_output", "prompt": "Create a JSON object for a user named Marco with id 17 and active set to true."}
+{"id": 463, "category": "sql_structured_output", "prompt": "Write a regular expression that matches exactly five decimal digits."}
+{"id": 464, "category": "sql_structured_output", "prompt": "Write a SQL query that finds products with stock equal to zero."}
+{"id": 465, "category": "sql_structured_output", "prompt": "Return a JSON array containing three objects with ids 1, 2, and 3."}
+{"id": 466, "category": "sql_structured_output", "prompt": "Write a SQL query that orders employees by hire_date from newest to oldest."}
+{"id": 467, "category": "sql_structured_output", "prompt": "Create a regex that matches a lowercase word containing only letters a to z."}
+{"id": 468, "category": "sql_structured_output", "prompt": "Return JSON for a movie titled 'Arrival', released in 2016, with genre 'science fiction'."}
+{"id": 469, "category": "sql_structured_output", "prompt": "Write a SQL query that computes the average price from the products table."}
+{"id": 470, "category": "sql_structured_output", "prompt": "Write a SQL query to delete rows from sessions where expired is true."}
+{"id": 471, "category": "sql_structured_output", "prompt": "Create a JSON object with keys width and height set to 1920 and 1080."}
+{"id": 472, "category": "sql_structured_output", "prompt": "Write a regex that matches either 'yes' or 'no' exactly."}
+{"id": 473, "category": "sql_structured_output", "prompt": "Write a SQL query that selects distinct city values from customers."}
+{"id": 474, "category": "sql_structured_output", "prompt": "Return a JSON array of the numbers 2, 4, 6, 8, and 10."}
+{"id": 475, "category": "sql_structured_output", "prompt": "Write a SQL query joining orders to customers using customer_id and returning order id plus customer name."}
+{"id": 476, "category": "sql_structured_output", "prompt": "Create a regex for a string that ends with '.csv'."}
+{"id": 477, "category": "sql_structured_output", "prompt": "Return JSON representing a task with title 'Backup', priority 2, and completed false."}
+{"id": 478, "category": "sql_structured_output", "prompt": "Write a SQL query that updates users and sets active to false where last_login is null."}
+{"id": 479, "category": "sql_structured_output", "prompt": "Create a JSON object with a nested address containing city 'Turin' and country 'Italy'."}
+{"id": 480, "category": "sql_structured_output", "prompt": "Write a SQL query that returns departments having more than 10 employees."}
+{"id": 481, "category": "sql_structured_output", "prompt": "Create a regex matching an optional plus sign followed by one or more digits."}
+{"id": 482, "category": "sql_structured_output", "prompt": "Write a SQL query that finds the earliest created_at value in the events table."}
+{"id": 483, "category": "sql_structured_output", "prompt": "Return a JSON object with a tags field containing the array ['ml','systems']."}
+{"id": 484, "category": "sql_structured_output", "prompt": "Write a SQL query that selects rows created during the year 2025 using a date range."}
+{"id": 485, "category": "sql_structured_output", "prompt": "Create a regex that matches a hexadecimal color like #A1B2C3."}
+{"id": 486, "category": "sql_structured_output", "prompt": "Return valid JSON for a sensor with id 's7', temperature 21.5, and online true."}
+{"id": 487, "category": "sql_structured_output", "prompt": "Write a SQL query that counts distinct customer_id values in the orders table."}
+{"id": 488, "category": "sql_structured_output", "prompt": "Create a SQL query that returns category and total sales, grouped by category."}
+{"id": 489, "category": "sql_structured_output", "prompt": "Return a JSON object where metadata contains version 3 and environment 'test'."}
+{"id": 490, "category": "sql_structured_output", "prompt": "Write a regex that matches strings containing only uppercase letters and underscores."}
+{"id": 491, "category": "sql_structured_output", "prompt": "Write a SQL query that selects users where active is true."}
+{"id": 492, "category": "sql_structured_output", "prompt": "Return a JSON object with name 'Paul', age 34, and city 'Boston'."}
+{"id": 493, "category": "sql_structured_output", "prompt": "Write a regex that matches exactly three uppercase letters followed by two digits."}
+{"id": 494, "category": "sql_structured_output", "prompt": "Create a SQL query that finds all orders where total is greater than 100."}
+{"id": 495, "category": "sql_structured_output", "prompt": "Return a JSON array containing the values 'low', 'medium', and 'high'."}
+{"id": 496, "category": "sql_structured_output", "prompt": "Write a SQL query that sorts products by price in ascending order."}
+{"id": 497, "category": "sql_structured_output", "prompt": "Create a regex that matches a string starting with 'user_' and ending with one or more digits."}
+{"id": 498, "category": "sql_structured_output", "prompt": "Return valid JSON for an event with title 'Demo', year 2026, and public set to true."}
+{"id": 499, "category": "sql_structured_output", "prompt": "Write a SQL query that counts rows in the logs table grouped by level."}
+{"id": 500, "category": "sql_structured_output", "prompt": "Create a SQL query that selects name and email from contacts while excluding rows with a null email."}

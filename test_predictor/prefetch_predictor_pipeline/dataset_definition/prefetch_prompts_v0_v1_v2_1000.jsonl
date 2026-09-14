@@ -1,0 +1,1000 @@
+{"id":1,"category":"computer_science","prompt":"Explain what a binary search is in one short paragraph.","source_dataset":"prefetch_prompts_v0"}
+{"id":2,"category":"computer_science","prompt":"Compare a stack and a queue using a simple real-world analogy.","source_dataset":"prefetch_prompts_v0"}
+{"id":3,"category":"computer_science","prompt":"What is the purpose of a hash table? Answer briefly.","source_dataset":"prefetch_prompts_v0"}
+{"id":4,"category":"computer_science","prompt":"Describe how TCP differs from UDP in three concise points.","source_dataset":"prefetch_prompts_v0"}
+{"id":5,"category":"computer_science","prompt":"Why does a computer use virtual memory? Give a practical explanation.","source_dataset":"prefetch_prompts_v0"}
+{"id":6,"category":"computer_science","prompt":"Define recursion and mention one common use case.","source_dataset":"prefetch_prompts_v0"}
+{"id":7,"category":"computer_science","prompt":"Explain what a deadlock is in operating systems without using formulas.","source_dataset":"prefetch_prompts_v0"}
+{"id":8,"category":"computer_science","prompt":"Name three differences between a process and a thread.","source_dataset":"prefetch_prompts_v0"}
+{"id":9,"category":"computer_science","prompt":"What problem does a cache solve in computer architecture? Answer in a few sentences.","source_dataset":"prefetch_prompts_v0"}
+{"id":10,"category":"computer_science","prompt":"Explain the basic idea behind public-key cryptography to a beginner.","source_dataset":"prefetch_prompts_v0"}
+{"id":11,"category":"programming","prompt":"Write a short Python function that returns the largest number in a list.","source_dataset":"prefetch_prompts_v0"}
+{"id":12,"category":"programming","prompt":"Create a JavaScript function that checks whether a string is a palindrome.","source_dataset":"prefetch_prompts_v0"}
+{"id":13,"category":"programming","prompt":"Show a minimal C function that swaps two integers using pointers.","source_dataset":"prefetch_prompts_v0"}
+{"id":14,"category":"programming","prompt":"Write a Python list comprehension that keeps only the even numbers from a list.","source_dataset":"prefetch_prompts_v0"}
+{"id":15,"category":"programming","prompt":"Implement a simple recursive factorial function in Python.","source_dataset":"prefetch_prompts_v0"}
+{"id":16,"category":"programming","prompt":"Give a short Java method that counts the vowels in a string.","source_dataset":"prefetch_prompts_v0"}
+{"id":17,"category":"programming","prompt":"Write a SQL-like pseudocode loop that prints the numbers from 1 to 5.","source_dataset":"prefetch_prompts_v0"}
+{"id":18,"category":"programming","prompt":"Create a concise Python function that merges two dictionaries.","source_dataset":"prefetch_prompts_v0"}
+{"id":19,"category":"programming","prompt":"Show how to reverse a string in JavaScript with a short code example.","source_dataset":"prefetch_prompts_v0"}
+{"id":20,"category":"programming","prompt":"Write a C function that returns the minimum of three integers.","source_dataset":"prefetch_prompts_v0"}
+{"id":21,"category":"debugging_code_reasoning","prompt":"Find the bug in this Python code and explain the fix briefly: for i in range(5): print(i+1","source_dataset":"prefetch_prompts_v0"}
+{"id":22,"category":"debugging_code_reasoning","prompt":"Why does this JavaScript expression return false? Explain briefly: 0 == '0' && 0 === '0'.","source_dataset":"prefetch_prompts_v0"}
+{"id":23,"category":"debugging_code_reasoning","prompt":"This Python function returns None unexpectedly: def add(a,b): c=a+b. What is missing?","source_dataset":"prefetch_prompts_v0"}
+{"id":24,"category":"debugging_code_reasoning","prompt":"Identify the error in this C snippet: int *p = NULL; printf(\"%d\", *p);","source_dataset":"prefetch_prompts_v0"}
+{"id":25,"category":"debugging_code_reasoning","prompt":"Explain why this loop never ends: while x > 0: x = x + 1.","source_dataset":"prefetch_prompts_v0"}
+{"id":26,"category":"debugging_code_reasoning","prompt":"A Python list changes after assigning b = a and modifying b. Explain why and how to avoid it.","source_dataset":"prefetch_prompts_v0"}
+{"id":27,"category":"debugging_code_reasoning","prompt":"Spot the off-by-one issue: for i in range(len(items)+1): print(items[i]).","source_dataset":"prefetch_prompts_v0"}
+{"id":28,"category":"debugging_code_reasoning","prompt":"Why can dividing two integers in C produce an unexpected truncated result? Give a short example.","source_dataset":"prefetch_prompts_v0"}
+{"id":29,"category":"debugging_code_reasoning","prompt":"This SQL condition matches no rows: WHERE value = NULL. Explain the correct form.","source_dataset":"prefetch_prompts_v0"}
+{"id":30,"category":"debugging_code_reasoning","prompt":"Explain why modifying a dictionary while iterating over it can cause problems in Python.","source_dataset":"prefetch_prompts_v0"}
+{"id":31,"category":"mathematics","prompt":"Solve for x: 3x + 7 = 22. Give only the result and one short verification.","source_dataset":"prefetch_prompts_v0"}
+{"id":32,"category":"mathematics","prompt":"A product costs 80 euros and is discounted by 25%. What is the final price?","source_dataset":"prefetch_prompts_v0"}
+{"id":33,"category":"mathematics","prompt":"What is the probability of rolling an even number on a fair six-sided die?","source_dataset":"prefetch_prompts_v0"}
+{"id":34,"category":"mathematics","prompt":"A rectangle has sides 8 cm and 5 cm. Compute its area and perimeter.","source_dataset":"prefetch_prompts_v0"}
+{"id":35,"category":"mathematics","prompt":"Simplify the fraction 42/56 and show the final reduced form.","source_dataset":"prefetch_prompts_v0"}
+{"id":36,"category":"mathematics","prompt":"If a car travels 150 km in 2.5 hours, what is its average speed?","source_dataset":"prefetch_prompts_v0"}
+{"id":37,"category":"mathematics","prompt":"What is 15% of 240? Answer with the calculation.","source_dataset":"prefetch_prompts_v0"}
+{"id":38,"category":"mathematics","prompt":"The sequence is 2, 6, 12, 20, 30. What is the next term and why?","source_dataset":"prefetch_prompts_v0"}
+{"id":39,"category":"mathematics","prompt":"A circle has radius 3. What is its area in terms of pi?","source_dataset":"prefetch_prompts_v0"}
+{"id":40,"category":"mathematics","prompt":"Compare 7/12 and 5/8 and state which fraction is larger.","source_dataset":"prefetch_prompts_v0"}
+{"id":41,"category":"logic_reasoning","prompt":"All roses are flowers. Some flowers fade quickly. Can we conclude that some roses fade quickly? Answer briefly.","source_dataset":"prefetch_prompts_v0"}
+{"id":42,"category":"logic_reasoning","prompt":"Anna is older than Luca, and Luca is older than Marco. Who is the youngest?","source_dataset":"prefetch_prompts_v0"}
+{"id":43,"category":"logic_reasoning","prompt":"If every blue box is heavy and this box is not heavy, what can you infer about its color?","source_dataset":"prefetch_prompts_v0"}
+{"id":44,"category":"logic_reasoning","prompt":"A train leaves before a bus, and the bus leaves before a taxi. Which leaves last?","source_dataset":"prefetch_prompts_v0"}
+{"id":45,"category":"logic_reasoning","prompt":"Three switches are labeled A, B, and C. Only one is on. A is off and B is off. Which switch is on?","source_dataset":"prefetch_prompts_v0"}
+{"id":46,"category":"logic_reasoning","prompt":"If statement P implies Q and Q is false, what can be concluded about P?","source_dataset":"prefetch_prompts_v0"}
+{"id":47,"category":"logic_reasoning","prompt":"A number is greater than 10, even, and less than 14. What number is it?","source_dataset":"prefetch_prompts_v0"}
+{"id":48,"category":"logic_reasoning","prompt":"Mia, Leo, and Nora each choose a different fruit: apple, pear, banana. Mia does not choose apple, Leo chooses pear, and Nora does not choose banana. Who chooses what?","source_dataset":"prefetch_prompts_v0"}
+{"id":49,"category":"logic_reasoning","prompt":"A box contains only red and green balls. If a ball is not red, what color must it be?","source_dataset":"prefetch_prompts_v0"}
+{"id":50,"category":"logic_reasoning","prompt":"If today is Tuesday, what day of the week will it be 10 days from now?","source_dataset":"prefetch_prompts_v0"}
+{"id":51,"category":"science","prompt":"Explain why ice floats on liquid water in two sentences.","source_dataset":"prefetch_prompts_v0"}
+{"id":52,"category":"science","prompt":"Name three main differences between DNA and RNA.","source_dataset":"prefetch_prompts_v0"}
+{"id":53,"category":"science","prompt":"What happens to gas pressure when volume decreases at constant temperature?","source_dataset":"prefetch_prompts_v0"}
+{"id":54,"category":"science","prompt":"Classify a dolphin as a fish or a mammal and briefly justify the answer.","source_dataset":"prefetch_prompts_v0"}
+{"id":55,"category":"science","prompt":"Why do objects fall toward Earth? Give a concise physical explanation.","source_dataset":"prefetch_prompts_v0"}
+{"id":56,"category":"science","prompt":"Describe photosynthesis using no more than three short sentences.","source_dataset":"prefetch_prompts_v0"}
+{"id":57,"category":"science","prompt":"What role do mitochondria play in a eukaryotic cell?","source_dataset":"prefetch_prompts_v0"}
+{"id":58,"category":"science","prompt":"Why does the sky appear blue during the day? Answer briefly.","source_dataset":"prefetch_prompts_v0"}
+{"id":59,"category":"science","prompt":"State the difference between an element and a compound with one example of each.","source_dataset":"prefetch_prompts_v0"}
+{"id":60,"category":"science","prompt":"What causes the seasons on Earth? Correct a common misconception if relevant.","source_dataset":"prefetch_prompts_v0"}
+{"id":61,"category":"general_knowledge","prompt":"What is the capital of Canada, and in which province is it located?","source_dataset":"prefetch_prompts_v0"}
+{"id":62,"category":"general_knowledge","prompt":"Briefly explain what inflation means in everyday economic terms.","source_dataset":"prefetch_prompts_v0"}
+{"id":63,"category":"general_knowledge","prompt":"Name the three branches of government commonly distinguished in democratic systems.","source_dataset":"prefetch_prompts_v0"}
+{"id":64,"category":"general_knowledge","prompt":"What is the main purpose of the United Nations? Answer in two sentences.","source_dataset":"prefetch_prompts_v0"}
+{"id":65,"category":"general_knowledge","prompt":"Explain the difference between weather and climate.","source_dataset":"prefetch_prompts_v0"}
+{"id":66,"category":"general_knowledge","prompt":"Which ocean is the largest on Earth, and what makes it geographically significant?","source_dataset":"prefetch_prompts_v0"}
+{"id":67,"category":"general_knowledge","prompt":"What does GDP measure? Give a concise definition.","source_dataset":"prefetch_prompts_v0"}
+{"id":68,"category":"general_knowledge","prompt":"Who wrote the novel Frankenstein, and in which century was it published?","source_dataset":"prefetch_prompts_v0"}
+{"id":69,"category":"general_knowledge","prompt":"What is the difference between a renewable and a non-renewable energy source?","source_dataset":"prefetch_prompts_v0"}
+{"id":70,"category":"general_knowledge","prompt":"Why are time zones necessary? Give a practical explanation.","source_dataset":"prefetch_prompts_v0"}
+{"id":71,"category":"language_tasks","prompt":"Translate into Italian: 'The meeting has been moved to tomorrow morning.'","source_dataset":"prefetch_prompts_v0"}
+{"id":72,"category":"language_tasks","prompt":"Translate into English: 'Il treno arriverà con dieci minuti di ritardo.'","source_dataset":"prefetch_prompts_v0"}
+{"id":73,"category":"language_tasks","prompt":"Give two synonyms for the word 'rapid' and use one in a short sentence.","source_dataset":"prefetch_prompts_v0"}
+{"id":74,"category":"language_tasks","prompt":"Correct the grammar in this sentence: 'She don't like working on weekends.'","source_dataset":"prefetch_prompts_v0"}
+{"id":75,"category":"language_tasks","prompt":"Rewrite 'The task was difficult, but we completed it successfully' in simpler English.","source_dataset":"prefetch_prompts_v0"}
+{"id":76,"category":"language_tasks","prompt":"Identify the adjective in this sentence: 'The old bridge crosses the narrow river.'","source_dataset":"prefetch_prompts_v0"}
+{"id":77,"category":"language_tasks","prompt":"Turn this statement into a polite question: 'Send me the report by Friday.'","source_dataset":"prefetch_prompts_v0"}
+{"id":78,"category":"language_tasks","prompt":"Change this sentence from active to passive voice: 'The team released the update yesterday.'","source_dataset":"prefetch_prompts_v0"}
+{"id":79,"category":"language_tasks","prompt":"Give the plural forms of: analysis, child, mouse, criterion.","source_dataset":"prefetch_prompts_v0"}
+{"id":80,"category":"language_tasks","prompt":"Explain the difference between 'affect' and 'effect' with one short example.","source_dataset":"prefetch_prompts_v0"}
+{"id":81,"category":"text_transformation","prompt":"Summarize in one sentence: Regular exercise can improve cardiovascular health, strengthen muscles, reduce stress, and support better sleep.","source_dataset":"prefetch_prompts_v0"}
+{"id":82,"category":"text_transformation","prompt":"Rewrite this in a more formal tone: 'We fixed the problem and everything works now.'","source_dataset":"prefetch_prompts_v0"}
+{"id":83,"category":"text_transformation","prompt":"Extract the city and date from this sentence: 'The conference will take place in Berlin on 14 October 2026.'","source_dataset":"prefetch_prompts_v0"}
+{"id":84,"category":"text_transformation","prompt":"Convert this sentence into three bullet points: 'The app is fast, easy to use, and works offline.'","source_dataset":"prefetch_prompts_v0"}
+{"id":85,"category":"text_transformation","prompt":"Shorten this message while preserving its meaning: 'Please remember that the office will be closed tomorrow because of scheduled maintenance.'","source_dataset":"prefetch_prompts_v0"}
+{"id":86,"category":"text_transformation","prompt":"Paraphrase: 'The experiment failed because the input data were incomplete.'","source_dataset":"prefetch_prompts_v0"}
+{"id":87,"category":"text_transformation","prompt":"Turn this note into a concise title: 'Discussion about reducing memory usage during model inference.'","source_dataset":"prefetch_prompts_v0"}
+{"id":88,"category":"text_transformation","prompt":"Extract the names and roles: 'Sara is the project manager, David is the backend developer, and Lina is the designer.'","source_dataset":"prefetch_prompts_v0"}
+{"id":89,"category":"text_transformation","prompt":"Rewrite this sentence to remove ambiguity: 'Alex told Jordan that he had missed the deadline.'","source_dataset":"prefetch_prompts_v0"}
+{"id":90,"category":"text_transformation","prompt":"Convert this informal sentence into professional language: 'The server went down and we had to fix it really fast.'","source_dataset":"prefetch_prompts_v0"}
+{"id":91,"category":"sql_structured_output","prompt":"Write a SQL query that selects all users older than 30 from a table named users.","source_dataset":"prefetch_prompts_v0"}
+{"id":92,"category":"sql_structured_output","prompt":"Return a JSON object with the keys name, age, and city for a person named Alice, age 28, living in Rome.","source_dataset":"prefetch_prompts_v0"}
+{"id":93,"category":"sql_structured_output","prompt":"Write a SQL query that counts how many orders have status equal to 'completed'.","source_dataset":"prefetch_prompts_v0"}
+{"id":94,"category":"sql_structured_output","prompt":"Create a regular expression that matches a simple integer with an optional leading minus sign.","source_dataset":"prefetch_prompts_v0"}
+{"id":95,"category":"sql_structured_output","prompt":"Write a SQL query that returns the five highest salaries from a table named employees.","source_dataset":"prefetch_prompts_v0"}
+{"id":96,"category":"sql_structured_output","prompt":"Return a compact JSON array containing the strings red, green, and blue.","source_dataset":"prefetch_prompts_v0"}
+{"id":97,"category":"sql_structured_output","prompt":"Write a SQL query that selects product names where price is between 10 and 50.","source_dataset":"prefetch_prompts_v0"}
+{"id":98,"category":"sql_structured_output","prompt":"Create a regular expression that matches strings starting with 'ABC' followed by exactly three digits.","source_dataset":"prefetch_prompts_v0"}
+{"id":99,"category":"sql_structured_output","prompt":"Write a SQL query that groups orders by customer_id and counts the orders for each customer.","source_dataset":"prefetch_prompts_v0"}
+{"id":100,"category":"sql_structured_output","prompt":"Return a JSON object representing a book with title 'Dune', author 'Frank Herbert', and year 1965.","source_dataset":"prefetch_prompts_v0"}
+{"id":101,"category":"computer_science","prompt":"Why is a balanced binary search tree usually faster than a linked list for lookups?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":102,"category":"computer_science","prompt":"Can you explain what an operating system scheduler actually does?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":103,"category":"computer_science","prompt":"What happens behind the scenes when I type a website address into a browser and press Enter?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":104,"category":"computer_science","prompt":"In simple terms, why are database indexes useful?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":105,"category":"computer_science","prompt":"How is a compiler different from an interpreter?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":106,"category":"computer_science","prompt":"What does Big O notation tell me about an algorithm?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":107,"category":"computer_science","prompt":"Why can two programs that produce the same output have very different running times?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":108,"category":"computer_science","prompt":"Could you explain the difference between RAM and persistent storage?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":109,"category":"computer_science","prompt":"What is a race condition, and why can it be hard to reproduce?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":110,"category":"computer_science","prompt":"Why do CPUs have multiple levels of cache instead of one large cache?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":111,"category":"computer_science","prompt":"What is the basic idea of dynamic programming?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":112,"category":"computer_science","prompt":"How does a Bloom filter save memory, and what trade-off does it make?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":113,"category":"computer_science","prompt":"What does it mean for an algorithm to be stable when sorting data?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":114,"category":"computer_science","prompt":"Why is random access fast in an array but slow in a linked list?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":115,"category":"computer_science","prompt":"Can you briefly explain what a system call is?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":116,"category":"computer_science","prompt":"What is a page fault, and when does one occur?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":117,"category":"computer_science","prompt":"How does a mutex help when several threads share the same data?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":118,"category":"computer_science","prompt":"What is the difference between horizontal and vertical scaling?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":119,"category":"computer_science","prompt":"Why is DNS often described as the phone book of the internet?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":120,"category":"computer_science","prompt":"What does eventual consistency mean in a distributed system?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":121,"category":"computer_science","prompt":"How is a graph different from a tree in data structures?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":122,"category":"computer_science","prompt":"When would you choose breadth-first search instead of depth-first search?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":123,"category":"computer_science","prompt":"What problem does memory fragmentation cause?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":124,"category":"computer_science","prompt":"Why do many hash tables resize when they become too full?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":125,"category":"computer_science","prompt":"What is the difference between authentication and authorization?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":126,"category":"computer_science","prompt":"Can you explain what an API is without using too much technical jargon?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":127,"category":"computer_science","prompt":"How does a checksum help detect corrupted data?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":128,"category":"computer_science","prompt":"What does idempotent mean in the context of an HTTP request?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":129,"category":"computer_science","prompt":"Why is HTTPS safer than plain HTTP?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":130,"category":"computer_science","prompt":"What is a database transaction supposed to guarantee?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":131,"category":"computer_science","prompt":"How does a CPU decide which memory address to read or write?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":132,"category":"computer_science","prompt":"Why does binary representation work well for digital computers?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":133,"category":"computer_science","prompt":"What is the practical difference between a file system and a database?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":134,"category":"computer_science","prompt":"Why can too many context switches reduce system performance?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":135,"category":"computer_science","prompt":"What is the role of a network router in moving packets between networks?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":136,"category":"computer_science","prompt":"Why are primary keys important when designing relational tables?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":137,"category":"computer_science","prompt":"What makes a hash collision possible, and how can a hash table handle it?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":138,"category":"computer_science","prompt":"How is a software library different from a standalone application?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":139,"category":"computer_science","prompt":"Why can compression reduce storage size without changing the meaning of the original data?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":140,"category":"computer_science","prompt":"What is the main difference between symmetric and asymmetric encryption?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":141,"category":"programming","prompt":"Write a Python function that removes duplicate values from a list while keeping the original order.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":142,"category":"programming","prompt":"Can you show me a small JavaScript function that converts Celsius to Fahrenheit?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":143,"category":"programming","prompt":"Write a C function that checks whether an integer is positive, negative, or zero.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":144,"category":"programming","prompt":"How would you write a Python function that counts how many times each word appears in a sentence?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":145,"category":"programming","prompt":"Create a short Java method that returns true if a number is even.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":146,"category":"programming","prompt":"Write a JavaScript function that finds the longest string in an array.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":147,"category":"programming","prompt":"Show me a Python function that safely divides two numbers and handles division by zero.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":148,"category":"programming","prompt":"Write a small C loop that prints the first ten multiples of 3.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":149,"category":"programming","prompt":"Can you implement a Python function that returns the second largest distinct number in a list?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":150,"category":"programming","prompt":"Create a Java method that reverses the elements of an integer array.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":151,"category":"programming","prompt":"Write a JavaScript function that removes all whitespace from a string.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":152,"category":"programming","prompt":"Show a Python example that sorts a list of dictionaries by the key 'age'.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":153,"category":"programming","prompt":"Write a C function that counts the number of characters in a string without using strlen.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":154,"category":"programming","prompt":"Can you write a Python function that checks whether two strings are anagrams?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":155,"category":"programming","prompt":"Create a JavaScript function that sums only the positive numbers in an array.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":156,"category":"programming","prompt":"Write a short Java method that returns the maximum value in an integer array.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":157,"category":"programming","prompt":"Show me how to read a text file line by line in Python.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":158,"category":"programming","prompt":"Write a Python function that splits a list into chunks of a given size.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":159,"category":"programming","prompt":"Can you create a JavaScript function that capitalizes the first letter of every word?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":160,"category":"programming","prompt":"Write a C function that computes the greatest common divisor of two positive integers.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":161,"category":"programming","prompt":"Give me a Python function that flattens a list containing one level of nested lists.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":162,"category":"programming","prompt":"Write a Java method that counts how many digits are in a positive integer.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":163,"category":"programming","prompt":"Create a short JavaScript function that returns the intersection of two arrays.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":164,"category":"programming","prompt":"How would you implement a simple FIFO queue using a Python list or deque?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":165,"category":"programming","prompt":"Write a Python function that returns all keys whose dictionary value is greater than a threshold.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":166,"category":"programming","prompt":"Create a C function that checks if a character is an uppercase English letter.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":167,"category":"programming","prompt":"Write a JavaScript function that rotates an array one position to the right.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":168,"category":"programming","prompt":"Show a compact Python function that computes the mean of a non-empty list of numbers.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":169,"category":"programming","prompt":"Write a Java method that removes spaces from a string.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":170,"category":"programming","prompt":"Create a Python function that returns the index of the first negative number, or -1 if none exists.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":171,"category":"programming","prompt":"Write a Python function that counts the vowels in a sentence.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":172,"category":"programming","prompt":"Show a JavaScript function that returns the smallest number in an array.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":173,"category":"programming","prompt":"Write a C function that computes the sum of all integers from 1 to n.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":174,"category":"programming","prompt":"How can I build a Python dictionary from one list of keys and another list of values?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":175,"category":"programming","prompt":"Write a Java method that checks whether a string is empty or contains only whitespace.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":176,"category":"programming","prompt":"Create a Python function that returns only words longer than five characters.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":177,"category":"programming","prompt":"Write a JavaScript function that counts how many times a given letter appears in a string.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":178,"category":"programming","prompt":"Create a C function that returns the absolute value of an integer without using abs.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":179,"category":"programming","prompt":"Write a Python function that converts every string in a list to lowercase.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":180,"category":"programming","prompt":"Show a short Java example that swaps the first and last elements of an array.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":181,"category":"debugging_code_reasoning","prompt":"Why does this Python code print the same list twice after I change b: a=[1,2]; b=a; b.append(3)?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":182,"category":"debugging_code_reasoning","prompt":"What is wrong with this loop: for i in range(1, 10, 0): print(i)?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":183,"category":"debugging_code_reasoning","prompt":"This function always returns after the first iteration: def total(xs):\n    s=0\n    for x in xs:\n        s+=x\n        return s\nWhat should change?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":184,"category":"debugging_code_reasoning","prompt":"Why can this C code overflow even if the final mathematical result seems small: int x = 50000 * 50000?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":185,"category":"debugging_code_reasoning","prompt":"I get a KeyError from data['name'] when some records have no name. What's a safer Python approach?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":186,"category":"debugging_code_reasoning","prompt":"Why does ['a','b','c'].sort() return None in Python?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":187,"category":"debugging_code_reasoning","prompt":"What is the issue with using = instead of == inside this C condition: if (x = 5)?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":188,"category":"debugging_code_reasoning","prompt":"This JavaScript comparison behaves strangely: [] == false. Can you explain the type coercion involved?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":189,"category":"debugging_code_reasoning","prompt":"Why does this Python code skip some items: for x in values: if x < 0: values.remove(x)?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":190,"category":"debugging_code_reasoning","prompt":"A Java method throws NullPointerException when calling user.getName(). What should I check first?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":191,"category":"debugging_code_reasoning","prompt":"Why is this recursive Python function broken: def countdown(n): print(n); countdown(n-1)?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":192,"category":"debugging_code_reasoning","prompt":"This SQL query duplicates rows after a JOIN. What is the first relationship between the tables I should inspect?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":193,"category":"debugging_code_reasoning","prompt":"Why might fopen return NULL in C even though the filename looks correct?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":194,"category":"debugging_code_reasoning","prompt":"My Python condition if x == 1 or 2 is always true. How should it be written?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":195,"category":"debugging_code_reasoning","prompt":"What bug is in this Java loop: for (int i=0; i<=array.length; i++) System.out.println(array[i]);?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":196,"category":"debugging_code_reasoning","prompt":"Why does parseInt('08px') in JavaScript return a number instead of failing completely?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":197,"category":"debugging_code_reasoning","prompt":"This Python dictionary comprehension overwrites values: {x[0]: x for x in names}. Why can that happen?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":198,"category":"debugging_code_reasoning","prompt":"I expected 0.1 + 0.2 == 0.3 to be true in JavaScript. Why isn't it?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":199,"category":"debugging_code_reasoning","prompt":"What can go wrong if two threads increment the same counter without synchronization?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":200,"category":"debugging_code_reasoning","prompt":"Why does this C function return a pointer to invalid memory: char* f(){ char s[10]=\"hi\"; return s; }?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":201,"category":"debugging_code_reasoning","prompt":"My Python list index is out of range when I access items[len(items)]. Which index should be the last valid one?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":202,"category":"debugging_code_reasoning","prompt":"Why does a while loop using a floating-point equality test sometimes fail to terminate?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":203,"category":"debugging_code_reasoning","prompt":"A SQL LEFT JOIN behaves like an INNER JOIN after I add a condition on the right table in WHERE. Why?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":204,"category":"debugging_code_reasoning","prompt":"What is wrong with this Python default argument: def add_item(x, items=[]): items.append(x); return items?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":205,"category":"debugging_code_reasoning","prompt":"Why can calling free twice on the same C pointer crash a program?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":206,"category":"debugging_code_reasoning","prompt":"This Java code compares two strings with == and gives an unexpected result. What should be used instead?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":207,"category":"debugging_code_reasoning","prompt":"Why does deleting a key from a Python dictionary during iteration raise an error?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":208,"category":"debugging_code_reasoning","prompt":"My JavaScript async function returns a Promise instead of the final value. What am I forgetting to do?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":209,"category":"debugging_code_reasoning","prompt":"A Python variable defined inside a function isn't visible outside it. Is this a scope issue?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":210,"category":"debugging_code_reasoning","prompt":"Why can SELECT * FROM users WHERE age > '20' be risky if age is stored as text?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":211,"category":"debugging_code_reasoning","prompt":"This Python loop never starts: x=5; while x<0: x-=1. What is the logical mistake?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":212,"category":"debugging_code_reasoning","prompt":"Why can this C expression cause division by zero: int y = 10 / (x - x)?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":213,"category":"debugging_code_reasoning","prompt":"I use input() in Python and then do value + 1, but I get a TypeError. What conversion is missing?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":214,"category":"debugging_code_reasoning","prompt":"A SQL query using WHERE name = 'mario' does not match the stored value 'Mario'. What could explain this?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":215,"category":"debugging_code_reasoning","prompt":"Why can modifying a Java ArrayList inside a for-each loop raise ConcurrentModificationException?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":216,"category":"debugging_code_reasoning","prompt":"In Python, when does the condition if my_list: evaluate to false?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":217,"category":"debugging_code_reasoning","prompt":"This JavaScript code declares const x = 3 and later executes x = 4. Why does it fail?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":218,"category":"debugging_code_reasoning","prompt":"Why does a Python function with no explicit return statement produce None?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":219,"category":"debugging_code_reasoning","prompt":"In C, why is reading a[5] invalid when the array was declared as int a[5]?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":220,"category":"debugging_code_reasoning","prompt":"A SELECT COUNT(*) query returns zero even though the table has rows. Which filters or joins should I inspect first?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":221,"category":"mathematics","prompt":"If I split 84 euros equally among 7 people, how much does each person get?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":222,"category":"mathematics","prompt":"A jacket costs 120 euros after a 20% discount. What was its original price?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":223,"category":"mathematics","prompt":"Solve 5x - 9 = 31 and give a quick check of the result.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":224,"category":"mathematics","prompt":"A recipe for 4 people needs 300 grams of flour. How much flour do I need for 10 people?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":225,"category":"mathematics","prompt":"What is the least common multiple of 12 and 18?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":226,"category":"mathematics","prompt":"A triangle has base 10 cm and height 6 cm. What's its area?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":227,"category":"mathematics","prompt":"If a savings account grows from 500 to 540 euros, what percentage increase is that?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":228,"category":"mathematics","prompt":"What is the median of 3, 7, 8, 10, 15, 21, 30?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":229,"category":"mathematics","prompt":"Convert 2.75 hours into hours and minutes.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":230,"category":"mathematics","prompt":"A fair coin is tossed three times. What is the probability of getting three heads?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":231,"category":"mathematics","prompt":"Solve the inequality 2x + 3 < 11.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":232,"category":"mathematics","prompt":"What is the square root of 144, and why are there two solutions to x squared equals 144?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":233,"category":"mathematics","prompt":"A shop adds 22% VAT to a 50 euro item. What total price does the customer pay?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":234,"category":"mathematics","prompt":"If 5 workers finish a job in 12 days at the same rate, how many worker-days does the job require?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":235,"category":"mathematics","prompt":"Find the next two numbers in the pattern 1, 1, 2, 3, 5, 8.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":236,"category":"mathematics","prompt":"A right triangle has legs of length 6 and 8. How long is the hypotenuse?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":237,"category":"mathematics","prompt":"What is 3 to the power of 5?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":238,"category":"mathematics","prompt":"How many different pairs can be chosen from 6 people?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":239,"category":"mathematics","prompt":"A train covers 90 km in 45 minutes. What is its average speed in km/h?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":240,"category":"mathematics","prompt":"Convert the decimal 0.375 into a simplified fraction.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":241,"category":"mathematics","prompt":"If x:y = 3:5 and x = 18, what is y?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":242,"category":"mathematics","prompt":"What is the sum of the interior angles of a hexagon?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":243,"category":"mathematics","prompt":"A number increases from 64 to 80. By what percentage did it increase?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":244,"category":"mathematics","prompt":"Solve the system x + y = 10 and x - y = 4.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":245,"category":"mathematics","prompt":"What is the remainder when 137 is divided by 9?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":246,"category":"mathematics","prompt":"A bag has 4 red, 3 blue, and 3 green balls. What's the probability of drawing a blue ball?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":247,"category":"mathematics","prompt":"Find the average of 12, 17, 19, 22, and 30.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":248,"category":"mathematics","prompt":"How many minutes are there in 2 days and 6 hours?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":249,"category":"mathematics","prompt":"If the circumference of a circle is 10 pi, what is its radius?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":250,"category":"mathematics","prompt":"Factor the expression x squared minus 9.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":251,"category":"mathematics","prompt":"If 72 dollars pay for 6 identical tickets, how much does one ticket cost?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":252,"category":"mathematics","prompt":"A price falls from 200 to 170. What percentage discount is that?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":253,"category":"mathematics","prompt":"Solve 4x + 2 = 26 and verify the answer briefly.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":254,"category":"mathematics","prompt":"A room is 4.5 meters long and 3 meters wide. What is its floor area?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":255,"category":"mathematics","prompt":"What is the greatest common divisor of 48 and 60?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":256,"category":"mathematics","prompt":"If I travel 18 km in 90 minutes, what is my average speed in km/h?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":257,"category":"mathematics","prompt":"What is one third of three quarters?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":258,"category":"mathematics","prompt":"In a class of 25 students, 15 are present. What percentage of the class is present?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":259,"category":"mathematics","prompt":"What is the next number in the sequence 3, 6, 12, 24, 48?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":260,"category":"mathematics","prompt":"A fair die is rolled once. What is the probability of getting a number greater than 4?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":261,"category":"logic_reasoning","prompt":"Every laptop in the office has a sticker. This device has no sticker. Can it be one of those office laptops?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":262,"category":"logic_reasoning","prompt":"Nina arrived before Omar but after Paolo. Who arrived first?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":263,"category":"logic_reasoning","prompt":"If no reptiles have fur and this animal has fur, what can you conclude about it being a reptile?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":264,"category":"logic_reasoning","prompt":"A code is a three-digit number. The first digit is 4, the last is 7, and the middle digit is twice 3. What is the code?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":265,"category":"logic_reasoning","prompt":"Four books are stacked. The red book is above the blue one, and the blue one is above the green one. Which of those three is lowest?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":266,"category":"logic_reasoning","prompt":"If the alarm sounds whenever the door opens, and the alarm did not sound, what does that imply under the stated rule?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":267,"category":"logic_reasoning","prompt":"Tom is taller than Eva, Eva is taller than Sam, and Sam is taller than Li. Who is second tallest?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":268,"category":"logic_reasoning","prompt":"A box can contain only circles or squares. This item is not a square. What shape must it be?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":269,"category":"logic_reasoning","prompt":"If all approved requests have an ID and this request has no ID, can it be approved?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":270,"category":"logic_reasoning","prompt":"There are three cups: red, white, and black. The coin is not under red or white. Where is it?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":271,"category":"logic_reasoning","prompt":"A meeting is after lunch but before a 4 PM call. Which event happens last?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":272,"category":"logic_reasoning","prompt":"If A is true only when B is true, and B is false, can A be true?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":273,"category":"logic_reasoning","prompt":"Three runners finish in different positions. Lea beats Max, and Max beats Zoe. What is the finishing order?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":274,"category":"logic_reasoning","prompt":"If a password must contain a digit and this password has no digits, does it satisfy the rule?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":275,"category":"logic_reasoning","prompt":"A number is odd, greater than 20, and less than 24. Which number fits?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":276,"category":"logic_reasoning","prompt":"Every employee in team X works remotely. Dana works in team X. What can be concluded about Dana?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":277,"category":"logic_reasoning","prompt":"If some cats are black, does it follow that all black animals are cats? Explain briefly.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":278,"category":"logic_reasoning","prompt":"A parcel is either in locker A or locker B. Locker A is empty. Where must the parcel be?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":279,"category":"logic_reasoning","prompt":"If Monday's task must happen before Tuesday's task, can Tuesday's task legally be completed first?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":280,"category":"logic_reasoning","prompt":"Three lights are numbered 1, 2, and 3. Exactly two are on. Light 1 is off. What do you know about lights 2 and 3?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":281,"category":"logic_reasoning","prompt":"If P implies Q and P is true, what follows about Q?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":282,"category":"logic_reasoning","prompt":"Alex is not younger than Bea, and Bea is older than Chris. Can Chris be the oldest of the three?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":283,"category":"logic_reasoning","prompt":"A card is either red or black. It is not black. What color is it?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":284,"category":"logic_reasoning","prompt":"If all metal objects conduct electricity and this object is metal, what property should it have according to the premise?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":285,"category":"logic_reasoning","prompt":"A bus leaves at 8:10, a train at 8:05, and a tram at 8:20. Which leaves in the middle?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":286,"category":"logic_reasoning","prompt":"There are five seats in a row. Mia sits immediately left of Leo. If Leo is in seat 3, where is Mia?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":287,"category":"logic_reasoning","prompt":"If exactly one statement is true and statement A is false while statement B is true, what must be true about any remaining statements?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":288,"category":"logic_reasoning","prompt":"A store is open only if both the lights are on and the door is unlocked. The door is locked. Can the store be open under that rule?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":289,"category":"logic_reasoning","prompt":"If a sequence alternates red, blue, red, blue, what color should position 11 be?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":290,"category":"logic_reasoning","prompt":"No square is a circle. Shape X is a square. Can Shape X be a circle?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":291,"category":"logic_reasoning","prompt":"Julia arrived after Mark but before Helen. Who arrived last?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":292,"category":"logic_reasoning","prompt":"If every valid file ends in .csv and this file ends in .txt, can it be valid under that rule?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":293,"category":"logic_reasoning","prompt":"A number is even, greater than 30, and less than 34. What is it?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":294,"category":"logic_reasoning","prompt":"There are three boxes, A, B, and C. The object is not in A and not in C. Where is it?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":295,"category":"logic_reasoning","prompt":"If every enrolled student has a badge and Luke has no badge, what can be inferred using only that rule?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":296,"category":"logic_reasoning","prompt":"Anna is faster than Paul but slower than Sarah. Who is the fastest?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":297,"category":"logic_reasoning","prompt":"A switch can only be on or off. If it is not on, what state must it be in?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":298,"category":"logic_reasoning","prompt":"If P implies Q and Q is false, what logical conclusion can you draw about P?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":299,"category":"logic_reasoning","prompt":"In a race, B finishes after A and C finishes after B. What is the order of the three runners?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":300,"category":"logic_reasoning","prompt":"If today is Friday, what day of the week will it be 9 days from now?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":301,"category":"science","prompt":"Why does metal usually feel colder than wood even when both are in the same room?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":302,"category":"science","prompt":"What is the main job of red blood cells?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":303,"category":"science","prompt":"Why does salt lower the freezing point of water?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":304,"category":"science","prompt":"How does a vaccine help the immune system prepare for an infection?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":305,"category":"science","prompt":"What is the difference between mass and weight?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":306,"category":"science","prompt":"Why can we see the Moon even though it does not produce its own visible light?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":307,"category":"science","prompt":"What happens to water molecules when liquid water boils?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":308,"category":"science","prompt":"Why is carbon dioxide considered a greenhouse gas?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":309,"category":"science","prompt":"What is the role of chlorophyll in plants?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":310,"category":"science","prompt":"How do antibiotics differ from antiviral drugs?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":311,"category":"science","prompt":"Why does a balloon expand when the air inside it is heated?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":312,"category":"science","prompt":"What is an isotope in simple terms?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":313,"category":"science","prompt":"Why are enzymes important for biological reactions?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":314,"category":"science","prompt":"How is a physical change different from a chemical change?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":315,"category":"science","prompt":"What keeps planets in orbit around the Sun?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":316,"category":"science","prompt":"Why does sound travel differently through air and water?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":317,"category":"science","prompt":"What is the purpose of the ozone layer?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":318,"category":"science","prompt":"How does natural selection change a population over generations?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":319,"category":"science","prompt":"Why can iron rust while gold generally does not?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":320,"category":"science","prompt":"What is the difference between a virus and a bacterium?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":321,"category":"science","prompt":"Why does increasing temperature usually speed up a chemical reaction?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":322,"category":"science","prompt":"What happens during cellular respiration?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":323,"category":"science","prompt":"How are arteries and veins different?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":324,"category":"science","prompt":"Why are noble gases relatively unreactive?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":325,"category":"science","prompt":"What causes an eclipse of the Moon?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":326,"category":"science","prompt":"How does insulation reduce heat transfer in a house?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":327,"category":"science","prompt":"Why is freshwater less dense than most rocks?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":328,"category":"science","prompt":"What does pH measure, and what does a value below 7 indicate?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":329,"category":"science","prompt":"How does the human eye focus on objects at different distances?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":330,"category":"science","prompt":"What is the basic difference between nuclear fission and nuclear fusion?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":331,"category":"science","prompt":"Why does ice melt faster in a warm room than in a cold one?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":332,"category":"science","prompt":"What role does hemoglobin play in the blood?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":333,"category":"science","prompt":"Why do we see lightning before we hear thunder?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":334,"category":"science","prompt":"What is the difference between evaporation and boiling?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":335,"category":"science","prompt":"How does a plant move water from its roots to its leaves?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":336,"category":"science","prompt":"Why does atmospheric pressure decrease as altitude increases?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":337,"category":"science","prompt":"What is one key difference between prokaryotic and eukaryotic cells?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":338,"category":"science","prompt":"Why is copper a good conductor of electricity?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":339,"category":"science","prompt":"What happens to the frequency of a wave when its period decreases?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":340,"category":"science","prompt":"Why are ocean tides influenced mainly by the Moon?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":341,"category":"general_knowledge","prompt":"Why was the printing press such an important invention in European history?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":342,"category":"general_knowledge","prompt":"What is the difference between a country and a continent?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":343,"category":"general_knowledge","prompt":"What does a central bank generally do?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":344,"category":"general_knowledge","prompt":"Why is the Suez Canal important for international trade?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":345,"category":"general_knowledge","prompt":"What is meant by a constitutional monarchy?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":346,"category":"general_knowledge","prompt":"Which language has the most native speakers worldwide, and which has the widest international use?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":347,"category":"general_knowledge","prompt":"What is the purpose of a census?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":348,"category":"general_knowledge","prompt":"Why is the Equator important in geography?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":349,"category":"general_knowledge","prompt":"What does UNESCO do?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":350,"category":"general_knowledge","prompt":"What was the Renaissance, in a couple of sentences?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":351,"category":"general_knowledge","prompt":"Why do countries use different currencies?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":352,"category":"general_knowledge","prompt":"What is the main difference between a republic and a monarchy?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":353,"category":"general_knowledge","prompt":"Which continent contains the Sahara Desert?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":354,"category":"general_knowledge","prompt":"What is a trade deficit in simple terms?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":355,"category":"general_knowledge","prompt":"Why is the Panama Canal strategically important?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":356,"category":"general_knowledge","prompt":"What is meant by freedom of the press?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":357,"category":"general_knowledge","prompt":"What is the difference between a city, a state, and a country in the United States?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":358,"category":"general_knowledge","prompt":"Why is the Nile historically important to Egypt?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":359,"category":"general_knowledge","prompt":"What does the term 'industrial revolution' refer to?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":360,"category":"general_knowledge","prompt":"What is the purpose of a national constitution?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":361,"category":"general_knowledge","prompt":"Why are leap years added to the calendar?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":362,"category":"general_knowledge","prompt":"What is the difference between latitude and longitude?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":363,"category":"general_knowledge","prompt":"What is an exchange rate?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":364,"category":"general_knowledge","prompt":"Why is Antarctica considered a desert?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":365,"category":"general_knowledge","prompt":"Who painted The Starry Night, and what art movement is he commonly associated with?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":366,"category":"general_knowledge","prompt":"What is the basic purpose of the World Health Organization?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":367,"category":"general_knowledge","prompt":"What does 'open source' mean for software?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":368,"category":"general_knowledge","prompt":"Why do many countries have a parliament?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":369,"category":"general_knowledge","prompt":"What is the difference between importing and exporting goods?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":370,"category":"general_knowledge","prompt":"What is cultural heritage, and why do societies try to preserve it?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":371,"category":"general_knowledge","prompt":"Why do leap years exist?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":372,"category":"general_knowledge","prompt":"What is the difference between a lake and a sea?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":373,"category":"general_knowledge","prompt":"What is the general role of a central bank?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":374,"category":"general_knowledge","prompt":"Why is the Panama Canal important to global trade?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":375,"category":"general_knowledge","prompt":"What does representative democracy mean?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":376,"category":"general_knowledge","prompt":"On which continent is the Gobi Desert located?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":377,"category":"general_knowledge","prompt":"What does the unemployment rate measure?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":378,"category":"general_knowledge","prompt":"Why is Greenwich used as a reference for world time zones?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":379,"category":"general_knowledge","prompt":"What is the difference between importing and exporting?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":380,"category":"general_knowledge","prompt":"What is a UNESCO World Heritage Site in simple terms?","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":381,"category":"language_tasks","prompt":"Correct the grammar in this sentence: 'She don't know where the station is.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":382,"category":"language_tasks","prompt":"Rewrite 'I need this now' as a polite workplace request.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":383,"category":"language_tasks","prompt":"Give two synonyms for 'accurate' and use one in a short sentence.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":384,"category":"language_tasks","prompt":"Change this sentence to the past tense: 'They meet every Friday after work.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":385,"category":"language_tasks","prompt":"Turn this statement into a question: 'The package has arrived.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":386,"category":"language_tasks","prompt":"Rewrite this in simpler English: 'The implementation requires substantial computational resources.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":387,"category":"language_tasks","prompt":"Correct the punctuation: 'Before we leave lets check the doors windows and lights.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":388,"category":"language_tasks","prompt":"Change to passive voice: 'The technician replaced the damaged cable.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":389,"category":"language_tasks","prompt":"Give one antonym for 'temporary' and use it in a sentence.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":390,"category":"language_tasks","prompt":"Rewrite this sentence so it sounds less demanding: 'Send the report before lunch.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":391,"category":"language_tasks","prompt":"Correct the error: 'There are less people here today.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":392,"category":"language_tasks","prompt":"Identify the adjective and adverb in: 'The careful driver stopped suddenly.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":393,"category":"language_tasks","prompt":"Turn this direct question into reported speech: Tom asked, 'Did you finish the task?'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":394,"category":"language_tasks","prompt":"Replace 'very big' with a more precise adjective in: 'They built a very big warehouse.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":395,"category":"language_tasks","prompt":"Change this sentence from singular to plural: 'The child carries a heavy box.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":396,"category":"language_tasks","prompt":"Rewrite in a warmer tone: 'Your application was received.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":397,"category":"language_tasks","prompt":"Explain the difference between 'fewer' and 'less' with a short example.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":398,"category":"language_tasks","prompt":"Correct the spelling and grammar: 'Your definately going to recieve an answer soon.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":399,"category":"language_tasks","prompt":"Give two natural alternatives to 'I completely agree.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":400,"category":"language_tasks","prompt":"Change to active voice: 'The final decision was made by the committee.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":401,"category":"language_tasks","prompt":"Rewrite this informal sentence in professional English: 'We messed up the schedule.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":402,"category":"language_tasks","prompt":"Explain the difference between 'its' and 'it's' using one example of each.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":403,"category":"language_tasks","prompt":"Make this request friendlier: 'Move your car.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":404,"category":"language_tasks","prompt":"Identify the subject, verb, and object in: 'The mechanic repaired the engine.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":405,"category":"language_tasks","prompt":"Rewrite without the double negative: 'I didn't see nobody there.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":406,"category":"language_tasks","prompt":"Change this sentence to future tense: 'She starts the new job on Monday.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":407,"category":"language_tasks","prompt":"Give one synonym and one antonym for 'complex'.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":408,"category":"language_tasks","prompt":"Correct the sentence: 'He has wrote three emails this morning.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":409,"category":"language_tasks","prompt":"Turn this command into a polite question: 'Open the window.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":410,"category":"language_tasks","prompt":"Explain the difference between 'advice' and 'advise' with a brief example.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":411,"category":"language_tasks","prompt":"Rewrite this sentence to avoid repetition: 'The project was delayed because the project lacked funding.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":412,"category":"language_tasks","prompt":"Change this sentence from first person to third person: 'I check my email every morning.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":413,"category":"language_tasks","prompt":"Correct the word choice: 'The weather had a big affect on attendance.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":414,"category":"language_tasks","prompt":"Make this sentence more concise: 'The reason is because the server was unavailable.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":415,"category":"language_tasks","prompt":"Identify the preposition in: 'The keys are under the notebook.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":416,"category":"language_tasks","prompt":"Rewrite this to sound more confident: 'I think maybe this approach could work.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":417,"category":"language_tasks","prompt":"Turn this statement into a negative sentence: 'They have completed the migration.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":418,"category":"language_tasks","prompt":"Correct the sentence: 'Each of the students have a laptop.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":419,"category":"language_tasks","prompt":"Replace the phrase 'a lot of' with a more formal alternative in: 'We received a lot of requests.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":420,"category":"language_tasks","prompt":"Explain the difference between 'who' and 'whom' with one short example.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":421,"category":"text_transformation","prompt":"Summarize this in one sentence: The library extended its opening hours during exam week so students can study later in the evening.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":422,"category":"text_transformation","prompt":"Rewrite in a more casual tone: 'We appreciate your prompt response to our inquiry.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":423,"category":"text_transformation","prompt":"Extract the person's name, company, and role: 'Marta Rossi joined Vega Labs as a data analyst.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":424,"category":"text_transformation","prompt":"Turn this into a short checklist: 'Before leaving, lock the door, switch off the lights, and close the windows.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":425,"category":"text_transformation","prompt":"Make this sentence more concise: 'At this point in time, we are currently unable to provide a definitive answer.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":426,"category":"text_transformation","prompt":"Paraphrase without changing the meaning: 'Remote work can reduce commuting time for employees.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":427,"category":"text_transformation","prompt":"Create a short headline from: 'Local school opens a new science laboratory for students.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":428,"category":"text_transformation","prompt":"Extract the two prices from: 'The basic plan costs 12 euros, while the premium plan costs 25 euros.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":429,"category":"text_transformation","prompt":"Rewrite to make the cause clearer: 'The flight was delayed. Heavy fog covered the airport.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":430,"category":"text_transformation","prompt":"Convert this note into a professional email subject: 'Need approval for next week's software release.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":431,"category":"text_transformation","prompt":"Summarize in one sentence: 'The company will migrate its servers on Saturday, so the service may be unavailable for two hours.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":432,"category":"text_transformation","prompt":"Rewrite this message to sound reassuring: 'We found an issue in the payment system and engineers are working on it.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":433,"category":"text_transformation","prompt":"Extract the date, time, and place: 'Your appointment is on 8 November at 14:30 in Room 204.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":434,"category":"text_transformation","prompt":"Turn this sentence into two clear steps: 'Download the installer and then restart the computer after installation.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":435,"category":"text_transformation","prompt":"Shorten this notification: 'Your password will expire in three days, so please update it before then.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":436,"category":"text_transformation","prompt":"Paraphrase: 'Demand increased faster than the factory could expand production.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":437,"category":"text_transformation","prompt":"Create a descriptive title for: 'A guide explaining how to back up photos before replacing a phone.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":438,"category":"text_transformation","prompt":"Extract all quantities: 'Add 250 ml of milk, 2 eggs, and 100 grams of sugar.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":439,"category":"text_transformation","prompt":"Rewrite this to avoid repetition: 'The report was long, and because the report was long, few people read the report completely.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":440,"category":"text_transformation","prompt":"Turn this paragraph into one sentence: 'The road is closed for repairs. Buses are using a temporary route. Delays are expected.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":441,"category":"text_transformation","prompt":"Make this feedback more constructive: 'This interface is confusing and badly organized.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":442,"category":"text_transformation","prompt":"Extract the product, quantity, and destination: 'Ship 12 monitors to the Turin office.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":443,"category":"text_transformation","prompt":"Rewrite this as a neutral factual statement: 'The ridiculous update made everything worse.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":444,"category":"text_transformation","prompt":"Turn this into a concise warning: 'If you unplug the device while the update is running, the installation may fail.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":445,"category":"text_transformation","prompt":"Summarize: 'The experiment was repeated three times, produced similar measurements each time, and supported the original hypothesis.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":446,"category":"text_transformation","prompt":"Rewrite this sentence for a beginner: 'The application authenticates users through cryptographic credentials.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":447,"category":"text_transformation","prompt":"Extract the names of all cities: 'The train travels from Milan through Bologna and ends in Florence.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":448,"category":"text_transformation","prompt":"Convert this into a yes-or-no question: 'The backup completed successfully.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":449,"category":"text_transformation","prompt":"Write a short label for this setting: 'Choose whether notifications should make a sound.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":450,"category":"text_transformation","prompt":"Remove unnecessary words: 'In my personal opinion, I think that the second option is better.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":451,"category":"text_transformation","prompt":"Summarize in one sentence: 'The museum will be closed on Monday for maintenance and will reopen normally on Tuesday morning.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":452,"category":"text_transformation","prompt":"Rewrite this more professionally: 'The program crashed and we had to fix it really quickly.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":453,"category":"text_transformation","prompt":"Extract the name, date, and city: 'Lucas Brown will attend the event on May 12 in Boston.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":454,"category":"text_transformation","prompt":"Turn this into three bullet points: 'To register you need an email address, a password, and a phone number.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":455,"category":"text_transformation","prompt":"Shorten this while preserving the meaning: 'Your delivery may be delayed because of severe weather conditions.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":456,"category":"text_transformation","prompt":"Paraphrase: 'The new system uses less memory than the previous version.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":457,"category":"text_transformation","prompt":"Create a short title for: 'Instructions for recovering an account after forgetting the password.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":458,"category":"text_transformation","prompt":"Extract all quantities: 'We need 4 batteries, 2 USB cables, and one 64 GB memory card.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":459,"category":"text_transformation","prompt":"Rewrite in a neutral tone: 'This ridiculous decision wasted everyone's time.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":460,"category":"text_transformation","prompt":"Turn this into a yes-or-no question: 'The server restarted successfully.'","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":461,"category":"sql_structured_output","prompt":"Write a SQL query to return the names of customers whose country is 'Italy'.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":462,"category":"sql_structured_output","prompt":"Create a JSON object for a user named Marco with id 17 and active set to true.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":463,"category":"sql_structured_output","prompt":"Write a regular expression that matches exactly five decimal digits.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":464,"category":"sql_structured_output","prompt":"Write a SQL query that finds products with stock equal to zero.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":465,"category":"sql_structured_output","prompt":"Return a JSON array containing three objects with ids 1, 2, and 3.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":466,"category":"sql_structured_output","prompt":"Write a SQL query that orders employees by hire_date from newest to oldest.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":467,"category":"sql_structured_output","prompt":"Create a regex that matches a lowercase word containing only letters a to z.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":468,"category":"sql_structured_output","prompt":"Return JSON for a movie titled 'Arrival', released in 2016, with genre 'science fiction'.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":469,"category":"sql_structured_output","prompt":"Write a SQL query that computes the average price from the products table.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":470,"category":"sql_structured_output","prompt":"Write a SQL query to delete rows from sessions where expired is true.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":471,"category":"sql_structured_output","prompt":"Create a JSON object with keys width and height set to 1920 and 1080.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":472,"category":"sql_structured_output","prompt":"Write a regex that matches either 'yes' or 'no' exactly.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":473,"category":"sql_structured_output","prompt":"Write a SQL query that selects distinct city values from customers.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":474,"category":"sql_structured_output","prompt":"Return a JSON array of the numbers 2, 4, 6, 8, and 10.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":475,"category":"sql_structured_output","prompt":"Write a SQL query joining orders to customers using customer_id and returning order id plus customer name.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":476,"category":"sql_structured_output","prompt":"Create a regex for a string that ends with '.csv'.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":477,"category":"sql_structured_output","prompt":"Return JSON representing a task with title 'Backup', priority 2, and completed false.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":478,"category":"sql_structured_output","prompt":"Write a SQL query that updates users and sets active to false where last_login is null.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":479,"category":"sql_structured_output","prompt":"Create a JSON object with a nested address containing city 'Turin' and country 'Italy'.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":480,"category":"sql_structured_output","prompt":"Write a SQL query that returns departments having more than 10 employees.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":481,"category":"sql_structured_output","prompt":"Create a regex matching an optional plus sign followed by one or more digits.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":482,"category":"sql_structured_output","prompt":"Write a SQL query that finds the earliest created_at value in the events table.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":483,"category":"sql_structured_output","prompt":"Return a JSON object with a tags field containing the array ['ml','systems'].","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":484,"category":"sql_structured_output","prompt":"Write a SQL query that selects rows created during the year 2025 using a date range.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":485,"category":"sql_structured_output","prompt":"Create a regex that matches a hexadecimal color like #A1B2C3.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":486,"category":"sql_structured_output","prompt":"Return valid JSON for a sensor with id 's7', temperature 21.5, and online true.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":487,"category":"sql_structured_output","prompt":"Write a SQL query that counts distinct customer_id values in the orders table.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":488,"category":"sql_structured_output","prompt":"Create a SQL query that returns category and total sales, grouped by category.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":489,"category":"sql_structured_output","prompt":"Return a JSON object where metadata contains version 3 and environment 'test'.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":490,"category":"sql_structured_output","prompt":"Write a regex that matches strings containing only uppercase letters and underscores.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":491,"category":"sql_structured_output","prompt":"Write a SQL query that selects users where active is true.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":492,"category":"sql_structured_output","prompt":"Return a JSON object with name 'Paul', age 34, and city 'Boston'.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":493,"category":"sql_structured_output","prompt":"Write a regex that matches exactly three uppercase letters followed by two digits.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":494,"category":"sql_structured_output","prompt":"Create a SQL query that finds all orders where total is greater than 100.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":495,"category":"sql_structured_output","prompt":"Return a JSON array containing the values 'low', 'medium', and 'high'.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":496,"category":"sql_structured_output","prompt":"Write a SQL query that sorts products by price in ascending order.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":497,"category":"sql_structured_output","prompt":"Create a regex that matches a string starting with 'user_' and ending with one or more digits.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":498,"category":"sql_structured_output","prompt":"Return valid JSON for an event with title 'Demo', year 2026, and public set to true.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":499,"category":"sql_structured_output","prompt":"Write a SQL query that counts rows in the logs table grouped by level.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":500,"category":"sql_structured_output","prompt":"Create a SQL query that selects name and email from contacts while excluding rows with a null email.","source_dataset":"prefetch_prompts_v1_400_english"}
+{"id":501,"category":"computer_science","prompt":"When would a B-tree be preferred over a binary search tree for storing data on disk?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":502,"category":"computer_science","prompt":"Can you explain how a trie stores words and why prefix searches are efficient?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":503,"category":"computer_science","prompt":"What does a priority queue guarantee when elements are removed?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":504,"category":"computer_science","prompt":"Why is a heap useful for repeatedly finding the smallest or largest item?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":505,"category":"computer_science","prompt":"How does topological sorting help when tasks have dependencies?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":506,"category":"computer_science","prompt":"What problem does Dijkstra's algorithm solve, and what assumption does it make about edge weights?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":507,"category":"computer_science","prompt":"Why is union-find useful when tracking connected components?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":508,"category":"computer_science","prompt":"What is memoization, and how is it different from plain recursion?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":509,"category":"computer_science","prompt":"How does an LRU cache decide which entry to remove?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":510,"category":"computer_science","prompt":"Why can sequential disk access be faster than many random reads?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":511,"category":"computer_science","prompt":"What is write-ahead logging in a database, and why is it useful?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":512,"category":"computer_science","prompt":"How does multi-version concurrency control let database readers and writers coexist?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":513,"category":"computer_science","prompt":"What is database sharding, and what problem is it meant to address?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":514,"category":"computer_science","prompt":"Why might a service keep several replicas of the same data?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":515,"category":"computer_science","prompt":"What does a load balancer do when several servers can handle the same request?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":516,"category":"computer_science","prompt":"What is the basic idea behind consensus in a distributed system?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":517,"category":"computer_science","prompt":"Why is leader election needed in some distributed systems?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":518,"category":"computer_science","prompt":"Can you explain the CAP theorem in a few practical sentences?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":519,"category":"computer_science","prompt":"What is the difference between strong consistency and eventual consistency from a user's perspective?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":520,"category":"computer_science","prompt":"How does a message queue help two services communicate asynchronously?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":521,"category":"computer_science","prompt":"What does backpressure mean in a data-processing pipeline?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":522,"category":"computer_science","prompt":"Why are network packets split into smaller units instead of sending one huge block?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":523,"category":"computer_science","prompt":"What does NAT do on a typical home network?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":524,"category":"computer_science","prompt":"How is a socket different from an IP address?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":525,"category":"computer_science","prompt":"What does a subnet mask tell a computer about an IP network?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":526,"category":"computer_science","prompt":"Why can packet loss happen even when two machines are correctly connected?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":527,"category":"computer_science","prompt":"What is a network handshake used for?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":528,"category":"computer_science","prompt":"How does a firewall decide whether to allow or block traffic?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":529,"category":"computer_science","prompt":"What is the difference between user mode and kernel mode?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":530,"category":"computer_science","prompt":"Why do operating systems use interrupts?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":531,"category":"computer_science","prompt":"What role does DMA play when moving data between devices and memory?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":532,"category":"computer_science","prompt":"What does memory mapping a file allow a program to do?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":533,"category":"computer_science","prompt":"Why can branch prediction make a CPU faster?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":534,"category":"computer_science","prompt":"What is SIMD, and what kind of workload benefits from it?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":535,"category":"computer_science","prompt":"How does endianness affect the way multi-byte numbers are stored?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":536,"category":"computer_science","prompt":"What is instruction pipelining in a processor?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":537,"category":"computer_science","prompt":"Why do modern CPUs execute some instructions out of order?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":538,"category":"computer_science","prompt":"What is a cache line, and why can it matter for performance?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":539,"category":"computer_science","prompt":"What does NUMA mean on a multi-socket computer?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":540,"category":"computer_science","prompt":"How is a static library different from a dynamically linked library?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":541,"category":"computer_science","prompt":"What happens during linking after source code has been compiled?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":542,"category":"computer_science","prompt":"What is an abstract syntax tree used for inside a compiler?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":543,"category":"computer_science","prompt":"Why do programming languages have type systems?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":544,"category":"computer_science","prompt":"What is the difference between lexical analysis and parsing?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":545,"category":"computer_science","prompt":"What does garbage collection's mark-and-sweep strategy do?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":546,"category":"computer_science","prompt":"Why is immutability useful in concurrent programs?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":547,"category":"computer_science","prompt":"What is a semaphore, and how does it differ from a simple lock?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":548,"category":"computer_science","prompt":"How does a publish-subscribe system differ from a traditional request-response interaction?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":549,"category":"computer_science","prompt":"What is a content delivery network intended to improve?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":550,"category":"computer_science","prompt":"Why might a database use a composite index instead of several unrelated single-column indexes?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":551,"category":"programming","prompt":"Write a short Python function that returns the most frequent value in a non-empty list.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":552,"category":"programming","prompt":"Can you show a JavaScript function that checks whether every number in an array is positive?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":553,"category":"programming","prompt":"Write a C function that counts how many elements of an integer array are greater than a given threshold.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":554,"category":"programming","prompt":"Create a Java method that returns the sum of the digits of a positive integer.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":555,"category":"programming","prompt":"Write a Python function that maps a list of words to their lengths.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":556,"category":"programming","prompt":"Show a JavaScript function that removes the first occurrence of a value from an array.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":557,"category":"programming","prompt":"Write a C function that finds the first position of a character in a null-terminated string.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":558,"category":"programming","prompt":"Create a Python function that returns a new list with adjacent duplicate values removed.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":559,"category":"programming","prompt":"Write a Java method that checks whether an integer array is sorted in ascending order.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":560,"category":"programming","prompt":"Can you implement a JavaScript function that counts the number of true values in an array?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":561,"category":"programming","prompt":"Write a Python function that groups words by their first letter.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":562,"category":"programming","prompt":"Show a C function that returns the larger of two floating-point values.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":563,"category":"programming","prompt":"Create a Java method that repeats a string n times.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":564,"category":"programming","prompt":"Write a JavaScript function that returns all numbers divisible by 3 from an array.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":565,"category":"programming","prompt":"Can you write a Python function that swaps the keys and values of a dictionary with unique values?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":566,"category":"programming","prompt":"Write a C loop that prints the powers of two from 1 through 64.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":567,"category":"programming","prompt":"Create a Java method that counts uppercase letters in a string.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":568,"category":"programming","prompt":"Write a Python function that returns the common keys shared by two dictionaries.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":569,"category":"programming","prompt":"Show a JavaScript function that converts an array of words into a comma-separated string.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":570,"category":"programming","prompt":"Write a C function that checks whether an integer is a power of two.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":571,"category":"programming","prompt":"Create a Python function that returns the running totals of a list of numbers.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":572,"category":"programming","prompt":"Write a Java method that finds the first repeated character in a string.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":573,"category":"programming","prompt":"Can you show a JavaScript function that replaces negative numbers in an array with zero?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":574,"category":"programming","prompt":"Write a Python function that returns the shortest word in a sentence.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":575,"category":"programming","prompt":"Create a C function that copies one integer array into another.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":576,"category":"programming","prompt":"Write a Java method that returns the number of occurrences of a target value in an array.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":577,"category":"programming","prompt":"Show a Python function that creates a frequency dictionary for the characters in a string.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":578,"category":"programming","prompt":"Write a JavaScript function that returns the last n elements of an array.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":579,"category":"programming","prompt":"Create a C function that tests whether all values in an integer array are equal.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":580,"category":"programming","prompt":"Write a Python function that returns the diagonal elements of a square matrix.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":581,"category":"programming","prompt":"Can you show a Java method that replaces every space in a string with an underscore?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":582,"category":"programming","prompt":"Write a JavaScript function that finds the sum of values at even indexes in an array.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":583,"category":"programming","prompt":"Create a Python function that removes empty strings from a list.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":584,"category":"programming","prompt":"Write a C function that computes n squared by repeated addition rather than multiplication.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":585,"category":"programming","prompt":"Show a Java method that returns the first character of each word in a sentence.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":586,"category":"programming","prompt":"Write a Python function that partitions numbers into two lists: negative and non-negative.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":587,"category":"programming","prompt":"Create a JavaScript function that checks whether an array contains any duplicate values.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":588,"category":"programming","prompt":"Write a C function that counts the number of zero values in an integer array.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":589,"category":"programming","prompt":"Can you implement a Python function that returns a dictionary mapping each number to its square?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":590,"category":"programming","prompt":"Write a Java method that finds the longest run of the same character in a string.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":591,"category":"programming","prompt":"Show a JavaScript function that clips a number so it stays between a minimum and maximum.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":592,"category":"programming","prompt":"Write a Python function that transposes a rectangular matrix represented as nested lists.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":593,"category":"programming","prompt":"Create a C function that returns the index of the maximum element in an integer array.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":594,"category":"programming","prompt":"Write a Java method that removes the first and last character from a string when its length is at least two.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":595,"category":"programming","prompt":"Can you show a Python function that counts how many dictionary values are None?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":596,"category":"programming","prompt":"Write a JavaScript function that interleaves two arrays of the same length.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":597,"category":"programming","prompt":"Create a C function that checks whether a string begins with a specified character.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":598,"category":"programming","prompt":"Write a Python function that returns all unique pairs of adjacent elements from a list.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":599,"category":"programming","prompt":"Show a Java method that converts an array of integers into a comma-separated string.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":600,"category":"programming","prompt":"Write a JavaScript function that calculates the product of all non-zero numbers in an array.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":601,"category":"debugging_code_reasoning","prompt":"Why does this Python code fail: numbers = [1,2,3]; print(numbers[3])?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":602,"category":"debugging_code_reasoning","prompt":"A Python function uses sum as a variable name and later sum(values) fails. What caused the problem?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":603,"category":"debugging_code_reasoning","prompt":"Why does this expression produce a string instead of a number in JavaScript: '5' + 2?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":604,"category":"debugging_code_reasoning","prompt":"This C code prints garbage from an uninitialized local variable. Why does that happen?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":605,"category":"debugging_code_reasoning","prompt":"A Java loop uses i-- while checking i < 10 starting from zero. Why will it not behave as intended?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":606,"category":"debugging_code_reasoning","prompt":"Why does this Python slice return an empty list: items[5:2]?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":607,"category":"debugging_code_reasoning","prompt":"My SQL query uses an aggregate function in WHERE and fails. Why should HAVING be considered instead?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":608,"category":"debugging_code_reasoning","prompt":"Why can using scanf('%s', buffer) without a width limit be dangerous in C?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":609,"category":"debugging_code_reasoning","prompt":"A Java method expects an int but I pass null. Why is that invalid for a primitive type?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":610,"category":"debugging_code_reasoning","prompt":"Why does this Python expression behave unexpectedly: bool('False')?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":611,"category":"debugging_code_reasoning","prompt":"This JavaScript loop creates callbacks that all see the same final value when var is used. What scope issue is involved?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":612,"category":"debugging_code_reasoning","prompt":"Why can a C string without a terminating null byte cause functions like printf to read too far?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":613,"category":"debugging_code_reasoning","prompt":"A Python set cannot contain a list. Why is the list rejected?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":614,"category":"debugging_code_reasoning","prompt":"Why does Math.round(2.5) not behave the same way as Python's round(2.5) in every case?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":615,"category":"debugging_code_reasoning","prompt":"My SQL GROUP BY query selects a non-aggregated column that is not in the GROUP BY clause. Why can this be invalid?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":616,"category":"debugging_code_reasoning","prompt":"Why does this Python code create one tuple instead of an integer: x = 5,?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":617,"category":"debugging_code_reasoning","prompt":"A Java switch falls through into the next case. What statement is probably missing?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":618,"category":"debugging_code_reasoning","prompt":"Why does this C comparison fail to compare string contents: if (a == b)?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":619,"category":"debugging_code_reasoning","prompt":"A Python file stays locked or unflushed because I never close it. What construct should I use instead?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":620,"category":"debugging_code_reasoning","prompt":"Why can recursively traversing a very deep tree hit Python's recursion limit?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":621,"category":"debugging_code_reasoning","prompt":"This JavaScript code tries to read obj.user.name when obj.user is undefined. How can I guard against it?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":622,"category":"debugging_code_reasoning","prompt":"Why does assigning a negative number to an unsigned C integer produce a large positive value?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":623,"category":"debugging_code_reasoning","prompt":"A Java integer calculation 5 / 2 gives 2. What type change would preserve the fractional part?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":624,"category":"debugging_code_reasoning","prompt":"Why does this Python dictionary lookup fail when I use a list as the key?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":625,"category":"debugging_code_reasoning","prompt":"My SQL query compares a DATE column to a badly formatted string. What kind of issue can that cause?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":626,"category":"debugging_code_reasoning","prompt":"Why can accessing memory after free in C produce unpredictable behavior?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":627,"category":"debugging_code_reasoning","prompt":"A Java method is marked static but tries to use an instance field directly. Why is that a problem?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":628,"category":"debugging_code_reasoning","prompt":"Why does this Python loop change only the local variable and not the list: for x in values: x *= 2?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":629,"category":"debugging_code_reasoning","prompt":"A JavaScript object key 1 and key '1' refer to the same property. Why?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":630,"category":"debugging_code_reasoning","prompt":"Why can integer overflow make a Java int become negative after adding two positive numbers?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":631,"category":"debugging_code_reasoning","prompt":"This Python regex matches more text than expected because I used .* greedily. What does greedy mean here?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":632,"category":"debugging_code_reasoning","prompt":"Why does a SQL INNER JOIN remove rows that have no matching record on the other side?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":633,"category":"debugging_code_reasoning","prompt":"A C function writes past the end of an array by one element. Why can that corrupt unrelated memory?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":634,"category":"debugging_code_reasoning","prompt":"Why does this Python comparison raise an error in Python 3: 3 < '4'?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":635,"category":"debugging_code_reasoning","prompt":"A Java StringBuilder is shared by several threads without coordination. What kind of problem might appear?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":636,"category":"debugging_code_reasoning","prompt":"Why can a missing await cause JavaScript code to use a Promise where a value was expected?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":637,"category":"debugging_code_reasoning","prompt":"This Python function catches Exception and silently ignores it. Why can that make debugging harder?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":638,"category":"debugging_code_reasoning","prompt":"Why does using a very large recursion depth risk a stack overflow in C?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":639,"category":"debugging_code_reasoning","prompt":"A SQL query returns duplicate customer rows because one customer has several orders. What relationship explains the duplicates?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":640,"category":"debugging_code_reasoning","prompt":"Why does this Java condition use && instead of || when checking whether a number lies outside a range?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":641,"category":"debugging_code_reasoning","prompt":"A Python path works on Linux but fails on Windows because it contains hard-coded separators. What is a portable fix?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":642,"category":"debugging_code_reasoning","prompt":"Why can comparing floating-point values with exact equality be unreliable in C?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":643,"category":"debugging_code_reasoning","prompt":"This JavaScript array is sorted as 1, 10, 2, 20. Why does the default sort behave that way?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":644,"category":"debugging_code_reasoning","prompt":"Why does a Python generator seem to become empty after I iterate over it once?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":645,"category":"debugging_code_reasoning","prompt":"A Java method changes an object passed to it, and the caller sees the change. Why does that happen?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":646,"category":"debugging_code_reasoning","prompt":"Why can using SELECT without ORDER BY return rows in a different order between executions?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":647,"category":"debugging_code_reasoning","prompt":"This C printf call uses %d for a double. Why is the format specifier important?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":648,"category":"debugging_code_reasoning","prompt":"Why does Python's range(5, 0) produce no numbers without a negative step?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":649,"category":"debugging_code_reasoning","prompt":"A Java HashMap lookup fails after I mutate a field used by the key's hashCode. Why is that dangerous?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":650,"category":"debugging_code_reasoning","prompt":"Why can a JavaScript event handler run later than the line of code that registered it?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":651,"category":"mathematics","prompt":"A taxi charges 4 euros plus 1.50 euros per kilometer. What does a 6 km ride cost?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":652,"category":"mathematics","prompt":"Solve 7x + 5 = 47 and check the result.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":653,"category":"mathematics","prompt":"A store raises a 90 euro price by 10%. What is the new price?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":654,"category":"mathematics","prompt":"What is the mean of 6, 9, 11, 14, and 20?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":655,"category":"mathematics","prompt":"A square has perimeter 36 cm. What is its area?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":656,"category":"mathematics","prompt":"Convert 7/20 into a decimal and a percentage.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":657,"category":"mathematics","prompt":"Two angles of a triangle are 35 degrees and 65 degrees. What is the third angle?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":658,"category":"mathematics","prompt":"What is the probability of drawing an ace from a standard 52-card deck?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":659,"category":"mathematics","prompt":"If 8 notebooks cost 28 euros, what is the price of 3 notebooks at the same rate?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":660,"category":"mathematics","prompt":"Solve the inequality 5x - 4 >= 21.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":661,"category":"mathematics","prompt":"A cylinder has radius 2 and height 5. What is its volume in terms of pi?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":662,"category":"mathematics","prompt":"What is the next term in the sequence 5, 9, 17, 33, 65?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":663,"category":"mathematics","prompt":"A bank balance of 800 euros earns 5% simple interest for one year. How much interest is earned?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":664,"category":"mathematics","prompt":"Find the mode of 2, 4, 4, 5, 7, 7, 7, 9.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":665,"category":"mathematics","prompt":"A map scale is 1 cm to 5 km. How many kilometers does 7.2 cm represent?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":666,"category":"mathematics","prompt":"What is 2/5 divided by 4/7?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":667,"category":"mathematics","prompt":"Solve x/3 + 4 = 9.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":668,"category":"mathematics","prompt":"A regular pentagon has five equal sides of 8 cm. What is its perimeter?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":669,"category":"mathematics","prompt":"How many seconds are in 3 hours and 25 minutes?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":670,"category":"mathematics","prompt":"What is the probability of rolling a total of 7 with two fair six-sided dice?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":671,"category":"mathematics","prompt":"Factor x squared + 7x + 12.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":672,"category":"mathematics","prompt":"A number is decreased by 30% and becomes 56. What was the original number?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":673,"category":"mathematics","prompt":"What is the slope of the line through points (2, 3) and (6, 11)?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":674,"category":"mathematics","prompt":"If 12 machines make 360 parts in an hour at the same rate, how many parts does one machine make?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":675,"category":"mathematics","prompt":"Evaluate 4 factorial divided by 2 factorial.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":676,"category":"mathematics","prompt":"A rectangle has area 54 square units and width 6. What is its length?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":677,"category":"mathematics","prompt":"Convert 135 degrees to radians in terms of pi.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":678,"category":"mathematics","prompt":"What is the sum of the first ten positive integers?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":679,"category":"mathematics","prompt":"If a coin is tossed twice, what is the probability of getting exactly one head?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":680,"category":"mathematics","prompt":"Solve 3(x - 2) = 2x + 5.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":681,"category":"mathematics","prompt":"A 15 liter mixture is 40% juice. How many liters of juice does it contain?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":682,"category":"mathematics","prompt":"What is the midpoint between (1, 4) and (7, 10)?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":683,"category":"mathematics","prompt":"Simplify the ratio 45:60.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":684,"category":"mathematics","prompt":"A cube has side length 4 cm. What is its total surface area?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":685,"category":"mathematics","prompt":"If a number is multiplied by 1.25, by what percentage has it increased?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":686,"category":"mathematics","prompt":"What is the smallest prime number greater than 50?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":687,"category":"mathematics","prompt":"How many diagonals does a pentagon have?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":688,"category":"mathematics","prompt":"A runner completes 400 meters in 80 seconds. What is the average speed in meters per second?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":689,"category":"mathematics","prompt":"The sum of two positive integers is 14 and their product is 45. What are the two integers?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":690,"category":"mathematics","prompt":"What is 0.04 multiplied by 0.5?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":691,"category":"mathematics","prompt":"A shop buys an item for 40 euros and sells it for 52 euros. What is the profit percentage relative to cost?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":692,"category":"mathematics","prompt":"What is the value of 2 cubed times 3 squared?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":693,"category":"mathematics","prompt":"If 3 pens and 2 pencils cost 11 euros, and each pen costs 3 euros, what does one pencil cost?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":694,"category":"mathematics","prompt":"A circle has diameter 14 cm. What is its circumference in terms of pi?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":695,"category":"mathematics","prompt":"What is the reciprocal of 2 1/2?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":696,"category":"mathematics","prompt":"A class has 18 girls and 12 boys. What fraction of the class are boys in simplest form?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":697,"category":"mathematics","prompt":"If an arithmetic sequence starts at 7 and increases by 4 each time, what is its sixth term?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":698,"category":"mathematics","prompt":"How many different three-letter arrangements can be made from A, B, and C without repetition?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":699,"category":"mathematics","prompt":"What is the absolute value of -17 plus the absolute value of 5?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":700,"category":"mathematics","prompt":"A tank is 3/5 full and contains 24 liters. What is the tank's total capacity?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":701,"category":"logic_reasoning","prompt":"Every ceramic mug in the cabinet is blue. This mug is ceramic and came from the cabinet. What color must it be?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":702,"category":"logic_reasoning","prompt":"Rita finished before Noah, and Noah finished before Ben. Who finished second?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":703,"category":"logic_reasoning","prompt":"No electric car in this parking area uses diesel. This vehicle uses diesel. Can it be one of those electric cars?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":704,"category":"logic_reasoning","prompt":"A locker code has two digits. The first is 3 more than the second, and the second is 4. What is the code?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":705,"category":"logic_reasoning","prompt":"Four people stand in a line. Maya is ahead of Ben, Ben is ahead of Kai, and Kai is ahead of Zoe. Who is last?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":706,"category":"logic_reasoning","prompt":"If a device starts only when both switches are on, and one switch is off, can the device start?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":707,"category":"logic_reasoning","prompt":"All red folders are archived. Folder X is red. What follows?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":708,"category":"logic_reasoning","prompt":"A package is in exactly one of rooms 1, 2, or 3. It is not in room 1 and room 2 is empty. Where is it?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":709,"category":"logic_reasoning","prompt":"If no mammals lay green eggs and this animal lays green eggs, can it be a mammal under the premise?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":710,"category":"logic_reasoning","prompt":"Sam is shorter than Priya but taller than Owen. Who is tallest?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":711,"category":"logic_reasoning","prompt":"A door opens only with both a key card and a PIN. The PIN is missing. Can the door open under the rule?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":712,"category":"logic_reasoning","prompt":"If all premium members receive free shipping and Nora is a premium member, what benefit does she receive?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":713,"category":"logic_reasoning","prompt":"Three boxes weigh different amounts. A is heavier than B and C is lighter than B. Which box is heaviest?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":714,"category":"logic_reasoning","prompt":"If a train leaves after the ferry but before the bus, which of those three leaves first?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":715,"category":"logic_reasoning","prompt":"Every valid ticket contains a barcode. This ticket has no barcode. Is it valid under the rule?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":716,"category":"logic_reasoning","prompt":"A number is a multiple of 5, greater than 40, and less than 50. What is it?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":717,"category":"logic_reasoning","prompt":"If a statement is true only when condition X holds, and X does not hold, can the statement be true?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":718,"category":"logic_reasoning","prompt":"There are four chairs numbered 1 to 4. Ana sits immediately to the right of chair 2. Which chair is hers?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":719,"category":"logic_reasoning","prompt":"If all squares have four sides and shape A is a square, how many sides must shape A have?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":720,"category":"logic_reasoning","prompt":"A parcel was delivered either Monday or Tuesday. It was not delivered Monday. When was it delivered?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":721,"category":"logic_reasoning","prompt":"If the sequence repeats circle, triangle, square, what shape appears in position 8?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":722,"category":"logic_reasoning","prompt":"Every employee with server access has completed training. Lee has server access. What can be inferred?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":723,"category":"logic_reasoning","prompt":"No wooden objects are magnetic. This object is magnetic. What does that imply about it being wooden?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":724,"category":"logic_reasoning","prompt":"A, B, and C finish a race with no ties. B beats C, and A loses to B but beats C. What is the order?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":725,"category":"logic_reasoning","prompt":"If the light is green whenever the machine is ready, and the light is not green, what follows under the stated rule?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":726,"category":"logic_reasoning","prompt":"A safe contains either cash or documents, but not both. It contains cash. What can you say about documents?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":727,"category":"logic_reasoning","prompt":"All approved invoices have a signature. Invoice 42 has a signature. Does that alone prove it is approved?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":728,"category":"logic_reasoning","prompt":"A person can enter only if they have both a badge and permission. Morgan has a badge but no permission. Can Morgan enter?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":729,"category":"logic_reasoning","prompt":"Three events happen in order: breakfast before the meeting, and the meeting before lunch. Which event is in the middle?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":730,"category":"logic_reasoning","prompt":"If P implies Q and both P and Q are true, is the implication satisfied?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":731,"category":"logic_reasoning","prompt":"Every blue card is numbered. This card is not numbered. Can it be blue?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":732,"category":"logic_reasoning","prompt":"A lamp is on exactly when the switch is up. The lamp is off. What position must the switch be in?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":733,"category":"logic_reasoning","prompt":"Four books are ordered by height. Red is taller than Green, Green is taller than White, and White is taller than Black. Which is second shortest?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":734,"category":"logic_reasoning","prompt":"A number is divisible by 3, greater than 13, and less than 17. What is the number?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":735,"category":"logic_reasoning","prompt":"If exactly one of A or B is true and A is false, what must be true about B?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":736,"category":"logic_reasoning","prompt":"All members of group K wear helmets. Pat is not wearing a helmet. Can Pat be in group K under the rule?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":737,"category":"logic_reasoning","prompt":"The blue train arrives later than the red train but earlier than the green train. Which arrives last?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":738,"category":"logic_reasoning","prompt":"If a file can be opened only when it is both present and readable, and it is unreadable, can it be opened?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":739,"category":"logic_reasoning","prompt":"There are two keys, silver and gold. Exactly one opens the door. The silver key does not work. Which key works?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":740,"category":"logic_reasoning","prompt":"If today is Wednesday, what day will it be 15 days from now?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":741,"category":"logic_reasoning","prompt":"Every triangle in the set is yellow. Shape Z is a triangle in the set. What color is it?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":742,"category":"logic_reasoning","prompt":"A conference room is either occupied or empty. It is not empty. What is its state?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":743,"category":"logic_reasoning","prompt":"Nora is older than Eli, and Eli is older than Mia, but Nora is younger than Dan. Who is oldest?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":744,"category":"logic_reasoning","prompt":"If all encrypted files require a password and this file is encrypted, what must be required to open it?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":745,"category":"logic_reasoning","prompt":"A bus arrives before a tram, while a taxi arrives after the tram. Which arrives second?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":746,"category":"logic_reasoning","prompt":"Exactly two of three sensors are active. Sensor A is active and sensor B is inactive. What is sensor C's state?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":747,"category":"logic_reasoning","prompt":"If no birds in a sanctuary can swim and this animal can swim, what can you infer about it being one of those birds?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":748,"category":"logic_reasoning","prompt":"A task must be completed after step X and before step Z. If X is first, which step must come last among X, the task, and Z?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":749,"category":"logic_reasoning","prompt":"If every password longer than 20 characters is rejected and this password has 24 characters, what happens?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":750,"category":"logic_reasoning","prompt":"Three cups are labeled 1, 2, and 3. A token is not in cup 1, and cup 3 is empty. Which cup contains the token?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":751,"category":"science","prompt":"Why does a metal spoon heat up when one end is left in hot soup?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":752,"category":"science","prompt":"What is the difference between speed and velocity?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":753,"category":"science","prompt":"Why does a parachute slow a falling person?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":754,"category":"science","prompt":"What happens to the wavelength of light when its frequency increases in a vacuum?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":755,"category":"science","prompt":"Why does a pressure cooker cook food faster than an open pot?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":756,"category":"science","prompt":"What is electrical resistance in simple physical terms?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":757,"category":"science","prompt":"Why can static electricity make small pieces of paper move?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":758,"category":"science","prompt":"What is the difference between reflection and refraction of light?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":759,"category":"science","prompt":"Why does a black surface usually absorb more visible light than a white surface?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":760,"category":"science","prompt":"What causes an object to accelerate according to Newton's second law?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":761,"category":"science","prompt":"What is the role of neutrons inside an atomic nucleus?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":762,"category":"science","prompt":"How does an ionic bond form between atoms?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":763,"category":"science","prompt":"Why does a catalyst speed up a chemical reaction without being consumed?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":764,"category":"science","prompt":"What is the difference between an acid and a base in terms of pH?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":765,"category":"science","prompt":"Why can dissolving sugar in water be considered a physical change?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":766,"category":"science","prompt":"What does conservation of mass mean during a chemical reaction?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":767,"category":"science","prompt":"Why do gases expand to fill their container?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":768,"category":"science","prompt":"How does concentration affect the rate of many chemical reactions?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":769,"category":"science","prompt":"What is the difference between an atom and an ion?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":770,"category":"science","prompt":"Why does table salt dissolve in water?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":771,"category":"science","prompt":"What is the main function of the cell membrane?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":772,"category":"science","prompt":"How do ribosomes contribute to protein production?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":773,"category":"science","prompt":"What is the difference between mitosis and meiosis?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":774,"category":"science","prompt":"Why are white blood cells important to the immune system?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":775,"category":"science","prompt":"What does insulin help regulate in the human body?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":776,"category":"science","prompt":"How do stomata help a plant exchange gases?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":777,"category":"science","prompt":"What is the role of the nucleus in a eukaryotic cell?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":778,"category":"science","prompt":"Why are decomposers important in an ecosystem?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":779,"category":"science","prompt":"What is the difference between a food chain and a food web?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":780,"category":"science","prompt":"How does genetic mutation create new variation in a population?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":781,"category":"science","prompt":"Why do earthquakes occur near many tectonic plate boundaries?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":782,"category":"science","prompt":"How are igneous rocks formed?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":783,"category":"science","prompt":"What drives the water cycle between oceans, land, and the atmosphere?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":784,"category":"science","prompt":"Why can coastal areas have milder temperatures than inland areas?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":785,"category":"science","prompt":"What is the difference between weathering and erosion?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":786,"category":"science","prompt":"How does Earth's magnetic field help protect the planet?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":787,"category":"science","prompt":"What causes a solar eclipse?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":788,"category":"science","prompt":"Why does the Moon show different phases during a month?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":789,"category":"science","prompt":"What is a light-year actually a measure of?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":790,"category":"science","prompt":"Why do stars appear to twinkle more than planets when viewed from Earth?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":791,"category":"science","prompt":"How does a simple electric motor convert electrical energy into motion?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":792,"category":"science","prompt":"Why does a charged battery have stored chemical energy?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":793,"category":"science","prompt":"What is the difference between renewable solar energy and stored fossil-fuel energy?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":794,"category":"science","prompt":"Why does adding insulation to a cup help keep a drink warm?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":795,"category":"science","prompt":"What happens to the density of most materials when they are heated and expand?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":796,"category":"science","prompt":"Why can a boat made of steel float even though steel itself is denser than water?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":797,"category":"science","prompt":"How does a microphone convert sound into an electrical signal?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":798,"category":"science","prompt":"What is the basic purpose of a transformer in an electrical power system?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":799,"category":"science","prompt":"Why does the human body sweat when it becomes hot?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":800,"category":"science","prompt":"How do kidneys help maintain the body's internal chemical balance?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":801,"category":"general_knowledge","prompt":"Why was the invention of paper important for recording and sharing information?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":802,"category":"general_knowledge","prompt":"What was the main purpose of the ancient Roman road network?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":803,"category":"general_knowledge","prompt":"Why is the Magna Carta historically significant?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":804,"category":"general_knowledge","prompt":"What did the Silk Road connect, and why was it important?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":805,"category":"general_knowledge","prompt":"What was one major effect of the invention of the steam engine?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":806,"category":"general_knowledge","prompt":"Why is the city of Mecca significant in world history and culture?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":807,"category":"general_knowledge","prompt":"What was the basic purpose of medieval guilds?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":808,"category":"general_knowledge","prompt":"Why is the Rosetta Stone important to historians?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":809,"category":"general_knowledge","prompt":"What did the term 'Cold War' describe?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":810,"category":"general_knowledge","prompt":"Why was the first successful powered flight historically important?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":811,"category":"general_knowledge","prompt":"Which river flows through London?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":812,"category":"general_knowledge","prompt":"What mountain range separates much of Europe from Asia in the traditional geographic definition?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":813,"category":"general_knowledge","prompt":"What is the largest island in the Mediterranean Sea?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":814,"category":"general_knowledge","prompt":"Why are river deltas often fertile areas?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":815,"category":"general_knowledge","prompt":"What is the difference between an island and a peninsula?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":816,"category":"general_knowledge","prompt":"Why are ports usually located on coasts or navigable rivers?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":817,"category":"general_knowledge","prompt":"What is a landlocked country?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":818,"category":"general_knowledge","prompt":"Which continent contains the Andes mountain range?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":819,"category":"general_knowledge","prompt":"What is the difference between a strait and a canal?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":820,"category":"general_knowledge","prompt":"Why do major cities often develop near rivers?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":821,"category":"general_knowledge","prompt":"What does gross national income measure in broad terms?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":822,"category":"general_knowledge","prompt":"What is the basic idea of supply and demand?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":823,"category":"general_knowledge","prompt":"Why can inflation reduce purchasing power?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":824,"category":"general_knowledge","prompt":"What is a progressive tax system?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":825,"category":"general_knowledge","prompt":"What does a government budget deficit mean?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":826,"category":"general_knowledge","prompt":"Why do businesses calculate profit margins?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":827,"category":"general_knowledge","prompt":"What is the difference between a loan's principal and its interest?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":828,"category":"general_knowledge","prompt":"What does diversification mean in investing?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":829,"category":"general_knowledge","prompt":"Why do governments issue bonds?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":830,"category":"general_knowledge","prompt":"What is the purpose of an insurance premium?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":831,"category":"general_knowledge","prompt":"What is the role of a jury in a typical jury trial?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":832,"category":"general_knowledge","prompt":"Why do many legal systems separate civil and criminal cases?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":833,"category":"general_knowledge","prompt":"What is a referendum?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":834,"category":"general_knowledge","prompt":"What does separation of powers try to prevent?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":835,"category":"general_knowledge","prompt":"What is the purpose of local government?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":836,"category":"general_knowledge","prompt":"Why are public records important in a government?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":837,"category":"general_knowledge","prompt":"What does diplomatic immunity broadly mean?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":838,"category":"general_knowledge","prompt":"What is the purpose of an embassy?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":839,"category":"general_knowledge","prompt":"What is a treaty between countries?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":840,"category":"general_knowledge","prompt":"Why do countries conduct population censuses at regular intervals?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":841,"category":"general_knowledge","prompt":"Who composed The Four Seasons?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":842,"category":"general_knowledge","prompt":"What is a sonnet in literature?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":843,"category":"general_knowledge","prompt":"Why is perspective important in Renaissance painting?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":844,"category":"general_knowledge","prompt":"What is the basic difference between a novel and a short story?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":845,"category":"general_knowledge","prompt":"Who wrote Pride and Prejudice?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":846,"category":"general_knowledge","prompt":"What is a symphony?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":847,"category":"general_knowledge","prompt":"What does archaeology study?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":848,"category":"general_knowledge","prompt":"What is the difference between a primary historical source and a secondary source?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":849,"category":"general_knowledge","prompt":"Why do museums preserve artifacts under controlled temperature and humidity?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":850,"category":"general_knowledge","prompt":"What is the purpose of a bibliography in an academic work?","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":851,"category":"language_tasks","prompt":"Correct the grammar in this sentence: 'Neither of the answers are correct.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":852,"category":"language_tasks","prompt":"Rewrite 'You need to fix this today' as a courteous professional request.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":853,"category":"language_tasks","prompt":"Give two synonyms for 'brief' and use one in a sentence.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":854,"category":"language_tasks","prompt":"Change this sentence to the future tense: 'The team meets on Thursday.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":855,"category":"language_tasks","prompt":"Turn this statement into a question: 'They have approved the proposal.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":856,"category":"language_tasks","prompt":"Rewrite this in simpler English: 'The device exhibits intermittent connectivity failures.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":857,"category":"language_tasks","prompt":"Correct the punctuation: 'If you finish early call me otherwise send an email.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":858,"category":"language_tasks","prompt":"Change to passive voice: 'The storm damaged several houses.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":859,"category":"language_tasks","prompt":"Give one antonym for 'transparent' and use it naturally.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":860,"category":"language_tasks","prompt":"Rewrite this sentence so it sounds more diplomatic: 'Your explanation is unclear.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":861,"category":"language_tasks","prompt":"Correct the error: 'She has less assignments this week.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":862,"category":"language_tasks","prompt":"Identify the noun and adjective in: 'The narrow path reached the village.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":863,"category":"language_tasks","prompt":"Turn this direct statement into reported speech: He said, 'I will call tomorrow.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":864,"category":"language_tasks","prompt":"Replace 'very angry' with a more precise adjective.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":865,"category":"language_tasks","prompt":"Change this sentence from plural to singular: 'The children carry heavy backpacks.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":866,"category":"language_tasks","prompt":"Rewrite in a friendlier tone: 'Your payment was declined.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":867,"category":"language_tasks","prompt":"Explain the difference between 'then' and 'than' with one short example.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":868,"category":"language_tasks","prompt":"Correct the spelling and grammar: 'We seperated the files into there folders.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":869,"category":"language_tasks","prompt":"Give two natural alternatives to 'That makes sense.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":870,"category":"language_tasks","prompt":"Change to active voice: 'The contract was signed by both parties.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":871,"category":"language_tasks","prompt":"Rewrite this informal sentence in professional English: 'The numbers look kind of weird.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":872,"category":"language_tasks","prompt":"Explain the difference between 'accept' and 'except' with a brief example.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":873,"category":"language_tasks","prompt":"Make this request more polite: 'Stop talking during the presentation.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":874,"category":"language_tasks","prompt":"Identify the direct object in: 'The student opened the window.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":875,"category":"language_tasks","prompt":"Rewrite without the double negative: 'She hasn't never visited the city.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":876,"category":"language_tasks","prompt":"Change this sentence to the present perfect: 'They completed three tests.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":877,"category":"language_tasks","prompt":"Give one synonym and one antonym for 'frequent'.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":878,"category":"language_tasks","prompt":"Correct the sentence: 'I seen that movie last year.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":879,"category":"language_tasks","prompt":"Turn this command into a polite request: 'Wait outside.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":880,"category":"language_tasks","prompt":"Explain the difference between 'principal' and 'principle' with a short example.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":881,"category":"language_tasks","prompt":"Rewrite to avoid repetition: 'The manager reviewed the report, and the manager approved the report.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":882,"category":"language_tasks","prompt":"Change this sentence from third person to first person: 'She checks the logs every morning.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":883,"category":"language_tasks","prompt":"Correct the word choice: 'The new policy will effect all employees.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":884,"category":"language_tasks","prompt":"Make this sentence more concise: 'At the present moment, the system is currently offline.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":885,"category":"language_tasks","prompt":"Identify the conjunction in: 'I stayed inside because it was raining.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":886,"category":"language_tasks","prompt":"Rewrite this to sound more certain: 'I guess the update probably fixed the issue.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":887,"category":"language_tasks","prompt":"Turn this affirmative sentence into a negative one: 'The files were copied successfully.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":888,"category":"language_tasks","prompt":"Correct the sentence: 'One of the machines are broken.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":889,"category":"language_tasks","prompt":"Replace 'a lot of' with a more formal phrase in: 'The experiment generated a lot of data.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":890,"category":"language_tasks","prompt":"Explain the difference between 'lay' and 'lie' using a short example.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":891,"category":"language_tasks","prompt":"Change this sentence into the comparative form: 'This route is fast.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":892,"category":"language_tasks","prompt":"Rewrite this as a concise email subject: 'Question about the invoice I received yesterday.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":893,"category":"language_tasks","prompt":"Correct the capitalization: 'we visited central park during our trip to new york.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":894,"category":"language_tasks","prompt":"Replace the vague word 'thing' with a more precise noun in: 'The main thing is data security.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":895,"category":"language_tasks","prompt":"Turn this sentence into the conditional mood: 'I help you if I have time.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":896,"category":"language_tasks","prompt":"Identify the pronoun in: 'They left their bags near the door.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":897,"category":"language_tasks","prompt":"Rewrite this to remove unnecessary hedging: 'It seems possible that perhaps the server may be overloaded.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":898,"category":"language_tasks","prompt":"Correct the sentence: 'There is two files missing from the folder.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":899,"category":"language_tasks","prompt":"Give a more formal alternative to 'get rid of' in the sentence 'We need to get rid of duplicate records.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":900,"category":"language_tasks","prompt":"Rewrite this sentence so the modifier is unambiguous: 'Walking to work, the rain soaked Daniel's jacket.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":901,"category":"text_transformation","prompt":"Summarize in one sentence: 'The university added more evening classes because daytime sections were full and many students work during the day.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":902,"category":"text_transformation","prompt":"Rewrite this in a calmer tone: 'The update completely broke the application and caused a mess.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":903,"category":"text_transformation","prompt":"Extract the person's name, department, and extension: 'Helen Carter works in Finance and can be reached at extension 418.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":904,"category":"text_transformation","prompt":"Turn this into a checklist: 'Charge the laptop, pack the adapter, and download the presentation before the trip.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":905,"category":"text_transformation","prompt":"Shorten this message: 'We are writing to inform you that your reservation has been successfully confirmed.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":906,"category":"text_transformation","prompt":"Paraphrase: 'The road remained closed because workers had not finished the repairs.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":907,"category":"text_transformation","prompt":"Create a short headline for: 'City council approves funding for three new public parks.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":908,"category":"text_transformation","prompt":"Extract the start time and end time: 'The workshop runs from 09:15 until 12:45.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":909,"category":"text_transformation","prompt":"Rewrite these two sentences as one clear cause-and-effect sentence: 'The database was unavailable. The application could not load user profiles.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":910,"category":"text_transformation","prompt":"Turn this note into an email subject: 'Please review the draft contract before Thursday.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":911,"category":"text_transformation","prompt":"Summarize in one sentence: 'A software patch will be installed tonight, and users may be disconnected for several minutes during the restart.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":912,"category":"text_transformation","prompt":"Rewrite this to sound more empathetic: 'Your shipment is late because the carrier missed the connection.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":913,"category":"text_transformation","prompt":"Extract the order number and amount: 'Order 84721 was charged 63.90 dollars.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":914,"category":"text_transformation","prompt":"Convert this into two numbered steps: 'Sign in to the portal, then upload the completed form.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":915,"category":"text_transformation","prompt":"Make this notification shorter: 'Your account will be locked after five unsuccessful login attempts.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":916,"category":"text_transformation","prompt":"Paraphrase: 'The study found that participants remembered images better than isolated words.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":917,"category":"text_transformation","prompt":"Create a concise title for: 'Instructions for connecting a laptop to an external monitor.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":918,"category":"text_transformation","prompt":"Extract all measurements: 'The box is 40 cm long, 25 cm wide, and 18 cm high.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":919,"category":"text_transformation","prompt":"Rewrite to remove repetition: 'The meeting started late because the meeting room was still occupied.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":920,"category":"text_transformation","prompt":"Combine into one sentence: 'The temperature dropped overnight. Ice formed on several roads.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":921,"category":"text_transformation","prompt":"Make this criticism more constructive: 'The documentation is disorganized and hard to follow.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":922,"category":"text_transformation","prompt":"Extract the item and serial number: 'The returned router has serial number XR-55291.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":923,"category":"text_transformation","prompt":"Rewrite this as a neutral statement: 'The careless operator ruined the entire batch.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":924,"category":"text_transformation","prompt":"Turn this into a concise safety warning: 'Do not touch the exposed contacts while the device is connected to power.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":925,"category":"text_transformation","prompt":"Summarize: 'Researchers tested four configurations, measured latency for each one, and selected the fastest configuration for further experiments.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":926,"category":"text_transformation","prompt":"Rewrite for a non-technical reader: 'The server rejected the request because the authentication token had expired.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":927,"category":"text_transformation","prompt":"Extract the airport codes: 'The flight travels from JFK to ORD and then continues to SFO.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":928,"category":"text_transformation","prompt":"Turn this into a yes-or-no question: 'The invoice includes tax.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":929,"category":"text_transformation","prompt":"Create a short setting label for: 'Automatically save a copy of every uploaded file.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":930,"category":"text_transformation","prompt":"Remove unnecessary words: 'The final outcome at the end was exactly the same.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":931,"category":"text_transformation","prompt":"Summarize in one sentence: 'The café will open an hour later on Sunday because the building is undergoing electrical maintenance.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":932,"category":"text_transformation","prompt":"Rewrite this more professionally: 'We ran out of disk space and had to clean things up fast.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":933,"category":"text_transformation","prompt":"Extract the customer name, ticket number, and priority: 'Customer Jordan Lee opened ticket 5827 with high priority.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":934,"category":"text_transformation","prompt":"Turn this into bullet points: 'The subscription includes cloud backup, email support, and monthly reports.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":935,"category":"text_transformation","prompt":"Shorten while preserving meaning: 'Because of scheduled maintenance, users may experience brief interruptions between midnight and 2 AM.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":936,"category":"text_transformation","prompt":"Paraphrase: 'The new processor completed the benchmark in less time while using less power.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":937,"category":"text_transformation","prompt":"Create a short title for: 'Steps to enable two-factor authentication on an account.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":938,"category":"text_transformation","prompt":"Extract all quantities: 'The order contains 6 keyboards, 3 webcams, and 10 mouse pads.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":939,"category":"text_transformation","prompt":"Rewrite in a neutral tone: 'The terrible interface made a simple task unnecessarily painful.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":940,"category":"text_transformation","prompt":"Turn this into a closed question: 'The backup includes the database files.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":941,"category":"text_transformation","prompt":"Summarize in one sentence: 'The train service added extra departures on Friday evening to handle increased passenger demand.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":942,"category":"text_transformation","prompt":"Rewrite this in a more reassuring tone: 'Some files were temporarily unavailable, but the storage system is now recovering them.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":943,"category":"text_transformation","prompt":"Extract the deadline and responsible person: 'Priya must submit the final report by March 18.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":944,"category":"text_transformation","prompt":"Convert this into three short instructions: 'Open Settings, choose Privacy, and disable location sharing.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":945,"category":"text_transformation","prompt":"Make this sentence more concise: 'The reason for the delay was due to a shortage of replacement parts.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":946,"category":"text_transformation","prompt":"Paraphrase: 'The team postponed the release so they could investigate a newly discovered defect.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":947,"category":"text_transformation","prompt":"Create a headline from: 'Regional hospital opens a new emergency care wing.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":948,"category":"text_transformation","prompt":"Extract the version numbers: 'The server runs 3.8.2, while the client was upgraded from 3.7.9 to 3.8.1.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":949,"category":"text_transformation","prompt":"Rewrite this to sound objective: 'The brilliant new design is obviously better than the old one.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":950,"category":"text_transformation","prompt":"Turn this statement into a direct question: 'The delivery is expected to arrive before noon.'","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":951,"category":"sql_structured_output","prompt":"Write a SQL query that returns the usernames of accounts created after January 1, 2026.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":952,"category":"sql_structured_output","prompt":"Return a JSON object for a device with id 'd42', status 'idle', and battery 87.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":953,"category":"sql_structured_output","prompt":"Create a regular expression that matches a string containing exactly eight digits.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":954,"category":"sql_structured_output","prompt":"Write a SQL query that lists invoices whose paid_at value is null.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":955,"category":"sql_structured_output","prompt":"Return a JSON array containing the numbers 5, 10, 15, and 20.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":956,"category":"sql_structured_output","prompt":"Write a SQL query that returns the newest ten messages ordered by created_at.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":957,"category":"sql_structured_output","prompt":"Create a regex that matches a word made only of lowercase letters and hyphens.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":958,"category":"sql_structured_output","prompt":"Return valid JSON for a course with code 'CS101', credits 6, and active true.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":959,"category":"sql_structured_output","prompt":"Write a SQL query that calculates the total quantity across all rows in the inventory table.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":960,"category":"sql_structured_output","prompt":"Write a SQL statement that updates products and increases price by 5 percent where category is 'books'.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":961,"category":"sql_structured_output","prompt":"Return a JSON object with x set to 12 and y set to -4.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":962,"category":"sql_structured_output","prompt":"Create a regex that matches exactly either 'open', 'closed', or 'pending'.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":963,"category":"sql_structured_output","prompt":"Write a SQL query that returns each unique department from the employees table.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":964,"category":"sql_structured_output","prompt":"Return a JSON array of three objects representing ids 10, 20, and 30.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":965,"category":"sql_structured_output","prompt":"Write a SQL query joining books to authors by author_id and returning book title and author name.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":966,"category":"sql_structured_output","prompt":"Create a regex that matches filenames ending in '.log'.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":967,"category":"sql_structured_output","prompt":"Return JSON for a notification with message 'Ready', unread true, and priority 1.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":968,"category":"sql_structured_output","prompt":"Write a SQL statement that sets archived to true for records older than January 1, 2024.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":969,"category":"sql_structured_output","prompt":"Return a JSON object with a profile field containing username 'nova' and level 7.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":970,"category":"sql_structured_output","prompt":"Write a SQL query that returns product categories whose average price is above 50.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":971,"category":"sql_structured_output","prompt":"Create a regex that matches an optional minus sign followed by one to three digits.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":972,"category":"sql_structured_output","prompt":"Write a SQL query that returns the latest updated_at value from the documents table.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":973,"category":"sql_structured_output","prompt":"Return a JSON object whose permissions field contains 'read' and 'write'.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":974,"category":"sql_structured_output","prompt":"Write a SQL query that selects events occurring between June 1 and June 30, 2026.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":975,"category":"sql_structured_output","prompt":"Create a regex that matches a six-character lowercase hexadecimal string without a leading hash.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":976,"category":"sql_structured_output","prompt":"Return valid JSON for a reading with sensor 'A9', humidity 44.2, and valid true.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":977,"category":"sql_structured_output","prompt":"Write a SQL query that counts distinct product_id values in the order_items table.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":978,"category":"sql_structured_output","prompt":"Create a SQL query that returns region and maximum salary, grouped by region.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":979,"category":"sql_structured_output","prompt":"Return a JSON object with settings containing retry_count 3 and debug false.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":980,"category":"sql_structured_output","prompt":"Create a regex that matches strings made only of lowercase letters, digits, and underscores.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":981,"category":"sql_structured_output","prompt":"Write a SQL query that returns customers who have placed no orders using a LEFT JOIN.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":982,"category":"sql_structured_output","prompt":"Return JSON for a rectangle with width 8, height 5, and unit 'cm'.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":983,"category":"sql_structured_output","prompt":"Create a regex that matches a date in the form YYYY-MM-DD using digits only.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":984,"category":"sql_structured_output","prompt":"Write a SQL query that returns the second highest distinct salary from employees.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":985,"category":"sql_structured_output","prompt":"Return a JSON array containing two coordinate objects: (1,2) and (3,4).","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":986,"category":"sql_structured_output","prompt":"Write a SQL query that finds duplicate email values in a users table.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":987,"category":"sql_structured_output","prompt":"Create a regex that matches strings beginning with 'INV-' followed by four digits.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":988,"category":"sql_structured_output","prompt":"Return valid JSON for a build with number 128, branch 'main', and successful true.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":989,"category":"sql_structured_output","prompt":"Write a SQL query that returns each customer_id with the sum of total from orders.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":990,"category":"sql_structured_output","prompt":"Create a SQL query that removes duplicate rows from a result by selecting distinct country and city pairs.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":991,"category":"sql_structured_output","prompt":"Return a JSON object with an empty errors array and status 'ok'.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":992,"category":"sql_structured_output","prompt":"Create a regex that matches one uppercase letter followed by any number of lowercase letters.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":993,"category":"sql_structured_output","prompt":"Write a SQL query that selects products whose name contains the substring 'pro'.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":994,"category":"sql_structured_output","prompt":"Return JSON for a calendar event with title 'Review', duration_minutes 30, and remote false.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":995,"category":"sql_structured_output","prompt":"Write a SQL query that ranks employees by salary within each department using a window function.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":996,"category":"sql_structured_output","prompt":"Create a regex that matches an IPv4-like pattern of four dot-separated numeric groups without validating the numeric ranges.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":997,"category":"sql_structured_output","prompt":"Return a JSON object with keys min, max, and average set to 2, 10, and 6.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":998,"category":"sql_structured_output","prompt":"Write a SQL query using EXISTS to return customers who have at least one order.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":999,"category":"sql_structured_output","prompt":"Create a SQL query that returns the number of rows per status and sorts the counts from highest to lowest.","source_dataset":"prefetch_prompts_v2_500_english"}
+{"id":1000,"category":"sql_structured_output","prompt":"Return valid JSON for a server with hostname 'node-3', ports [80,443], and maintenance false.","source_dataset":"prefetch_prompts_v2_500_english"}
