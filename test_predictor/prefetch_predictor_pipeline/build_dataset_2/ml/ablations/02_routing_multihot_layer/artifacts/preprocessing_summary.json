@@ -1,0 +1,58 @@
+{
+  "ablation": "routing_history_only",
+  "representation": "multihot_256_layer",
+  "source_columns": [
+    "routing_history_expert_0",
+    "routing_history_expert_1",
+    "routing_history_expert_2",
+    "routing_history_expert_3",
+    "routing_history_expert_4",
+    "routing_history_expert_5"
+  ],
+  "history_length": 1,
+  "feature_count": 296,
+  "target": "E_l(t+1)",
+  "splits": {
+    "train": {
+      "X_shape": [
+        155560,
+        296
+      ],
+      "X_nonzero_values": 1088920,
+      "y_shape": [
+        155560,
+        256
+      ]
+    },
+    "validation": {
+      "X_shape": [
+        20600,
+        296
+      ],
+      "X_nonzero_values": 144200,
+      "y_shape": [
+        20600,
+        256
+      ]
+    },
+    "test": {
+      "X_shape": [
+        21280,
+        296
+      ],
+      "X_nonzero_values": 148960,
+      "y_shape": [
+        21280,
+        256
+      ]
+    }
+  },
+  "one_hot_configuration": {
+    "handle_unknown": "infrequent_if_exist",
+    "min_frequency": 41
+  },
+  "additional_columns": [
+    "layer"
+  ],
+  "layer_one_hot_feature_count": 40
+}

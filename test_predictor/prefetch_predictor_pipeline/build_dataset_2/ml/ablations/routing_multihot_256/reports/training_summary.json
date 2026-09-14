@@ -1,0 +1,43 @@
+{
+  "random_state": 42,
+  "top_k": 6,
+  "test_evaluated": false,
+  "logistic_max_iter": 5000,
+  "logistic_n_jobs": -1,
+  "models": {
+    "logistic_regression": {
+      "train_examples_used": 155560,
+      "training_seconds": 3499.617233483,
+      "train_evaluation_seconds": 0.8997545439997339,
+      "train_recall_at_6": 0.16979407731207677,
+      "validation_seconds": 0.11355907800134446,
+      "validation_recall_at_6": 0.1623462783171521,
+      "logistic_max_iter": 5000,
+      "logistic_n_jobs": -1
+    },
+    "decision_tree": {
+      "train_examples_used": 155560,
+      "training_seconds": 38.31500368399975,
+      "train_evaluation_seconds": 0.9681057369998598,
+      "train_recall_at_6": 0.9682716208108338,
+      "validation_seconds": 0.10625012200034689,
+      "validation_recall_at_6": 0.21526699029126214
+    },
+    "random_forest": {
+      "train_examples_used": 155560,
+      "training_seconds": 74.61461501399936,
+      "train_evaluation_seconds": 19.190923115998885,
+      "train_recall_at_6": 0.25953222765063855,
+      "validation_seconds": 2.351106093999988,
+      "validation_recall_at_6": 0.2406229773462783
+    },
+    "knn": {
+      "train_examples_used": 20000,
+      "training_seconds": 0.10603574400010984,
+      "train_evaluation_seconds": 3.04286973499984,
+      "train_recall_at_6": 0.9899,
+      "validation_seconds": 2.6192000979990553,
+      "validation_recall_at_6": 0.2577831715210356
+    }
+  }
+}

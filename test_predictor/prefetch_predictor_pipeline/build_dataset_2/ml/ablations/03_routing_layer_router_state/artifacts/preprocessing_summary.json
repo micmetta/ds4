@@ -1,0 +1,139 @@
+{
+  "ablation": "routing_history_only",
+  "representation": "multihot_256_layer_router_state",
+  "source_columns": [
+    "routing_history_expert_0",
+    "routing_history_expert_1",
+    "routing_history_expert_2",
+    "routing_history_expert_3",
+    "routing_history_expert_4",
+    "routing_history_expert_5"
+  ],
+  "history_length": 1,
+  "feature_count": 4408,
+  "target": "E_l(t+1)",
+  "splits": {
+    "train": {
+      "X_shape": [
+        155560,
+        4408
+      ],
+      "X_nonzero_values": 6066840,
+      "y_shape": [
+        155560,
+        256
+      ]
+    },
+    "validation": {
+      "X_shape": [
+        20600,
+        4408
+      ],
+      "X_nonzero_values": 803400,
+      "y_shape": [
+        20600,
+        256
+      ]
+    },
+    "test": {
+      "X_shape": [
+        21280,
+        4408
+      ],
+      "X_nonzero_values": 829920,
+      "y_shape": [
+        21280,
+        256
+      ]
+    }
+  },
+  "one_hot_configuration": {
+    "handle_unknown": "infrequent_if_exist",
+    "min_frequency": 41
+  },
+  "additional_columns": [
+    "layer",
+    "router_logit_expert_id_0",
+    "router_logit_expert_id_1",
+    "router_logit_expert_id_2",
+    "router_logit_expert_id_3",
+    "router_logit_expert_id_4",
+    "router_logit_expert_id_5",
+    "router_logit_expert_id_6",
+    "router_logit_expert_id_7",
+    "router_logit_expert_id_8",
+    "router_logit_expert_id_9",
+    "router_logit_expert_id_10",
+    "router_logit_expert_id_11",
+    "router_logit_expert_id_12",
+    "router_logit_expert_id_13",
+    "router_logit_expert_id_14",
+    "router_logit_expert_id_15",
+    "router_logit_value_0",
+    "router_logit_value_1",
+    "router_logit_value_2",
+    "router_logit_value_3",
+    "router_logit_value_4",
+    "router_logit_value_5",
+    "router_logit_value_6",
+    "router_logit_value_7",
+    "router_logit_value_8",
+    "router_logit_value_9",
+    "router_logit_value_10",
+    "router_logit_value_11",
+    "router_logit_value_12",
+    "router_logit_value_13",
+    "router_logit_value_14",
+    "router_logit_value_15"
+  ],
+  "router_state": {
+    "categorical_columns": [
+      "layer",
+      "router_logit_expert_id_0",
+      "router_logit_expert_id_1",
+      "router_logit_expert_id_2",
+      "router_logit_expert_id_3",
+      "router_logit_expert_id_4",
+      "router_logit_expert_id_5",
+      "router_logit_expert_id_6",
+      "router_logit_expert_id_7",
+      "router_logit_expert_id_8",
+      "router_logit_expert_id_9",
+      "router_logit_expert_id_10",
+      "router_logit_expert_id_11",
+      "router_logit_expert_id_12",
+      "router_logit_expert_id_13",
+      "router_logit_expert_id_14",
+      "router_logit_expert_id_15"
+    ],
+    "numeric_columns": [
+      "router_logit_value_0",
+      "router_logit_value_1",
+      "router_logit_value_2",
+      "router_logit_value_3",
+      "router_logit_value_4",
+      "router_logit_value_5",
+      "router_logit_value_6",
+      "router_logit_value_7",
+      "router_logit_value_8",
+      "router_logit_value_9",
+      "router_logit_value_10",
+      "router_logit_value_11",
+      "router_logit_value_12",
+      "router_logit_value_13",
+      "router_logit_value_14",
+      "router_logit_value_15"
+    ],
+    "numeric_scaler": "StandardScaler fit only on train",
+    "router_id_encoding": {
+      "type": "fixed_one_hot_per_slot",
+      "slots": 16,
+      "expert_id_range": [
+        0,
+        255
+      ],
+      "feature_count": 4096
+    },
+    "one_hot_feature_count": 40
+  }
+}

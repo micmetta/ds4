@@ -1,0 +1,8 @@
+{
+  "train_examples_used": 20000,
+  "training_seconds": 0.10998332899998786,
+  "train_evaluation_seconds": 3.007406792999973,
+  "train_recall_at_6": 0.9989583333333334,
+  "validation_seconds": 2.4547498829997494,
+  "validation_recall_at_6": 0.1856957928802589
+}

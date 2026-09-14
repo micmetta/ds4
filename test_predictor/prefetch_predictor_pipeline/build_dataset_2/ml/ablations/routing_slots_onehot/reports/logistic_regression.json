@@ -1,0 +1,10 @@
+{
+  "train_examples_used": 155560,
+  "training_seconds": 3532.8475875090003,
+  "train_evaluation_seconds": 0.946047149000151,
+  "train_recall_at_6": 0.15539020313705323,
+  "validation_seconds": 0.12399222800013376,
+  "validation_recall_at_6": 0.13563106796116506,
+  "logistic_max_iter": 5000,
+  "logistic_n_jobs": -1
+}
