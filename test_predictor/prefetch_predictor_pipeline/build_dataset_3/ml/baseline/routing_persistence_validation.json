@@ -1,0 +1,16 @@
+{
+  "baseline": "routing_persistence",
+  "prediction_rule": "predicted_experts = experts_t",
+  "top_k": 6,
+  "test_evaluated": false,
+  "splits": {
+    "train": {
+      "examples": 820440,
+      "recall_at_6": 0.4001438252644922
+    },
+    "validation": {
+      "examples": 103640,
+      "recall_at_6": 0.4040299755564132
+    }
+  }
+}
