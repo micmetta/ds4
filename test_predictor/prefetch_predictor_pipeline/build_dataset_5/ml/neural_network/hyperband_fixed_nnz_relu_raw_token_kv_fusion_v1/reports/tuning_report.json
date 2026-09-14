@@ -1,0 +1,72 @@
+{
+  "experiment": "build5_fixed_nnz_hyperband",
+  "interrupted": false,
+  "elapsed_seconds_this_invocation": 55234.809743184,
+  "completed_trials": 30,
+  "best_trials_for_phase_2": [
+    {
+      "trial_id": "0024",
+      "validation_recall_at_6": 0.49085259437561035,
+      "hyperparameters": {
+        "raw_hidden_projection_dimension": 512,
+        "token_projection_dimension": 64,
+        "kv_projection": "direct",
+        "fusion_hidden_units": 512,
+        "learning_rate": 0.00015
+      },
+      "checkpoint_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_checkpoints/0024/best.weights.h5"
+    },
+    {
+      "trial_id": "0016",
+      "validation_recall_at_6": 0.4853203296661377,
+      "hyperparameters": {
+        "raw_hidden_projection_dimension": 1024,
+        "token_projection_dimension": 512,
+        "kv_projection": "512",
+        "fusion_hidden_units": 0,
+        "learning_rate": 0.00015
+      },
+      "checkpoint_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_checkpoints/0016/best.weights.h5"
+    },
+    {
+      "trial_id": "0028",
+      "validation_recall_at_6": 0.4791150987148285,
+      "hyperparameters": {
+        "raw_hidden_projection_dimension": 512,
+        "token_projection_dimension": 512,
+        "kv_projection": "direct",
+        "fusion_hidden_units": 512,
+        "learning_rate": 0.0001
+      },
+      "checkpoint_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_checkpoints/0028/best.weights.h5"
+    },
+    {
+      "trial_id": "0017",
+      "validation_recall_at_6": 0.47787922620773315,
+      "hyperparameters": {
+        "raw_hidden_projection_dimension": 512,
+        "token_projection_dimension": 64,
+        "kv_projection": "64",
+        "fusion_hidden_units": 0,
+        "learning_rate": 0.00015
+      },
+      "checkpoint_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_checkpoints/0017/best.weights.h5"
+    },
+    {
+      "trial_id": "0029",
+      "validation_recall_at_6": 0.4748106002807617,
+      "hyperparameters": {
+        "raw_hidden_projection_dimension": 1024,
+        "token_projection_dimension": 1024,
+        "kv_projection": "direct",
+        "fusion_hidden_units": 512,
+        "learning_rate": 6.997208e-05
+      },
+      "checkpoint_path": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/hyperband_fixed_nnz_relu_raw_token_kv_fusion_v1/trial_checkpoints/0029/best.weights.h5"
+    }
+  ],
+  "phase_2": {
+    "epochs": 1000,
+    "early_stopping_patience": 5
+  }
+}

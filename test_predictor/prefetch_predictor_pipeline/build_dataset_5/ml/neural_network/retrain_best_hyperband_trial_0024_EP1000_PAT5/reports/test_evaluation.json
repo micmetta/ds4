@@ -1,0 +1,23 @@
+{
+  "experiment": "fixed_nnz_checkpoint_test_evaluation",
+  "split": "test",
+  "checkpoint": "test_predictor/prefetch_predictor_pipeline/build_dataset_5/ml/neural_network/retrain_best_hyperband_trial_0024_EP1000_PAT5/models/best.weights.h5",
+  "test_examples": 209400,
+  "test_recall_at_6": 0.5060561922954473,
+  "architecture": {
+    "state_hidden_units": 512,
+    "fusion_hidden_layers": [
+      512
+    ],
+    "raw_hidden_projection_dimension": 512,
+    "raw_hidden_projection_activation": "relu",
+    "token_projection_dimension": 64,
+    "token_projection_activation": "relu",
+    "kv_projection_dimension": null,
+    "kv_projection_activation": null,
+    "dropout": 0.3,
+    "learning_rate": 0.00015,
+    "l2_regularization": 0.0,
+    "tensorflow_compute_policy": "float32"
+  }
+}
