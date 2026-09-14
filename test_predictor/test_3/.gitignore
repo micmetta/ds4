@@ -1,0 +1,3 @@
+output/
+output_[0-9]*/
+test_3_runner
