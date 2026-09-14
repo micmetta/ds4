@@ -215,6 +215,9 @@ typedef struct ds4_gpu_stream_expert_load_stats {
     double   upload_and_sync_ms;
     double   total_ms;
     int      direct_io;
+    /* TEST_7 diagnostics: how the current six-expert demand was assembled. */
+    uint32_t prefetched_experts_reused;
+    uint32_t ssd_experts_loaded;
 } ds4_gpu_stream_expert_load_stats;
 
 /* TEST_4/5 lifecycle events emitted by the speculative pinned-RAM worker.
@@ -295,9 +298,11 @@ int ds4_gpu_stream_expert_cache_begin_selected_load(
 
 /* TEST_4 only: a separate pinned host bank is populated by a background
  * Direct-I/O worker.  A return value of 1 from try_selected_load means the
- * requested group was ready in that bank and was copied host->device; 0 means
- * that the caller must use the ordinary synchronous demand load; -1 is an
- * error.  These APIs are inert unless DS4_TEST_4_PREFETCH=1 is set. */
+ * requested group was ready in that bank and was copied host->device; 2 means
+ * that one or more predicted experts were reused and only the missing experts
+ * were read synchronously; 0 means that the caller must load the complete
+ * group synchronously; -1 is an error.  These APIs are inert unless
+ * DS4_TEST_4_PREFETCH=1 is set. */
 int ds4_gpu_test4_prefetch_enqueue(
         const ds4_gpu_stream_expert_table *table,
         uint32_t                           target_token,

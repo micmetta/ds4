@@ -50,7 +50,7 @@ NVCCFLAGS ?= -O3 -g -lineinfo --use_fast_math $(NVCC_ARCH_FLAGS) -Xcompiler $(NA
 # Vendored llama.cpp mmq prefill tier (cuda/mmq/, see cuda/mmq/VENDOR.md).
 MMQ_INCLUDES := -Icuda/mmq
 MMQ_OBJS := cuda/mmq/ds4_ggml_stubs.o cuda/mmq/ds4_mmq.o cuda/mmq/ds4_mmq_d2r.o cuda/mmq/quantize.o cuda/mmq/mmid.o cuda/mmq/mmvq.o cuda/mmq/ds4_repack.o
-CORE_OBJS = ds4.o ds4_distributed.o ds4_tp.o ds4_ssd.o ds4_cuda.o ds4_layer_pack.o $(MMQ_OBJS)
+CORE_OBJS = ds4.o ds4_distributed.o ds4_tp.o ds4_ssd.o ds4_cuda.o ds4_cuda_optional_fallback.o ds4_layer_pack.o $(MMQ_OBJS)
 CPU_CORE_OBJS = ds4_cpu.o ds4_distributed.o ds4_tp.o ds4_ssd.o ds4_layer_pack.o
 CUDA_LDLIBS ?= -lm -Xcompiler -pthread -L$(CUDA_HOME)/targets/sbsa-linux/lib -L$(CUDA_HOME)/lib64 -lcudart -lcublas
 HIPCC ?= $(shell command -v hipcc 2>/dev/null || echo /opt/rocm/bin/hipcc)
@@ -62,7 +62,7 @@ DS4_LINK_LIBS ?= $(CUDA_LDLIBS)
 METAL_LDLIBS := $(LDLIBS)
 endif
 
-.PHONY: all help clean test test_0_runner test-predictor-0 test_1_runner test-predictor-1 test_2_runner test-predictor-2 test_3_runner test-predictor-3 test_4_runner test-predictor-4 test_5_runner test-predictor-5 test_6_runner test-predictor-6 build_1_runner test-metal-session-batch test-mxfp4-cuda test-cuda-session-batch test-cuda-mixed-batch dspark-acceptance dspark-verify-depth mtp-verify-depth cpu cuda cuda-spark cuda-generic cuda-regression strix-halo rocm
+.PHONY: all help clean test test_0_runner test-predictor-0 test_1_runner test-predictor-1 test_2_runner test-predictor-2 test_3_runner test-predictor-3 test_4_runner test-predictor-4 test_5_runner test-predictor-5 test_6_runner test-predictor-6 test_7_runner test-predictor-7 test_8_runner test-predictor-8 dataset_runner test-metal-session-batch test-mxfp4-cuda test-cuda-session-batch test-cuda-mixed-batch dspark-acceptance dspark-verify-depth mtp-verify-depth cpu cuda cuda-spark cuda-generic cuda-regression strix-halo rocm
 
 ifeq ($(UNAME_S),Darwin)
 .PHONY: metal-decode-schedule-bench metal-prefill-variant-bench check-mxfp4-half-lut
@@ -244,10 +244,26 @@ test_predictor/test_5/test_5_runner: test_predictor/test_5/test_5_runner.c
 test_predictor/test_6/test_6_runner: test_predictor/test_6/test_6_runner.c test_predictor/test_5/test_5_runner.c
 	$(CC) $(CFLAGS) -o $@ $<
 
-test_predictor/creation_dataset/build_1/dataset_runner: test_predictor/creation_dataset/build_1/dataset_runner.c
+test_predictor/test_7/test_7_runner: test_predictor/test_7/test_7_runner.c
 	$(CC) $(CFLAGS) -o $@ $<
 
-build_1_runner: test_predictor/creation_dataset/build_1/dataset_runner
+test_7_runner: ds4 test_predictor/test_7/test_7_runner
+
+test-predictor-7: test_7_runner
+	./test_predictor/test_7/test_7_runner
+
+test_predictor/test_8/test_8_runner: test_predictor/test_8/test_8_runner.c
+	$(CC) $(CFLAGS) -o $@ $<
+
+test_8_runner: ds4 test_predictor/test_8/test_8_runner
+
+test-predictor-8: test_8_runner
+	./test_predictor/test_8/test_8_runner
+
+test_predictor/prefetch_predictor_pipeline/collector/dataset_runner: test_predictor/prefetch_predictor_pipeline/collector/dataset_runner.c
+	$(CC) $(CFLAGS) -o $@ $<
+
+dataset_runner: test_predictor/prefetch_predictor_pipeline/collector/dataset_runner
 
 ifeq ($(UNAME_S),Darwin)
 test_0_runner: test_predictor/test_0/test_0_runner
@@ -415,6 +431,9 @@ ds4_metal.o: ds4_metal.m ds4_gpu.h $(METAL_SRCS)
 
 ds4_cuda.o: ds4_cuda.cu ds4_gpu.h ds4_gpu_mgpu.h ds4_iq2_tables_cuda.inc cuda/mmq/ds4_mmq.h
 	$(NVCC) $(NVCCFLAGS) -c -o $@ ds4_cuda.cu
+
+ds4_cuda_optional_fallback.o: ds4_cuda_optional_fallback.c
+	$(CC) $(CFLAGS) -c -o $@ $<
 
 # Vendored mmq pieces (see cuda/mmq/VENDOR.md).  ds4_mmq.cu transitively
 # pulls in mmq.cuh which has heavy template instantiation -- each piece

@@ -61,6 +61,8 @@ typedef struct ds4_gpu_stream_expert_load_stats {
     double   upload_and_sync_ms;
     double   total_ms;
     int      direct_io;
+    uint32_t prefetched_experts_reused;
+    uint32_t ssd_experts_loaded;
 } ds4_gpu_stream_expert_load_stats;
 
 /* Matching diagnostic ABI in ds4_gpu.h; this CUDA translation unit keeps
@@ -26382,6 +26384,8 @@ static int cuda_stream_selected_cache_begin_load(
     g_stream_selected_cache.valid = 1;
     g_stream_selected_last_load_stats.total_ms =
         (cuda_wall_sec() - load_t0) * 1000.0;
+    g_stream_selected_last_load_stats.prefetched_experts_reused = 0;
+    g_stream_selected_last_load_stats.ssd_experts_loaded = slot_count;
     return 1;
 }
 
@@ -26886,7 +26890,139 @@ static int cuda_test4_upload_slot(const cuda_test4_pinned_slot *slot,
         stats->upload_and_sync_ms = (cuda_wall_sec() - t0) * 1000.0;
         stats->total_ms = stats->upload_and_sync_ms;
         stats->direct_io = g_model_direct_fd >= 0;
+        stats->prefetched_experts_reused = slot->n_selected;
+        stats->ssd_experts_loaded = 0;
     }
+    return 1;
+}
+
+/* Build the demand group in its actual router order.  Values already read by
+ * the speculative worker are copied from the pinned slot; only expert IDs not
+ * present in that prediction are read from the model file. */
+static int cuda_test4_upload_slot_partial(
+        const cuda_test4_pinned_slot *slot,
+        const int32_t *selected_ids,
+        uint32_t n_selected,
+        uint32_t *reused_experts,
+        ds4_gpu_stream_expert_load_stats *stats) {
+    if (reused_experts) *reused_experts = 0;
+    if (!slot || !selected_ids || n_selected != CUDA_TEST4_SELECTED_COUNT ||
+        slot->n_selected != CUDA_TEST4_SELECTED_COUNT ||
+        !cuda_stream_selected_ranges_valid(&slot->table)) return 0;
+    const uint64_t gate_bytes = (uint64_t)n_selected * slot->table.gate_expert_bytes;
+    const uint64_t down_bytes = (uint64_t)n_selected * slot->table.down_expert_bytes;
+    const double t0 = cuda_wall_sec();
+    cuda_stream_selected_cache_invalidate();
+    if (ds4_gpu_set_current_device(0) != 0 ||
+        !cuda_stream_selected_ensure_bytes(&g_stream_selected_cache.gate_ptr,
+                                           &g_stream_selected_cache.gate_capacity,
+                                           gate_bytes, "TEST_7 partial gate experts") ||
+        !cuda_stream_selected_ensure_bytes(&g_stream_selected_cache.up_ptr,
+                                           &g_stream_selected_cache.up_capacity,
+                                           gate_bytes, "TEST_7 partial up experts") ||
+        !cuda_stream_selected_ensure_bytes(&g_stream_selected_cache.down_ptr,
+                                           &g_stream_selected_cache.down_capacity,
+                                           down_bytes, "TEST_7 partial down experts") ||
+        !cuda_stream_selected_ensure_i32(n_selected)) return 0;
+
+    cudaStream_t stream = g_stream_selected_upload_stream;
+    if (!stream && cudaStreamCreateWithFlags(&stream, cudaStreamNonBlocking) != cudaSuccess) return 0;
+    const int own_stream = stream != g_stream_selected_upload_stream;
+    uint32_t reused = 0;
+    ds4_gpu_stream_expert_load_stats direct_stats = {0};
+    cudaError_t copy_err = cudaSuccess;
+    for (uint32_t i = 0; i < n_selected && copy_err == cudaSuccess; ++i) {
+        const int32_t expert = selected_ids[i];
+        if (expert < 0 || (uint32_t)expert >= slot->table.n_total_expert) {
+            copy_err = cudaErrorInvalidValue;
+            break;
+        }
+        int32_t prefetched_index = -1;
+        for (uint32_t j = 0; j < slot->n_selected; ++j) {
+            if (slot->selected[j] == expert) {
+                prefetched_index = (int32_t)j;
+                break;
+            }
+        }
+        char *gate_dst = g_stream_selected_cache.gate_ptr +
+                         (uint64_t)i * slot->table.gate_expert_bytes;
+        char *up_dst = g_stream_selected_cache.up_ptr +
+                       (uint64_t)i * slot->table.gate_expert_bytes;
+        char *down_dst = g_stream_selected_cache.down_ptr +
+                         (uint64_t)i * slot->table.down_expert_bytes;
+        if (prefetched_index >= 0) {
+            const uint64_t source = (uint64_t)prefetched_index;
+            copy_err = cudaMemcpyAsync(gate_dst,
+                                       slot->gate + source * slot->table.gate_expert_bytes,
+                                       (size_t)slot->table.gate_expert_bytes,
+                                       cudaMemcpyHostToDevice, stream);
+            if (copy_err == cudaSuccess) copy_err = cudaMemcpyAsync(
+                    up_dst, slot->up + source * slot->table.gate_expert_bytes,
+                    (size_t)slot->table.gate_expert_bytes, cudaMemcpyHostToDevice, stream);
+            if (copy_err == cudaSuccess) copy_err = cudaMemcpyAsync(
+                    down_dst, slot->down + source * slot->table.down_expert_bytes,
+                    (size_t)slot->table.down_expert_bytes, cudaMemcpyHostToDevice, stream);
+            ++reused;
+        } else {
+            const uint64_t expert_index = (uint32_t)expert;
+            if (!cuda_model_copy_to_device_streamed(
+                        gate_dst, slot->table.model_map, slot->table.model_size,
+                        slot->table.gate_offset + expert_index * slot->table.gate_expert_bytes,
+                        slot->table.gate_expert_bytes, "TEST_7 partial gate expert", &direct_stats) ||
+                !cuda_model_copy_to_device_streamed(
+                        up_dst, slot->table.model_map, slot->table.model_size,
+                        slot->table.up_offset + expert_index * slot->table.gate_expert_bytes,
+                        slot->table.gate_expert_bytes, "TEST_7 partial up expert", &direct_stats) ||
+                !cuda_model_copy_to_device_streamed(
+                        down_dst, slot->table.model_map, slot->table.model_size,
+                        slot->table.down_offset + expert_index * slot->table.down_expert_bytes,
+                        slot->table.down_expert_bytes, "TEST_7 partial down expert", &direct_stats)) {
+                copy_err = cudaErrorUnknown;
+            }
+        }
+    }
+    int32_t remap[CUDA_TEST4_SELECTED_COUNT];
+    for (uint32_t i = 0; i < n_selected; ++i) remap[i] = (int32_t)i;
+    if (copy_err == cudaSuccess) copy_err = cudaMemcpyAsync(
+            g_stream_selected_cache.slot_selected_ptr, remap,
+            (size_t)n_selected * sizeof(remap[0]), cudaMemcpyHostToDevice, stream);
+    const cudaError_t sync_err = copy_err == cudaSuccess ? cudaStreamSynchronize(stream) : copy_err;
+    if (own_stream) (void)cudaStreamDestroy(stream);
+    if (sync_err != cudaSuccess) {
+        (void)cudaGetLastError();
+        cuda_stream_selected_cache_invalidate();
+        return 0;
+    }
+    g_stream_selected_cache.logical_tier = 0;
+    g_stream_selected_cache.model_map = slot->table.model_map;
+    g_stream_selected_cache.layer = slot->table.layer;
+    g_stream_selected_cache.n_total_expert = slot->table.n_total_expert;
+    g_stream_selected_cache.slot_count = n_selected;
+    g_stream_selected_cache.compact_count = n_selected;
+    g_stream_selected_cache.gate_offset = slot->table.gate_offset;
+    g_stream_selected_cache.up_offset = slot->table.up_offset;
+    g_stream_selected_cache.down_offset = slot->table.down_offset;
+    g_stream_selected_cache.gate_expert_bytes = slot->table.gate_expert_bytes;
+    g_stream_selected_cache.down_expert_bytes = slot->table.down_expert_bytes;
+    g_stream_selected_cache.slot_selected_tensor.ptr = g_stream_selected_cache.slot_selected_ptr;
+    g_stream_selected_cache.slot_selected_tensor.bytes =
+        (uint64_t)n_selected * sizeof(remap[0]);
+    g_stream_selected_cache.slot_selected_tensor.owner = 0;
+    g_stream_selected_cache.slot_selected_tensor.device_id = 0;
+    g_stream_selected_cache.valid = 1;
+    if (stats) {
+        memset(stats, 0, sizeof(*stats));
+        stats->slot_count = n_selected;
+        stats->unique_experts = n_selected;
+        stats->bytes = gate_bytes * 2u + down_bytes;
+        stats->ssd_read_ms = direct_stats.ssd_read_ms;
+        stats->upload_and_sync_ms = (cuda_wall_sec() - t0) * 1000.0;
+        stats->total_ms = stats->upload_and_sync_ms;
+        stats->direct_io = direct_stats.direct_io;
+        stats->prefetched_experts_reused = reused;
+        stats->ssd_experts_loaded = n_selected - reused;
+    }
+    if (reused_experts) *reused_experts = reused;
     return 1;
 }
 
@@ -31138,6 +31274,8 @@ extern "C" int ds4_gpu_test4_prefetch_try_selected_load(
     pthread_mutex_lock(&g_test4_prefetch.mutex);
     const uint32_t distance = cuda_test4_prefetch_init_distance();
     cuda_test4_pinned_slot *slot = NULL;
+    cuda_test4_pinned_slot *partial_slot = NULL;
+    uint32_t partial_reused = 0;
     int saw_loading = 0;
     int saw_failed = 0;
     int saw_expert_mismatch = 0;
@@ -31170,6 +31308,22 @@ extern "C" int ds4_gpu_test4_prefetch_try_selected_load(
             slot = candidate;
             break;
         }
+        if (candidate->state == CUDA_TEST4_SLOT_READY &&
+            candidate->target_token == token && candidate->layer == layer) {
+            uint32_t reused = 0;
+            for (uint32_t i = 0; i < n_selected; ++i) {
+                for (uint32_t j = 0; j < candidate->n_selected; ++j) {
+                    if (selected_ids[i] == candidate->selected[j]) {
+                        ++reused;
+                        break;
+                    }
+                }
+            }
+            if (reused > partial_reused) {
+                partial_slot = candidate;
+                partial_reused = reused;
+            }
+        }
     }
     if (!slot) {
         cuda_test4_pinned_slot lookup_event;
@@ -31185,8 +31339,21 @@ extern "C" int ds4_gpu_test4_prefetch_try_selected_load(
                               saw_expert_mismatch ? DS4_GPU_TEST4_EVENT_LOOKUP_EXPERT_MISMATCH :
                                                     DS4_GPU_TEST4_EVENT_LOOKUP_ABSENT,
                               &lookup_event);
+        if (!partial_slot || partial_reused == 0) {
+            pthread_mutex_unlock(&g_test4_prefetch.mutex);
+            return 0;
+        }
+        partial_slot->state = CUDA_TEST4_SLOT_CONSUMING;
         pthread_mutex_unlock(&g_test4_prefetch.mutex);
-        return 0;
+        uint32_t actual_reused = 0;
+        const int ok = cuda_test4_upload_slot_partial(
+                partial_slot, selected_ids, n_selected, &actual_reused, out_stats);
+        pthread_mutex_lock(&g_test4_prefetch.mutex);
+        partial_slot->state = CUDA_TEST4_SLOT_EMPTY;
+        pthread_cond_broadcast(&g_test4_prefetch.cond);
+        pthread_mutex_unlock(&g_test4_prefetch.mutex);
+        if (ok && out_stats) g_stream_selected_last_load_stats = *out_stats;
+        return ok && actual_reused > 0 ? 2 : -1;
     }
     slot->state = CUDA_TEST4_SLOT_CONSUMING;
     pthread_mutex_unlock(&g_test4_prefetch.mutex);
