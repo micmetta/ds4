@@ -62,7 +62,7 @@ DS4_LINK_LIBS ?= $(CUDA_LDLIBS)
 METAL_LDLIBS := $(LDLIBS)
 endif
 
-.PHONY: all help clean test test_0_runner test-predictor-0 test_1_runner test-predictor-1 test_2_runner test-predictor-2 test_3_runner test-predictor-3 test_4_runner test-predictor-4 test_5_runner test-predictor-5 test_6_runner test-predictor-6 test_7_runner test-predictor-7 test_8_runner test-predictor-8 dataset_runner test-metal-session-batch test-mxfp4-cuda test-cuda-session-batch test-cuda-mixed-batch dspark-acceptance dspark-verify-depth mtp-verify-depth cpu cuda cuda-spark cuda-generic cuda-regression strix-halo rocm
+.PHONY: all help clean test test_0_runner test-predictor-0 test_1_runner test-predictor-1 test_2_runner test-predictor-2 test_3_runner test-predictor-3 test_4_runner test-predictor-4 test_5_runner test-predictor-5 test_6_runner test-predictor-6 test_7_runner test-predictor-7 test_8_runner test-predictor-8 test_9_runner test-predictor-9 test_10_runner test-predictor-10 dataset_runner test-metal-session-batch test-mxfp4-cuda test-cuda-session-batch test-cuda-mixed-batch dspark-acceptance dspark-verify-depth mtp-verify-depth cpu cuda cuda-spark cuda-generic cuda-regression strix-halo rocm
 
 ifeq ($(UNAME_S),Darwin)
 .PHONY: metal-decode-schedule-bench metal-prefill-variant-bench check-mxfp4-half-lut
@@ -259,6 +259,22 @@ test_8_runner: ds4 test_predictor/test_8/test_8_runner
 
 test-predictor-8: test_8_runner
 	./test_predictor/test_8/test_8_runner
+
+test_predictor/test_9/test_9_runner: test_predictor/test_9/test_9_runner.c
+	$(CC) $(CFLAGS) -o $@ $<
+
+test_9_runner: ds4 test_predictor/test_9/test_9_runner
+
+test-predictor-9: test_9_runner
+	./test_predictor/test_9/test_9_runner
+
+test_predictor/test_10/test_10_runner: test_predictor/test_10/test_10_runner.c
+	$(CC) $(CFLAGS) -o $@ $<
+
+test_10_runner: test_predictor/test_10/test_10_runner
+
+test-predictor-10: test_10_runner
+	./test_predictor/test_10/test_10_runner
 
 test_predictor/prefetch_predictor_pipeline/collector/dataset_runner: test_predictor/prefetch_predictor_pipeline/collector/dataset_runner.c
 	$(CC) $(CFLAGS) -o $@ $<

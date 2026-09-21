@@ -233,6 +233,11 @@ enum {
     DS4_GPU_TEST4_EVENT_LOOKUP_ABSENT,
     DS4_GPU_TEST4_EVENT_LOOKUP_EXPERT_MISMATCH,
     DS4_GPU_TEST4_EVENT_STALE_DISCARDED,
+    /* TEST_9: lifecycle esplicito delle richieste stale. */
+    DS4_GPU_TEST4_EVENT_STALE_QUEUED_DISCARDED,
+    DS4_GPU_TEST4_EVENT_READING_MARKED_TOO_LATE,
+    DS4_GPU_TEST4_EVENT_TOO_LATE_FREED,
+    DS4_GPU_TEST4_EVENT_STALE_QUEUED_DISCARDED_BY_WORKER,
 };
 
 /* Why a speculative worker read failed.  This is trace-only information. */
@@ -260,6 +265,29 @@ typedef struct ds4_gpu_test4_prefetch_event {
     double   worker_read_ms;
     double   queue_to_ready_ms;
     double   slot_age_ms;
+    /* UINT32_MAX for lifecycle records emitted by the decode thread;
+     * 0/1 identify the SSD worker that actually performed the read. */
+    uint32_t worker_id;
+    /* Snapshot diagnostico della banca pinned nel momento dell'evento. I
+     * campi sono usati da TEST_9 per distinguere una banca logicamente piena
+     * dalla fame del worker o da una pressione reale sui buffer pinned. */
+    uint32_t active_layer_count;
+    uint32_t active_distance;
+    uint32_t slot_distance_index;
+    uint32_t bank_empty_slots;
+    uint32_t bank_loading_slots;
+    uint32_t bank_ready_slots;
+    uint32_t bank_consuming_slots;
+    uint32_t bank_failed_slots;
+    uint32_t lower_layer_loading_slots;
+    uint32_t bank_queued_slots;
+    uint32_t bank_reading_slots;
+    uint32_t bank_too_late_slots;
+    uint32_t same_layer_slot_state[8];
+    uint32_t same_layer_slot_target_token[8];
+    double   same_layer_slot_age_ms[8];
+    uint32_t pinned_slots_allocated;
+    uint64_t pinned_bytes_estimated;
 } ds4_gpu_test4_prefetch_event;
 
 /* Lightweight CUDA-memory snapshot used only by TEST_3 diagnostics. */

@@ -76,6 +76,99 @@ def learned_trace_summary(path: Path) -> dict[str, float | int]:
     }
 
 
+def correct_predictions_prefetch_availability_summary(
+    learned_path: Path, prefetch_path: Path, learned_layer_count: int,
+) -> dict[str, int]:
+    """Spiega quanti expert predetti correttamente erano davvero riusabili.
+
+    Un expert puo' essere corretto rispetto al router del token successivo ma
+    non essere ancora presente nella RAM pinned quando DS4 lo domanda. Questa
+    funzione unisce la trace del predictor con quella del worker usando la
+    chiave ``(target_token_index, layer)`` e separa i motivi osservabili.
+    """
+    learned_records = [
+        json.loads(line) for line in learned_path.read_text().splitlines() if line.strip()
+    ]
+    prefetch_records = [
+        json.loads(line) for line in prefetch_path.read_text().splitlines() if line.strip()
+    ]
+    predicted_layers = set(range(3, 3 + learned_layer_count))
+    demand_events = {"prefetch_hit", "prefetch_partial_reuse", "prefetch_miss_demand"}
+
+    # Conserva la posizione nella trace: per essere utile, worker_ready deve
+    # comparire prima della domanda degli expert dello stesso token/layer.
+    events_by_key: dict[tuple[int, int], list[tuple[int, dict]]] = {}
+    demands_by_key: dict[tuple[int, int], tuple[int, dict]] = {}
+    for position, record in enumerate(prefetch_records):
+        token_index = record.get("token_index")
+        layer = record.get("layer")
+        if not isinstance(token_index, int) or layer not in predicted_layers:
+            continue
+        key = (token_index, layer)
+        events_by_key.setdefault(key, []).append((position, record))
+        if record.get("event") in demand_events:
+            demands_by_key[key] = (position, record)
+
+    result = {
+        "correct_predicted_experts_reused_from_pinned_ram": 0,
+        "correct_predicted_experts_not_reused": 0,
+        "correct_predicted_experts_not_reused_prefetch_bank_full": 0,
+        "correct_predicted_experts_not_reused_worker_not_ready": 0,
+        "correct_predicted_experts_not_reused_stale_discarded": 0,
+        "correct_predicted_experts_not_reused_ready_but_unavailable": 0,
+        "correct_predicted_experts_not_reused_no_prefetch_state": 0,
+    }
+    for prediction in learned_records:
+        if "recall_at_6" not in prediction:
+            continue
+        layer = prediction.get("layer")
+        target_token_index = prediction.get("target_token_index")
+        if layer not in predicted_layers or not isinstance(target_token_index, int):
+            continue
+        correct_count = len(
+            set(prediction["predicted_experts"]) & set(prediction["actual_experts"])
+        )
+        if not correct_count:
+            continue
+        key = (target_token_index, layer)
+        demand = demands_by_key.get(key)
+        if demand is None:
+            result["correct_predicted_experts_not_reused"] += correct_count
+            result["correct_predicted_experts_not_reused_no_prefetch_state"] += correct_count
+            continue
+
+        demand_position, demand_record = demand
+        reused_count = min(correct_count, int(demand_record.get("prefetched_experts_reused", 0)))
+        result["correct_predicted_experts_reused_from_pinned_ram"] += reused_count
+        not_reused = correct_count - reused_count
+        if not not_reused:
+            continue
+        result["correct_predicted_experts_not_reused"] += not_reused
+
+        earlier_events = {
+            record.get("event")
+            for position, record in events_by_key.get(key, [])
+            if position <= demand_position
+        }
+        # La priorita' evita doppio conteggio: un gruppo rifiutato per banca
+        # piena non puo' essere interpretato come una previsione arrivata tardi.
+        if "prefetch_bank_full" in earlier_events:
+            reason = "correct_predicted_experts_not_reused_prefetch_bank_full"
+        elif "prefetch_stale_discarded" in earlier_events:
+            reason = "correct_predicted_experts_not_reused_stale_discarded"
+        elif (
+            "prefetch_worker_queued" in earlier_events
+            or "prefetch_worker_started" in earlier_events
+        ) and "prefetch_worker_ready" not in earlier_events:
+            reason = "correct_predicted_experts_not_reused_worker_not_ready"
+        elif "prefetch_worker_ready" in earlier_events:
+            reason = "correct_predicted_experts_not_reused_ready_but_unavailable"
+        else:
+            reason = "correct_predicted_experts_not_reused_no_prefetch_state"
+        result[reason] += not_reused
+    return result
+
+
 def prefetch_trace_summary(path: Path, learned_layer_count: int) -> dict[str, int]:
     """Summarize only demand loads for the MoE layers predicted by TEST_7."""
     records = [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
@@ -263,6 +356,11 @@ def main() -> None:
                        **run_c,
                        **learned_trace_summary(output / "run_C.learned_predictions.jsonl"),
                        **prefetch_trace_summary(output / "run_C.prefetch.jsonl", int(layers)),
+                       **correct_predictions_prefetch_availability_summary(
+                           output / "run_C.learned_predictions.jsonl",
+                           output / "run_C.prefetch.jsonl",
+                           int(layers),
+                       ),
                    }},
         "schedule": {"layers": int(layers), "init_distance": int(distance), "step": int(step)},
     }

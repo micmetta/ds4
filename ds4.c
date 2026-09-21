@@ -1738,7 +1738,25 @@ static const char *ds4_test4_worker_event_name(uint32_t kind) {
         case DS4_GPU_TEST4_EVENT_LOOKUP_ABSENT:          return "prefetch_lookup_absent";
         case DS4_GPU_TEST4_EVENT_LOOKUP_EXPERT_MISMATCH: return "prefetch_lookup_expert_mismatch";
         case DS4_GPU_TEST4_EVENT_STALE_DISCARDED:        return "prefetch_stale_discarded";
+        case DS4_GPU_TEST4_EVENT_STALE_QUEUED_DISCARDED: return "prefetch_stale_queued_discarded";
+        case DS4_GPU_TEST4_EVENT_READING_MARKED_TOO_LATE:return "prefetch_reading_marked_too_late";
+        case DS4_GPU_TEST4_EVENT_TOO_LATE_FREED:         return "prefetch_too_late_freed";
+        case DS4_GPU_TEST4_EVENT_STALE_QUEUED_DISCARDED_BY_WORKER:
+            return "prefetch_stale_queued_discarded_by_worker";
         default:                                         return "prefetch_unknown";
+    }
+}
+
+static const char *ds4_test4_slot_state_name(uint32_t state) {
+    switch (state) {
+        case 0: return "EMPTY";
+        case 1: return "QUEUED";
+        case 2: return "READING";
+        case 3: return "READY";
+        case 4: return "CONSUMING";
+        case 5: return "FAILED";
+        case 6: return "TOO_LATE";
+        default: return "UNKNOWN";
     }
 }
 
@@ -1770,7 +1788,7 @@ static bool ds4_test4_trace_drain_worker_events(void) {
     for (uint32_t i = 0; i < count; ++i) {
         const ds4_gpu_test4_prefetch_event *event = &events[i];
         pthread_mutex_lock(&g_test4_trace.mutex);
-        const int rc = fprintf(g_test4_trace.fp,
+        int rc = fprintf(g_test4_trace.fp,
             "{\"phase\":\"decode\",\"event\":\"%s\","
             "\"token_index\":%u,\"layer\":%u,"
             "\"experts\":[%d,%d,%d,%d,%d,%d],"
@@ -1779,7 +1797,8 @@ static bool ds4_test4_trace_drain_worker_events(void) {
             "\"queue_to_worker_ms\":%.3f,"
             "\"worker_read_ms\":%.3f,"
             "\"queue_to_ready_ms\":%.3f,"
-            "\"slot_age_ms\":%.3f}\n",
+            "\"slot_age_ms\":%.3f,"
+            "\"worker_id\":%u",
             ds4_test4_worker_event_name(event->kind), event->target_token,
             event->layer, event->selected[0], event->selected[1],
             event->selected[2], event->selected[3], event->selected[4],
@@ -1787,7 +1806,45 @@ static bool ds4_test4_trace_drain_worker_events(void) {
             ds4_test4_worker_failure_name(event->failure_code),
             event->queue_to_worker_ms,
             event->worker_read_ms, event->queue_to_ready_ms,
-            event->slot_age_ms);
+            event->slot_age_ms, event->worker_id);
+        /* TEST_9 richiede uno snapshot aggiuntivo per investigare la
+         * starvation del worker. TEST_4/5/7/8 mantengono il formato storico
+         * della trace, a meno che questa variabile non venga impostata. */
+        const char *diagnostics = getenv("DS4_TEST_9_PINNED_DIAGNOSTICS");
+        if (rc >= 0 && diagnostics && strcmp(diagnostics, "0") != 0) {
+            rc = fprintf(g_test4_trace.fp,
+                ",\"pinned_bank_snapshot\":{"
+                "\"active_layer_count\":%u,\"active_distance\":%u,"
+                "\"slot_distance_index\":%u,"
+                "\"bank_slots\":{\"empty\":%u,\"loading\":%u,"
+                "\"queued\":%u,\"reading\":%u,\"ready\":%u,"
+                "\"consuming\":%u,\"failed\":%u,\"too_late\":%u},"
+                "\"lower_layer_loading_slots\":%u,"
+                "\"pinned_slots_allocated\":%u,"
+                "\"pinned_bytes_estimated\":%" PRIu64 ","
+                "\"same_layer_slots\":[",
+                event->active_layer_count, event->active_distance,
+                event->slot_distance_index,
+                event->bank_empty_slots, event->bank_loading_slots,
+                event->bank_queued_slots, event->bank_reading_slots,
+                event->bank_ready_slots, event->bank_consuming_slots,
+                event->bank_failed_slots, event->bank_too_late_slots,
+                event->lower_layer_loading_slots,
+                event->pinned_slots_allocated, event->pinned_bytes_estimated);
+            const uint32_t distance = event->active_distance > 8u ? 8u :
+                                      event->active_distance;
+            for (uint32_t future = 0; rc >= 0 && future < distance; ++future) {
+                rc = fprintf(g_test4_trace.fp,
+                    "%s{\"distance_index\":%u,\"state\":\"%s\","
+                    "\"target_token_index\":%u,\"age_ms\":%.3f}",
+                    future ? "," : "", future,
+                    ds4_test4_slot_state_name(event->same_layer_slot_state[future]),
+                    event->same_layer_slot_target_token[future],
+                    event->same_layer_slot_age_ms[future]);
+            }
+            if (rc >= 0) rc = fputs("]}", g_test4_trace.fp);
+        }
+        if (rc >= 0) rc = fputs("}\n", g_test4_trace.fp);
         if (rc < 0 || fflush(g_test4_trace.fp) != 0) g_test4_trace.failed = true;
         pthread_mutex_unlock(&g_test4_trace.mutex);
         if (g_test4_trace.failed) return false;

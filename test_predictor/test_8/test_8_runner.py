@@ -26,6 +26,7 @@ sys.path.insert(0, str(TEST7_DIR))
 # benchmark ripetuto e l'analisi statistica.
 from test_7_runner import (  # noqa: E402
     DEFAULT_CHECKPOINT,
+    correct_predictions_prefetch_availability_summary,
     learned_trace_summary,
     prefetch_trace_summary,
     required_environment,
@@ -100,6 +101,11 @@ def run_c(output: Path, model: str, oracle: Path, prefetch_model: str,
         **result,
         **learned_trace_summary(output / "run_C.learned_predictions.jsonl"),
         **prefetch_trace_summary(output / "run_C.prefetch.jsonl", int(layers)),
+        **correct_predictions_prefetch_availability_summary(
+            output / "run_C.learned_predictions.jsonl",
+            output / "run_C.prefetch.jsonl",
+            int(layers),
+        ),
     }
 
 

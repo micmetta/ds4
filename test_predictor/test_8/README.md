@@ -1,3 +1,6 @@
+Exit code: 0
+Wall time: 0.3 seconds
+Output:
 # TEST_8 — Benchmark ripetuto del learned prefetch asincrono
 
 ## Obiettivo
@@ -294,10 +297,58 @@ di prefetch -> RAM pinned.
 L'inferenza del predictor e' gia' asincrona: la GPU non attende la risposta
 CPU prima di proseguire. Cio' evita di bloccare direttamente il forward pass,
 ma non elimina il requisito temporale: il lavoro asincrono deve comunque
-finire prima della domanda reale. Per valutare con precisione quanto pesa
-questo effetto, un miglioramento futuro utile e' registrare separatamente:
+finire prima della domanda reale. Questo effetto non viene più dedotto
+indirettamente: le nuove metriche distinguono gli expert corretti riusati,
+quelli bloccati dalla banca piena e quelli per cui il worker non era ancora
+pronto alla domanda.
 
-- predizioni consegnate al worker prima della domanda del router;
-- predizioni consegnate troppo tardi;
-- expert corretti che erano pronti nella RAM pinned;
-- expert corretti ma non ancora pronti al momento della domanda.
+
+## Risultato diagnostico: TEST_8 `output_6` con otto layer
+
+`output_6` è stato eseguito con il GGUF principale sull'SSD esterno e il GGUF di prefetch sull'SSD interno, otto layer MoE predetti, tre ripetizioni alternate e il checkpoint migliore Build 5 (`Recall@6` offline test = **0,506056**).
+
+Il confronto temporale non ha mostrato un vantaggio stabile: C è stata più veloce in due coppie su tre, ma la variabilità è rimasta elevata. La nuova analisi incrociata delle trace, sulla prima fase C, ha però chiarito il limite principale:
+
+| Misura | Valore |
+|---|---:|
+| Expert correttamente predetti | 1.296 |
+| Expert corretti e riusati dalla RAM pinned | 689 |
+| Expert corretti ma non riusati | 607 |
+| Di cui: banca pinned piena (`prefetch_bank_full`) | **607** |
+| Di cui: worker non pronto alla domanda | **0** |
+
+Quindi, in questa configurazione, gli expert corretti non riusati non sono stati persi perché il predictor CPU o l'SSD abbiano finito troppo tardi: il worker non ha potuto ammetterli perché lo slot logico del rispettivo layer non era disponibile. TEST_9 rileva che 240 dei 248 eventi `prefetch_bank_full` sono avvenuti mentre lo slot del layer era ancora `CONSUMING` durante il riuso parziale precedente; non è quindi esaurita la RAM fisica pinned. Invertire i due SSD non può quindi risolvere da solo il problema.
+
+Per le prossime run è preferibile tornare alla disposizione normale: modello principale sull'SSD interno e modello di prefetch sull'SSD esterno. Il prossimo intervento tecnico va dedicato alla politica di capacità/occupazione degli slot pinned; non viene modificata in questa fase.
+
+### Baco/limite individuato: banca RAM pinned piena
+
+La trace ha evidenziato un problema concreto dell'implementazione corrente.
+La banca RAM pinned ha un numero finito di slot logici per gruppi associati alla
+coppia `(token futuro, layer)`. Quando lo slot del layer è occupato, il worker
+registra `prefetch_bank_full` e **rifiuta l'intera nuova richiesta learned**:
+non legge gli expert dal GGUF di prefetch e non li rende disponibili per la
+domanda successiva.
+
+Il punto importante è che questo rifiuto avviene anche se la sestina predetta
+contiene expert che il router reale richiederà davvero. Perciò una parte della
+differenza tra Recall@6 e riusi effettivi non dipende né dalla qualità della
+rete neurale né dalla velocità del predictor CPU o dell'SSD: è indisponibilità
+dello slot pinned del layer.
+
+```text
+riuso parziale del token t+1, layer l -> slot CONSUMING
+                    |
+                    v
+predizione per token t+2, layer l -> prefetch_bank_full -> richiesta rifiutata
+                    |
+                    v
+riuso precedente termina -> slot EMPTY, ma la richiesta t+2 era già persa
+```
+
+In `output_6`, tutti i 607 expert corretti ma non riusati appartengono a
+questo caso. Prima di attribuire eventuali mancati speedup a un predictor
+troppo lento, occorre quindi migliorare questa politica: per esempio limitare
+le richieste in anticipo, liberare gli slot non più utili o introdurre una
+politica di sostituzione. Queste soluzioni saranno valutate separatamente;
+questa documentazione registra soltanto il comportamento attuale.

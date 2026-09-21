@@ -1,3 +1,6 @@
+Exit code: 0
+Wall time: 0.7 seconds
+Output:
 # TEST_7 — Prefetch con il modello neurale Build 5
 
 ## Scopo
@@ -420,3 +423,17 @@ split. TEST_7, per ora, termina con un errore chiaro se compare un token non
 presente: il prompt iniziale usa una frase già contenuta in Build 5. La
 gestione di token fuori vocabolario sarà un intervento successivo, distinto
 dal test di integrazione iniziale.
+
+
+## Diagnostica degli expert corretti ma non riusati
+
+Dalle nuove run, `summary.json` collega la qualità della previsione alla disponibilità effettiva nella RAM pinned. Nella fase `C_learned_prefetch` sono disponibili:
+
+- `correct_predicted_experts_reused_from_pinned_ram`: expert sia corretti sia riusati dalla RAM pinned;
+- `correct_predicted_experts_not_reused`: expert corretti che non sono stati riusati;
+- `correct_predicted_experts_not_reused_prefetch_bank_full`: expert corretti non ammessi perché la banca pinned era piena;
+- `correct_predicted_experts_not_reused_worker_not_ready`: expert corretti per cui il worker non aveva ancora completato il caricamento;
+- `correct_predicted_experts_not_reused_stale_discarded`: expert corretti rimossi come obsoleti;
+- `correct_predicted_experts_not_reused_ready_but_unavailable` e `correct_predicted_experts_not_reused_no_prefetch_state`: casi diagnostici residui.
+
+Le ultime cinque categorie sommano a `correct_predicted_experts_not_reused`. Questa separazione evita di attribuire automaticamente al predictor o al disco un problema causato invece dalla capacità della banca pinned.
