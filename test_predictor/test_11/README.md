@@ -22,7 +22,7 @@ py '\\wsl.localhost\Debian\home\michele\ds4\test_predictor\test_11\windows_nativ
 In un terminale WSL separato esegui:
 
 ```bash
-DS4_TEST_11_GROUPS_PER_WORKER=12 DS4_TEST_11_WARMUP_GROUPS_PER_WORKER=2 DS4_TEST_11_WORKER_COUNTS=1,2,3,4 \
+DS4_TEST_11_GROUPS_PER_WORKER=12 DS4_TEST_11_WARMUP_GROUPS_PER_WORKER=2 DS4_TEST_11_WORKER_COUNTS=1,2,3,4,5,6,7 \
 uv run --project test_predictor/prefetch_predictor_pipeline/ML_pipeline \
 python test_predictor/test_11/test_11_runner.py
 ```

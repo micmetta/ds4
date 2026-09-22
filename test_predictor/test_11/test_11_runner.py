@@ -102,7 +102,7 @@ def main() -> None:
     port = int(os.environ.get("DS4_TEST_11_PORT", "38111"))
     groups = int(os.environ.get("DS4_TEST_11_GROUPS_PER_WORKER", "12"))
     warmup = int(os.environ.get("DS4_TEST_11_WARMUP_GROUPS_PER_WORKER", "2"))
-    workers = integers("DS4_TEST_11_WORKER_COUNTS", "1,2,3,4")
+    workers = integers("DS4_TEST_11_WORKER_COUNTS", "1,2,3,4,5,6,7")
     output = output_directory()
     report = {"experiment": "test_11_windows_to_wsl_localhost", "status": "running", "request_bytes": REQUEST_BYTES, "results": []}
     report_path = output / "windows_to_wsl_summary.json"
