@@ -381,7 +381,7 @@ def statistics_summary(values: list[float]) -> dict[str, float | int]:
 def prefetch_worker_count() -> int:
     """Legge e valida il numero di worker SSD richiesti per TEST_9.
 
-    DS4 contiene spazio per al massimo quattro worker. Il default è tre,
+    DS4 contiene spazio per al massimo sette worker. Il default è tre,
     perché output_10 ha mostrato che tre letture concorrenti sono il miglior
     compromesso misurato su questa macchina.
     """
@@ -390,11 +390,11 @@ def prefetch_worker_count() -> int:
         worker_count = int(raw_value)
     except ValueError as error:
         raise SystemExit(
-            "DS4_TEST_9_PREFETCH_NUM_WORKERS deve essere un intero tra 1 e 4."
+            "DS4_TEST_9_PREFETCH_NUM_WORKERS deve essere un intero tra 1 e 7."
         ) from error
-    if worker_count < 1 or worker_count > 4:
+    if worker_count < 1 or worker_count > 7:
         raise SystemExit(
-            "DS4_TEST_9_PREFETCH_NUM_WORKERS deve essere compreso tra 1 e 4."
+            "DS4_TEST_9_PREFETCH_NUM_WORKERS deve essere compreso tra 1 e 7."
         )
     return worker_count
 

@@ -1744,7 +1744,7 @@ Il numero di worker SSD non è più fissato nel codice di TEST_9. Impostare:
 DS4_TEST_9_PREFETCH_NUM_WORKERS=1
 ```
 
-oppure `2`, `3` o `4` fa dividere gli stessi layer fisici tra quel numero di
+oppure `2`, `3`, `4`, `5`, `6` o `7` fa dividere gli stessi layer fisici tra quel numero di
 worker con la regola `layer % numero_worker`. Ogni worker continua a scegliere
 il layer più basso disponibile nel proprio gruppo. Il runner salva sia il
 numero nel campo `schedule.prefetch_num_workers` sia la politica completa nel
@@ -1758,8 +1758,8 @@ nella configurazione CLion usare:
 DS4_TEST_9_PREFETCH_NUM_WORKERS=3
 ```
 
-I valori fuori dall'intervallo 1–4 interrompono TEST_9 con un messaggio chiaro:
-la struttura CUDA contiene spazio per al massimo quattro worker.
+I valori fuori dall'intervallo 1–7 interrompono TEST_9 con un messaggio chiaro:
+la struttura CUDA contiene spazio per al massimo sette worker.
 
 ## Risultati verificati — `output_13` (24 layer, tre worker)
 
