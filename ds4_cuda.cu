@@ -17,6 +17,9 @@
 #include <pthread.h>
 #include <time.h>
 #include <unistd.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
 #include <unordered_map>
 #include <vector>
 #include <algorithm>
@@ -26440,7 +26443,8 @@ enum {
     CUDA_TEST4_MAX_PREFETCH_DISTANCE = 8,
     CUDA_TEST4_SELECTED_COUNT = 6,
     CUDA_TEST4_EVENT_CAPACITY = 1024,
-    CUDA_TEST4_MAX_WORKERS = 4,
+    /* TEST_13 can compare up to seven layer-partitioned readers. */
+    CUDA_TEST4_MAX_WORKERS = 7,
 };
 
 typedef struct {
@@ -26551,6 +26555,9 @@ static int cuda_test4_fifo_worker_enabled(void) {
  * TEST_4/5/7/8 do not set this variable and retain one worker. */
 static uint32_t cuda_test4_partition_worker_count(void) {
     const char *value = getenv("DS4_TEST_9_PARTITION_WORKERS");
+    if (value && strcmp(value, "7") == 0) return 7u;
+    if (value && strcmp(value, "6") == 0) return 6u;
+    if (value && strcmp(value, "5") == 0) return 5u;
     if (value && strcmp(value, "4") == 0) return 4u;
     if (value && strcmp(value, "3") == 0) return 3u;
     if (value && strcmp(value, "2") == 0) return 2u;
@@ -26895,6 +26902,67 @@ static int cuda_test4_read_slot(cuda_test4_pinned_slot *slot) {
     return 1;
 }
 
+/* TEST_13: optional Windows-native reader.  The CUDA worker retains ownership
+ * of the pinned slot; only the byte source changes from pread() to TCP. */
+typedef struct __attribute__((packed)) {
+    uint32_t magic;
+    uint32_t layer;
+    int32_t selected[CUDA_TEST4_SELECTED_COUNT];
+} cuda_test13_request;
+
+static int cuda_test13_recv_full(int fd, void *dst, size_t bytes) {
+    char *p = (char *)dst;
+    while (bytes) {
+        ssize_t n = recv(fd, p, bytes, 0);
+        if (n <= 0) return 0;
+        p += n; bytes -= (size_t)n;
+    }
+    return 1;
+}
+
+static int cuda_test13_send_full(int fd, const void *src, size_t bytes) {
+    const char *p = (const char *)src;
+    while (bytes) {
+        ssize_t n = send(fd, p, bytes, MSG_NOSIGNAL);
+        if (n <= 0) return 0;
+        p += n; bytes -= (size_t)n;
+    }
+    return 1;
+}
+
+static int cuda_test13_windows_bridge_enabled(void) {
+    const char *value = getenv("DS4_TEST_13_WINDOWS_BRIDGE");
+    return value && *value && strcmp(value, "0") != 0;
+}
+
+static int cuda_test13_read_slot(cuda_test4_pinned_slot *slot) {
+    const char *host = getenv("DS4_TEST_13_WINDOWS_HOST");
+    const char *port_text = getenv("DS4_TEST_13_WINDOWS_PORT");
+    if (!slot || !host || !*host || !port_text || !*port_text ||
+        !cuda_stream_selected_ranges_valid(&slot->table) ||
+        !cuda_test4_slot_ensure(slot,
+            (uint64_t)slot->n_selected * slot->table.gate_expert_bytes,
+            (uint64_t)slot->n_selected * slot->table.down_expert_bytes)) return 0;
+    int fd = socket(AF_INET, SOCK_STREAM, 0);
+    struct sockaddr_in address; memset(&address, 0, sizeof(address));
+    address.sin_family = AF_INET; address.sin_port = htons((uint16_t)atoi(port_text));
+    if (fd < 0 || inet_pton(AF_INET, host, &address.sin_addr) != 1 ||
+        connect(fd, (struct sockaddr *)&address, sizeof(address)) != 0) {
+        if (fd >= 0) close(fd); return 0;
+    }
+    cuda_test13_request request = {0x31335444u, slot->table.layer, {0}};
+    for (uint32_t i = 0; i < slot->n_selected; ++i) request.selected[i] = slot->selected[i];
+    int ok = cuda_test13_send_full(fd, &request, sizeof(request));
+    for (uint32_t i = 0; ok && i < slot->n_selected; ++i) {
+        uint64_t g = (uint64_t)i * slot->table.gate_expert_bytes;
+        uint64_t d = (uint64_t)i * slot->table.down_expert_bytes;
+        ok = cuda_test13_recv_full(fd, slot->gate + g, (size_t)slot->table.gate_expert_bytes) &&
+             cuda_test13_recv_full(fd, slot->up + g, (size_t)slot->table.gate_expert_bytes) &&
+             cuda_test13_recv_full(fd, slot->down + d, (size_t)slot->table.down_expert_bytes);
+    }
+    close(fd); return ok;
+}
+
 /* TEST_9 may use several workers. With the historical scan policy each owns
  * layers selected by layer % worker_count. Plain FIFO has one queue shared by
  * all workers. Every selection occurs under the bank mutex, while SSD reads
@@ -26952,7 +27020,8 @@ static void *cuda_test4_prefetch_worker(void *opaque) {
         cuda_test4_event_push(DS4_GPU_TEST4_EVENT_WORKER_STARTED, slot);
         pthread_mutex_unlock(&g_test4_prefetch.mutex);
 
-        const int ok = cuda_test4_read_slot(slot);
+        const int ok = cuda_test13_windows_bridge_enabled() ?
+            cuda_test13_read_slot(slot) : cuda_test4_read_slot(slot);
 
         pthread_mutex_lock(&g_test4_prefetch.mutex);
         if (slot->state == CUDA_TEST4_SLOT_READING) {
@@ -26975,7 +27044,10 @@ static void *cuda_test4_prefetch_worker(void *opaque) {
 
 static int cuda_test4_start_worker(void) {
     if (g_test4_prefetch.worker_started) return 1;
-    if (!cuda_test4_prefetch_open_source()) return 0;
+    /* TEST_13 riceve i byte dal servizio Windows: non aprire il GGUF tramite
+     * DrvFS, altrimenti si conserva proprio il percorso che vogliamo evitare. */
+    if (!cuda_test13_windows_bridge_enabled() &&
+        !cuda_test4_prefetch_open_source()) return 0;
     g_test4_prefetch.stop = 0;
     const char *fifo_workers = getenv("DS4_TEST_9_FIFO_WORKERS");
     g_test4_prefetch.worker_count = cuda_test4_fifo_worker_enabled() ?
