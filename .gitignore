@@ -37,3 +37,4 @@ __pycache__/
 /misc/
 .*.swp
 .DS_Store
+/test_predictor/test_10/test_10_runner
