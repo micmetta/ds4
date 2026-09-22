@@ -8,7 +8,7 @@ prefetch. Non trasferisce ancora i dati in VRAM.
 Avvia prima il servizio Windows di TEST_11, poi da WSL:
 
 ```bash
-DS4_TEST_12_GROUPS_PER_WORKER=12 DS4_TEST_12_WARMUP_GROUPS_PER_WORKER=2 DS4_TEST_12_WORKER_COUNTS=1,2,3,4 \
+DS4_TEST_12_GROUPS_PER_WORKER=12 DS4_TEST_12_WARMUP_GROUPS_PER_WORKER=2 DS4_TEST_12_WORKER_COUNTS=1,2,3,4,5,6,7 \
 uv run --project test_predictor/prefetch_predictor_pipeline/ML_pipeline \
 python test_predictor/test_12/test_12_runner.py
 ```

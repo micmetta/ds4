@@ -86,7 +86,7 @@ def stats(values): return {"mean":statistics.mean(values),"p95":sorted(values)[m
 def main() -> None:
     host=os.environ.get("DS4_TEST_12_HOST",windows_host()); port=int(os.environ.get("DS4_TEST_12_PORT","38111"))
     groups=int(os.environ.get("DS4_TEST_12_GROUPS_PER_WORKER","12")); warmup=int(os.environ.get("DS4_TEST_12_WARMUP_GROUPS_PER_WORKER","2"))
-    counts=sorted({int(x) for x in os.environ.get("DS4_TEST_12_WORKER_COUNTS","1,2,3,4").split(",")})
+    counts=sorted({int(x) for x in os.environ.get("DS4_TEST_12_WORKER_COUNTS","1,2,3,4,5,6,7").split(",")})
     directory=output(); path=directory/"windows_to_wsl_pinned_summary.json"; report={"experiment":"test_12_windows_to_wsl_cuda_pinned","status":"running","request_bytes":BYTES,"host":host,"results":[]}
     print(f"TEST_12 output: {directory}; host Windows: {host}:{port}")
     try:
