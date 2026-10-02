@@ -1,0 +1,26 @@
+# Generated ML outputs: keep source code and Markdown documentation, but do
+# not propose reproducible data, checkpoints, or experiment reports for Git.
+
+# Large materialized arrays and trained model files.
+build_dataset_*/**/arrays/*
+!build_dataset_*/**/arrays/doc.md
+build_dataset_*/**/models/*
+!build_dataset_*/**/models/doc.md
+build_dataset_*/**/checkpoints/*
+build_dataset_*/**/logs/*
+
+# Machine-generated experiment metadata and metrics.  Configuration expressed
+# in Python scripts remains versioned; generated JSON reports do not.
+build_dataset_*/**/artifacts/*.json
+build_dataset_*/**/reports/*.json
+build_dataset_*/**/tuner/**/*.json
+build_dataset_*/**/training/*.json
+build_dataset_*/**/baseline/*.json
+build_dataset_*/**/token_embedding_artifacts/*.json
+
+# Local training/runtime by-products.
+**/__pycache__/
+*.keras
+*.h5
+*.ckpt
+*.npz
