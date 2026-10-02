@@ -1422,6 +1422,18 @@ static ds4_test4_prefetch_context g_test4_prefetch_context;
 static int g_test7_socket_fd = -1;
 static FILE *g_test7_trace_fp;
 static pthread_mutex_t g_test7_trace_mutex = PTHREAD_MUTEX_INITIALIZER;
+/* One raw FFN-normalized hidden vector per decode position is sufficient:
+ * layers are evaluated in physical order, hence layer l consumes the vector
+ * retained while processing l-1.  The ring mirrors the async result window. */
+typedef struct {
+    bool valid;
+    uint32_t pos;
+    uint32_t layer;
+    float hidden[4096];
+} ds4_test14_previous_hidden_cache;
+static ds4_test14_previous_hidden_cache g_test14_previous_hidden[
+    128
+];
 /* The first decode position defines the phase of TEST_6 bursts.  This keeps
  * INIT_DISTANCE and STEP independent of the prompt length. */
 static bool g_test4_prefetch_first_pos_valid;
@@ -1908,6 +1920,18 @@ static bool ds4_test7_active(void) {
     return mode && (strcmp(mode, "shadow") == 0 || strcmp(mode, "prefetch") == 0);
 }
 
+/* TEST_14 keeps TEST_7's asynchronous/pinned-RAM mechanics, but evaluates
+ * the Build-7 Top-4 checkpoint.  It is deliberately an opt-in flag so every
+ * historical TEST_7/9/13 execution keeps its original wire protocol. */
+static bool ds4_test14_active(void) {
+    const char *enabled = getenv("DS4_TEST_14_ENABLED");
+    return enabled && strcmp(enabled, "1") == 0;
+}
+
+static bool ds4_learned_predictor_active(void) {
+    return ds4_test7_active() || ds4_test14_active();
+}
+
 static bool ds4_test7_prefetch_enabled(void) {
     const char *mode = getenv("DS4_TEST_7_MODE");
     return mode && strcmp(mode, "prefetch") == 0;
@@ -2028,6 +2052,17 @@ typedef struct {
 } ds4_test7_request;
 typedef struct {
     char magic[4];
+    uint32_t pos, token, layer, request_id;
+    int32_t selected[6];
+    float router_logits[256];
+    float raw_hidden_current[4096];
+    float raw_hidden_previous[4096];
+    /* Build 7 uses these five derived statistics inside its fixed-NNZ state;
+     * the service derives them from this causal current-layer KV vector. */
+    float kv_current[512];
+} ds4_test14_request;
+typedef struct {
+    char magic[4];
     uint32_t request_id;
     int32_t experts[6];
     double inference_ms;
@@ -2046,7 +2081,9 @@ enum {
     DS4_TEST7_RESULT_CAPACITY = 128,
 };
 typedef struct {
+    bool build7;
     ds4_test7_request request;
+    ds4_test14_request request14;
     ds4_gpu_stream_expert_table table;
 } ds4_test7_async_job;
 typedef struct {
@@ -2112,12 +2149,18 @@ static void *ds4_test7_async_worker(void *unused) {
         --g_test7_async.count;
         pthread_mutex_unlock(&g_test7_async.mutex);
 
+        const void *request = job.build7 ? (const void *)&job.request14 : (const void *)&job.request;
+        const size_t request_size = job.build7 ? sizeof(job.request14) : sizeof(job.request);
+        const uint32_t request_id = job.build7 ? job.request14.request_id : job.request.request_id;
+        const uint32_t source_pos = job.build7 ? job.request14.pos : job.request.pos;
+        const uint32_t layer = job.build7 ? job.request14.layer : job.request.layer;
+        const char *response_magic = job.build7 ? "T7R2" : "T7R1";
         ds4_test7_response response;
         if (!ds4_test7_connect() ||
-            !ds4_test7_write_all(g_test7_socket_fd, &job.request, sizeof(job.request)) ||
+            !ds4_test7_write_all(g_test7_socket_fd, request, request_size) ||
             !ds4_test7_read_all(g_test7_socket_fd, &response, sizeof(response)) ||
-            memcmp(response.magic, "T7R1", 4) != 0 ||
-            response.request_id != job.request.request_id) {
+            memcmp(response.magic, response_magic, 4) != 0 ||
+            response.request_id != request_id) {
             fprintf(stderr, "ds4: TEST_7 asynchronous predictor request failed\n");
             if (g_test7_socket_fd >= 0) close(g_test7_socket_fd);
             g_test7_socket_fd = -1;
@@ -2126,16 +2169,16 @@ static void *ds4_test7_async_worker(void *unused) {
             pthread_mutex_unlock(&g_test7_async.mutex);
             continue;
         }
-        ds4_test7_match_prediction_and_actual(job.request.pos, job.request.layer,
+        ds4_test7_match_prediction_and_actual(source_pos, layer,
                                                response.experts, response.inference_ms);
         if (ds4_test7_prefetch_enabled()) {
             const int queued = ds4_gpu_test4_prefetch_enqueue(
-                    &job.table, job.request.pos + 1u, job.request.layer,
+                    &job.table, source_pos + 1u, layer,
                     response.experts, DS4_N_EXPERT_USED);
             if (queued) {
                 (void)ds4_test4_trace_drain_worker_events();
-                (void)ds4_test4_trace_record("learned_prefetch_enqueue", job.request.pos + 1u,
-                                             job.request.layer, response.experts, NULL);
+                (void)ds4_test4_trace_record("learned_prefetch_enqueue", source_pos + 1u,
+                                             layer, response.experts, NULL);
             } else {
                 fprintf(stderr, "ds4: TEST_7 cannot enqueue asynchronous learned prefetch\n");
             }
@@ -2171,15 +2214,18 @@ static bool ds4_test7_submit_async(const ds4_test7_async_job *job) {
 
 static bool ds4_test7_predict(uint32_t pos, uint32_t token, uint32_t layer,
                               const int32_t *selected, const float *router_logits,
-                              const float *raw_hidden, const float *kv_current,
+                              const float *raw_hidden, const float *raw_hidden_previous,
+                              const float *kv_current,
                               const ds4_gpu_stream_expert_table *table) {
-    if (!ds4_test7_active()) return true;
-    const uint32_t first_routed_layer = 3u;
-    const uint32_t routed_count = ds4_test7_routed_layer_count();
+    const bool build7 = ds4_test14_active();
+    if (!ds4_learned_predictor_active()) return true;
+    const uint32_t first_routed_layer = build7 ? 5u : 3u;
+    const uint32_t routed_count = build7 ? 38u : ds4_test7_routed_layer_count();
     if (layer < first_routed_layer || layer >= first_routed_layer + routed_count) {
         return true;
     }
     if (!selected || !router_logits || !raw_hidden || !kv_current || !table ||
+        (build7 && !raw_hidden_previous) ||
         layer >= DS4_MAX_LAYER) return false;
 
     int32_t completed_experts[6];
@@ -2207,16 +2253,30 @@ static bool ds4_test7_predict(uint32_t pos, uint32_t token, uint32_t layer,
 
     ds4_test7_async_job job;
     memset(&job, 0, sizeof(job));
+    job.build7 = build7;
     job.table = *table;
-    memcpy(job.request.magic, "T7P1", 4);
-    job.request.pos = pos;
-    job.request.token = token;
-    job.request.layer = layer;
-    job.request.request_id = pos * DS4_N_LAYER + layer;
-    memcpy(job.request.selected, selected, sizeof(job.request.selected));
-    memcpy(job.request.router_logits, router_logits, sizeof(job.request.router_logits));
-    memcpy(job.request.raw_hidden, raw_hidden, sizeof(job.request.raw_hidden));
-    memcpy(job.request.kv_current, kv_current, sizeof(job.request.kv_current));
+    if (build7) {
+        memcpy(job.request14.magic, "T7P2", 4);
+        job.request14.pos = pos;
+        job.request14.token = token;
+        job.request14.layer = layer;
+        job.request14.request_id = pos * DS4_N_LAYER + layer;
+        memcpy(job.request14.selected, selected, sizeof(job.request14.selected));
+        memcpy(job.request14.router_logits, router_logits, sizeof(job.request14.router_logits));
+        memcpy(job.request14.raw_hidden_current, raw_hidden, sizeof(job.request14.raw_hidden_current));
+        memcpy(job.request14.raw_hidden_previous, raw_hidden_previous, sizeof(job.request14.raw_hidden_previous));
+        memcpy(job.request14.kv_current, kv_current, sizeof(job.request14.kv_current));
+    } else {
+        memcpy(job.request.magic, "T7P1", 4);
+        job.request.pos = pos;
+        job.request.token = token;
+        job.request.layer = layer;
+        job.request.request_id = pos * DS4_N_LAYER + layer;
+        memcpy(job.request.selected, selected, sizeof(job.request.selected));
+        memcpy(job.request.router_logits, router_logits, sizeof(job.request.router_logits));
+        memcpy(job.request.raw_hidden, raw_hidden, sizeof(job.request.raw_hidden));
+        memcpy(job.request.kv_current, kv_current, sizeof(job.request.kv_current));
+    }
     return ds4_test7_submit_async(&job);
 }
 
@@ -22621,7 +22681,9 @@ static bool metal_graph_decode_cuda_selected_load(
     /* TEST_7 needs all 256 raw logits to reproduce the 16 ranked router
      * features used during Build-5 training, even when JSONL tracing is off. */
     const bool test7 = ds4_test7_active();
-    const bool trace_logits = ds4_routing_trace_wants_logits() || test7;
+    const bool test14 = ds4_test14_active();
+    const bool learned_predictor = test7 || test14;
+    const bool trace_logits = ds4_routing_trace_wants_logits() || learned_predictor;
     const bool replay_requested = getenv("DS4_ROUTING_ORACLE_REPLAY_PATH") != NULL;
     bool ok = ds4_gpu_tensor_read(metal_graph_router_selected(g),
                                   0,
@@ -22672,20 +22734,40 @@ static bool metal_graph_decode_cuda_selected_load(
      * TEST_7 measures their real runtime cost rather than hiding it. */
     float test7_hidden[DS4_N_EMBD];
     float test7_kv[DS4_N_HEAD_DIM];
-    if (ok && test7) {
+    if (ok && learned_predictor) {
         ok = ds4_gpu_tensor_read(metal_graph_ffn_norm(g), 0, test7_hidden,
                                  sizeof(test7_hidden)) != 0 &&
              ds4_gpu_tensor_read(metal_graph_kv(g), 0, test7_kv,
                                  sizeof(test7_kv)) != 0;
     }
+    float test14_previous_hidden[DS4_N_EMBD];
+    bool test14_previous_ready = false;
+    if (ok && test14) {
+        const uint32_t cache_index = pos % 128u;
+        ds4_test14_previous_hidden_cache *previous = &g_test14_previous_hidden[cache_index];
+        if (previous->valid && previous->pos == pos && previous->layer + 1u == il) {
+            memcpy(test14_previous_hidden, previous->hidden, sizeof(test14_previous_hidden));
+            test14_previous_ready = true;
+        }
+        previous->valid = true;
+        previous->pos = pos;
+        previous->layer = il;
+        memcpy(previous->hidden, test7_hidden, sizeof(previous->hidden));
+    }
     ds4_gpu_stream_expert_table test7_table;
     bool test7_table_ready = false;
-    if (ok && test7) {
+    if (ok && learned_predictor) {
         test7_table = graph_stream_expert_table_make(model, layer, il,
                                                      gate_expert_bytes, down_expert_bytes);
         test7_table_ready = true;
-        ok = ds4_test7_predict(pos, token, il, selected_ids, router_logits,
-                               test7_hidden, test7_kv, &test7_table);
+        if (test14 && il >= 5u && !test14_previous_ready) {
+            fprintf(stderr, "ds4: TEST_14 previous hidden missing at token %u layer %u\n", pos, il);
+            ok = false;
+        }
+        if (ok) ok = ds4_test7_predict(pos, token, il, selected_ids, router_logits,
+                                       test7_hidden,
+                                       test14_previous_ready ? test14_previous_hidden : NULL,
+                                       test7_kv, &test7_table);
     }
     if (ok) ok = ds4_routing_oracle_record(pos, il, selected_ids, router_weights);
     if (ok) ok = ds4_routing_trace_record_decode(pos, token, il,

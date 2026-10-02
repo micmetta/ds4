@@ -554,10 +554,15 @@ def benchmark_with_automatic_audits(arguments: argparse.Namespace) -> None:
     oracle = output / "routing_oracle.bin"
     report_path = output / "benchmark_summary.json"
     report: dict = {
-        "experiment": "test_9_repeated_async_learned_prefetch_with_pinned_ram_audit",
+        "experiment": os.environ.get(
+            "DS4_TEST_9_EXPERIMENT", "test_9_repeated_async_learned_prefetch_with_pinned_ram_audit"
+        ),
         "status": "running",
         "checkpoint": str(checkpoint),
-        "architecture": "state512 + hidden512_relu + token64_relu + kv_direct512 + fusion512_relu",
+        "architecture": os.environ.get(
+            "DS4_TEST_9_ARCHITECTURE",
+            "state512 + hidden512_relu + token64_relu + kv_direct512 + fusion512_relu",
+        ),
         "schedule": {
             "layers": int(layers),
             "init_distance": int(distance),
