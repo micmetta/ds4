@@ -206,6 +206,7 @@ I campi del record esterno non ancora descritti sopra significano:
 
 Il trace canonico (`sequence_id`, `token_position`, `layer`, `is_hash`, `experts_t`) permette di ricostruire offline qualunque valore di $H$ senza rieseguire il modello.
 
+
 ---
 
 ## 2. `router_scores` / `router_logits`
@@ -1149,7 +1150,306 @@ Questa è esattamente una situazione che un predictor basato solo sul routing po
 
 ---
 
-## 7. `indexer_features`
+---
+
+## 7. `expert_transition_probabilities`: matrice di probabilita' di transizione degli expert singoli
+
+> **Stato:** feature proposta per una build successiva al Build 6. Non e'
+> presente nei dataset Build 5/6 e non deve modificare retroattivamente i loro
+> artefatti o i loro risultati.
+
+### Cosa rappresenta
+
+La routing history dice quali sei expert sono stati selezionati nei token
+precedenti. Questa feature aggiunge una statistica esplicita sulle transizioni
+tra singoli expert consecutivi nello **stesso layer routed**:
+
+$$
+P_l(i \mid j) =
+P\!\left(i \in E_{t+1,l}\ \middle|\ j \in E_{t,l}\right).
+$$
+
+In altre parole, ogni cella della matrice del layer $l$ risponde alla domanda:
+
+> Qual e' la probabilita' che l'expert $i$ compaia tra i sei expert del token
+> successivo, sapendo che l'expert $j$ era presente tra i sei expert del token
+> corrente nello stesso layer?
+
+Con 256 expert routed, ogni layer ha una matrice $256 \times 256$. Le matrici
+sono **layer-specifiche**: lo stesso ID di expert a layer differenti indica
+pesi diversi e non deve condividere automaticamente la stessa dinamica di
+transizione.
+
+La diagonale della matrice e' inclusa. Per esempio, $P_{17}(12\mid12)$ misura
+quanto spesso l'expert $12$, presente nel layer $17$ al token $t$, ricompare
+anche al token $t+1$ nello stesso layer. Queste celle descrivono la
+**persistenza** o il riuso dello stesso expert fra token consecutivi.
+
+### Costruzione delle probabilita'
+
+Dal trace canonico, per ogni coppia consecutiva valida
+$(\mathrm{sequence\_id}, t, l)$ e $(\mathrm{sequence\_id}, t+1, l)$, si
+considerano tutti i $6 \times 6$ accoppiamenti:
+
+$$
+j \in E_{t,l}, \qquad i \in E_{t+1,l}.
+$$
+
+Il conteggio $C_l(i,j)$ aumenta di uno per ciascun accoppiamento osservato. La
+stima consigliata usa smoothing additivo di Laplace:
+
+$$
+P_l(i \mid j) =
+\frac{C_l(i,j)+\alpha}
+{\sum_{i'=1}^{256} C_l(i',j)+256\alpha},
+\qquad \alpha > 0.
+$$
+
+Ogni componente della formula indica:
+
+- $P_l(i \mid j)$: probabilita' stimata che l'expert $i$ appaia al token
+  successivo nel layer $l$, condizionata alla presenza dell'expert $j$ nel
+  token corrente dello stesso layer.
+- $l$: layer routed considerato. Ogni layer possiede conteggi e probabilita'
+  propri; non si mescolano le transizioni di layer differenti.
+- $i$: ID dell'expert da prevedere nel set $E_{t+1,l}$.
+- $j$: ID dell'expert gia' osservato nel set $E_{t,l}$.
+- $C_l(i,j)$: numero di transizioni osservate nel dataset di stima in cui
+  $j \in E_{t,l}$ e $i \in E_{t+1,l}$. I due eventi devono appartenere allo
+  stesso `sequence_id`, cioe' alla stessa generazione autoregressiva dello
+  stesso prompt/run: `sequence_id` e' solo la chiave tecnica che impedisce di
+  collegare per errore l'ultimo token di una sequenza al primo token di un
+  altro prompt o di un'altra run. Non e' una feature data alla rete e non
+  compare nella formula come valore numerico. I due eventi devono inoltre
+  appartenere allo stesso layer $l$ e a posizioni consecutive $t$ e $t+1$.
+  Poiche' ogni routing contiene sei expert, una coppia consecutiva token-layer
+  contribuisce a 36 conteggi, uno per ciascuna coppia $(i,j)$ tra i sei expert
+  correnti e i sei successivi.
+
+  Esempio: nella stessa sequenza `prompt_42_run_001`, al layer $17$, il token
+  $t=10$ seleziona `E(10,17) = [12, 31, 55, 81, 144, 203]` e il token
+  successivo $t+1=11$ seleziona
+  `E(11,17) = [12, 44, 55, 90, 144, 211]`. Poiche' $31$ e' nel primo set e
+  $44$ nel secondo, questo evento incrementa $C_{17}(44,31)$ di uno. Non si
+  deve invece collegare `prompt_42_run_001`, token $10$, con il token $0$ di
+  `prompt_43_run_001`: anche se il layer coincide, sono sequenze diverse e
+  non descrivono una transizione temporale reale.
+- $i'$: indice fittizio che scorre tutti i 256 possibili expert successivi.
+- $\sum_{i'=1}^{256} C_l(i',j)$: numero totale di volte in cui $j$ e' stato
+  osservato come expert corrente nel layer $l$, contato rispetto a tutti gli
+  expert comparsi nel token successivo. E' il denominatore empirico della
+  probabilita' condizionata prima dello smoothing.
+- $\alpha$: costante di smoothing additivo di Laplace. Aggiunge un piccolo
+  pseudo-conteggio a ogni possibile expert successivo, cosi' che anche una
+  coppia mai vista abbia una probabilita' positiva.
+- $256\alpha$: somma dei 256 pseudo-conteggi aggiunti al denominatore; mantiene
+  la normalizzazione della distribuzione, cioe'
+  $\sum_{i=1}^{256}P_l(i\mid j)=1$ per ogni expert corrente $j$.
+
+Un valore iniziale ragionevole e' $\alpha=0{,}1$ oppure $\alpha=1$. Lo
+smoothing evita probabilita' nulle o eccessivamente instabili quando un
+expert $j$ e' stato osservato poche volte in un layer.
+
+### Vettore usato dal predictor
+
+Non si salva una matrice da 65.536 valori in ogni record. Quando il predictor
+deve stimare $E_{t+1,l}$, conosce gia' i sei expert di $E_{t,l}$; da essi
+costruisce un singolo vettore denso di 256 componenti:
+
+$$
+q_{t,l}(i) =
+\frac{1}{|E_{t,l}|}
+\sum_{j \in E_{t,l}} P_l(i \mid j).
+$$
+
+Esempio numerico semplificato: supponiamo che, nel layer $17$, il routing
+corrente sia $E_{t,17}=[12,31,55,81,144,203]$ e che si voglia calcolare la
+componente di $q_{t,17}$ relativa all'expert candidato $44$. Se la matrice
+stimata contiene:
+
+$$
+\begin{aligned}
+P_{17}(44\mid12)&=0{,}30, & P_{17}(44\mid31)&=0{,}60, \\
+P_{17}(44\mid55)&=0{,}10, & P_{17}(44\mid81)&=0{,}20, \\
+P_{17}(44\mid144)&=0{,}40, & P_{17}(44\mid203)&=0{,}20,
+\end{aligned}
+$$
+
+allora il valore della componente $44$ del vettore e' la media delle sei
+probabilita' condizionate:
+
+$$
+q_{t,17}(44)=\frac{0{,}30+0{,}60+0{,}10+0{,}20+0{,}40+0{,}20}{6}
+=0{,}30.
+$$
+
+Lo stesso calcolo viene ripetuto per tutti i 256 possibili expert candidati.
+Il risultato e' un vettore 256D: in questo esempio, $q_{t,17}(44)=0{,}30$
+indica che, in media, gli expert presenti al token $t$ assegnano all'expert
+$44$ una probabilita' di transizione del 30% per il token $t+1$.
+
+`q_{t,l}` e' quindi una distribuzione di probabilita' aggregata sugli expert
+attesi al token successivo. Per ogni expert $i$, il valore alto indica che
+diversi expert correnti suggeriscono la sua presenza in $E_{t+1,l}$. La
+feature 256D `expert_transition_probabilities` coincide precisamente con il
+vettore completo:
+
+$$
+\mathbf{q}_{t,l} =
+[q_{t,l}(0),q_{t,l}(1),\ldots,q_{t,l}(255)].
+$$
+
+La componente $i$ e' dunque $q_{t,l}(i)$, cioe' la stima associata all'expert
+con ID $i$. Il vettore dovra' entrare nella rete come ramo separato,
+inizialmente senza fonderlo con `routing_history_multihot`: le due feature
+contengono informazione correlata ma non identica.
+
+Esempio: se al token $t$, layer $17$, sono presenti `[12, 31, 55, 81, 144,
+203]`, il preprocessing media le sei colonne corrispondenti della matrice
+$P_{17}$ e produce `q_{t,17}`. Quel vettore e' l'input della feature; il
+routing reale di $t+1$ resta esclusivamente la label.
+
+### Perche' $P_l(i\mid j)$ rispetta gli assiomi di probabilita'
+
+Per ogni layer $l$ e per ogni expert corrente fissato $j$, la colonna $j$
+della matrice $P_l$ e' una distribuzione discreta sugli ID dei 256 possibili
+expert successivi $i$. Questo segue direttamente dalla stima con smoothing di
+Laplace:
+
+$$
+P_l(i\mid j)=
+\frac{C_l(i,j)+\alpha}
+{\sum_{i'=0}^{255} C_l(i',j)+256\alpha},
+\qquad \alpha>0.
+$$
+
+- **Non negativita'.** $C_l(i,j)$ e' un conteggio e quindi non negativo;
+  inoltre $\alpha>0$. Numeratore e denominatore sono positivi, per cui
+  $P_l(i\mid j)>0$ per ogni $i$ e $j$.
+- **Normalizzazione.** Sommando sulle righe, cioe' su tutti i possibili
+  expert successivi $i$, il numeratore totale diventa
+  $\sum_{i=0}^{255}C_l(i,j)+256\alpha$, identico al denominatore. Vale dunque
+  $\sum_{i=0}^{255}P_l(i\mid j)=1$ per ogni $j$. In convenzione matriciale,
+  la somma e' quindi $1$ lungo ogni **colonna**: la colonna identifica
+  l'expert corrente condizionante $j$, mentre la riga identifica l'expert
+  candidato successivo $i$.
+- **Caso di un expert corrente mai visto nel train.** Se, per un dato layer,
+  $j$ non e' mai comparso nel train, allora $C_l(i,j)=0$ per tutti gli $i$.
+  La formula non lascia una colonna indefinita: diventa
+  $P_l(i\mid j)=(0+\alpha)/(0+256\alpha)=1/256$. Lo smoothing e' presente
+  ma si semplifica; la colonna e' una distribuzione uniforme valida.
+
+### Artefatti precomputati e visualizzazione
+
+L'implementazione distingue la matrice globale delle probabilita'
+condizionate $P_l(i\mid j)$ dai vettori 256D per esempio
+$\mathbf{q}_{t,l}$ usati dal predictor.
+
+- **Heatmap delle matrici $P_l(i\mid j)$.** Il report HTML interattivo e'
+  `build_dataset_6/ml/transition_features/expert_transition_probabilities_v1/reports/transition_probabilities_train_global.html`.
+  Visualizza una matrice $256\times256$ per layer: ciascuna cella rappresenta
+  una probabilita' condizionata, non un vettore $\mathbf{q}_{t,l}$ di uno
+  specifico record. Il corrispondente artefatto numerico float32 e'
+  `artifacts/transition_probabilities_train_global_float32.npy`.
+- **Vettori $\mathbf{q}_{t,l}$ gia' calcolati.** Sono materializzati in
+  float16 e allineati riga-per-riga agli altri array ML:
+  `arrays/expert_transition_probabilities_train.npy`,
+  `arrays/expert_transition_probabilities_validation.npy` e
+  `arrays/expert_transition_probabilities_test.npy` sotto
+  `build_dataset_6/ml/transition_features/expert_transition_probabilities_v1/`.
+  Durante il training la rete legge direttamente questi vettori; non ricalcola
+  al volo la media delle sei colonne di $P_l$ per ogni esempio.
+
+### Disponibilita' causale nel runtime
+
+La feature e' causale per il prefetch token-ahead. Durante il decoding del
+token $t$, non appena DS4 ha osservato il routing reale $E_{t,l}$, puo'
+consultare la matrice gia' addestrata e costruire $q_{t,l}$ per predire
+$E_{t+1,l}$. Non richiede hidden, KV o routing del token futuro.
+
+Non deve essere applicata ai layer hash $l=0,1,2$: per questi la mappa
+deterministica token-to-expert e' gia' un oracolo esatto e non richiede una
+stima probabilistica.
+
+### Regola anti-leakage per gli split
+
+La matrice e' una forma di target encoding, percio' deve essere costruita con
+attenzione:
+
+1. **Validation e test:** stimare tutte le $P_l(i\mid j)$ usando soltanto le
+   sequenze dello split train; validation e test possono solo consultarle.
+2. **Train:** non usare, per un record, una matrice i cui conteggi includono
+   la sua stessa transizione $E_{t,l}\rightarrow E_{t+1,l}$. La procedura
+   raccomandata e' un calcolo out-of-fold raggruppato per `prompt_id`: ogni
+   fold consulta le matrici stimate dagli altri fold train.
+3. **Sequenze:** non creare transizioni attraverso il confine tra prompt,
+   `sequence_id` o layer; sono valide solo le posizioni consecutive $t$ e
+   $t+1$ dello stesso `sequence_id` e dello stesso layer routed.
+
+Queste regole impediscono alla feature di incorporare, anche indirettamente,
+la label dell'esempio valutato.
+
+### Costo di memoria e occupazione su disco
+
+La matrice non viene replicata integralmente in ogni record. Il modello usa 40
+layer routed, dal layer 3 al layer 42, e ciascun layer ha 256 expert. La cache
+globale delle probabilita' ha quindi forma `[40, 256, 256]` e contiene:
+
+\[
+40 \times 256 \times 256 = 2.621.440
+\]
+
+valori. Se viene salvata come un singolo array contiguo, il suo costo esatto e'
+il seguente:
+
+| Artefatto | Tipo | Byte | Occupazione |
+| --- | --- | ---: | ---: |
+| Probabilita' $P_l(i\mid j)$ per tutti i 40 layer | `float16` | 5.242.880 | 5 MiB |
+| Probabilita' $P_l(i\mid j)$ per tutti i 40 layer | `float32` | 10.485.760 | 10 MiB |
+| Conteggi grezzi $C_l(i,j)$, se si vogliono conservare | `uint32` | 10.485.760 | 10 MiB |
+
+La scelta consigliata e' conservare almeno la matrice $P$ in `float32`: 10 MiB
+sono trascurabili rispetto agli altri input Build 6 e mantengono stabile la
+normalizzazione. Se si conservano anche i conteggi grezzi `uint32` per poter
+ricalcolare la matrice con un diverso smoothing $\alpha$, il totale diventa
+esattamente **20 MiB**. Metadati quali $\alpha$, l'ordine dei layer e i confini
+degli split hanno dimensione trascurabile.
+
+Il costo aumenta solo se si decide di materializzare il vettore derivato
+`expert_transition_probabilities` in ogni record invece di ricostruirlo dalla
+matrice e dai sei expert correnti. Per i 2.011.113 esempi Build 6, il vettore
+256D richiederebbe:
+
+\[
+2.011.113 \times 256 = 514.844.928
+\]
+
+valori, cioe' 1.029.689.856 byte (**0,959 GiB**) in `float16` oppure
+2.059.379.712 byte (**1,918 GiB**) in `float32`. La strategia preferibile e'
+quindi salvare la sola cache globale $P$ e costruire $Q_{t,l}$ in modo
+deterministico durante il preprocessing o il caricamento degli input: evita
+quasi 2 GiB di duplicazione in `float32` senza perdere informazione.
+
+L'out-of-fold anti-leakage non modifica la dimensione di una matrice, ma puo'
+richiedere piu' cache temporanee. Con $K$ fold, mantenere su disco tutte le
+matrici `float32` dei fold costa $K \times 10$ MiB; per esempio, con 5 fold
+sono 50 MiB. A queste si aggiungono 10 MiB per la matrice finale stimata su
+tutto il train e usata da validation/test. Le cache dei fold possono comunque
+essere generate una alla volta e rimosse dopo la materializzazione del relativo
+fold.
+
+### Perche' potrebbe essere utile
+
+La feature puo' catturare persistenza, sostituzioni frequenti e co-occorrenze
+temporali tra expert che una semplice history multi-hot lascia implicite. E'
+inoltre compatta: aggiunge 256 valori per esempio, molto meno dei rami raw
+hidden da 4096D. La sua utilita' deve pero' essere verificata sperimentalmente:
+prima con un'ablation KNN su validation e poi, solo in caso di miglioramento
+ripetibile, con una nuova FFN e Recall@6 finale.
+
+---
+
+## 8. `indexer_features`
 
 ### Cosa rappresentano
 
@@ -1197,7 +1497,7 @@ Per evitare dipendenza eccessiva da indici assoluti, potrebbe essere utile deriv
 
 ---
 
-## 8. `attention_features`
+## 9. `attention_features`
 
 ### Cosa rappresentano
 
@@ -1215,7 +1515,7 @@ Il routing MoE viene eseguito dopo che il token è stato trasformato dai blocchi
 
 ---
 
-## 9. `token_id`, `token_position`, `layer` e metadati del prompt
+## 10. `token_id`, `token_position`, `layer` e metadati del prompt
 
 Queste non sono feature semantiche interne in senso stretto, ma sono indispensabili per interpretare correttamente il dataset.
 
@@ -1253,7 +1553,7 @@ Questi campi sono importanti per verificare che il predictor non impari semplice
 
 ---
 
-## 10. Target principale: `target_experts_next_token`
+## 11. Target principale: `target_experts_next_token`
 
 ### Cosa rappresenta
 
@@ -1284,7 +1584,7 @@ prefetch SSD/RAM -> VRAM
 
 ---
 
-## 11. Target alternativo: prediction layer-ahead
+## 12. Target alternativo: prediction layer-ahead
 
 Oltre alla prediction token-ahead, abbiamo discusso una seconda strategia:
 
@@ -1334,7 +1634,7 @@ Per questo vale la pena progettare il dataset in modo da non escludere questa se
 
 ---
 
-## 12. Feature operative del runtime: utili per il prefetch, ma da separare dal predictor semantico
+## 13. Feature operative del runtime: utili per il prefetch, ma da separare dal predictor semantico
 
 Lo stato del sistema può includere:
 

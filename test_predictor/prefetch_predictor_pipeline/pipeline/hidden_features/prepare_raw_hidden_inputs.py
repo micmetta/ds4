@@ -63,8 +63,18 @@ def expected_counts(state_arrays_dir: Path) -> dict[str, int]:
     return counts
 
 
-def validate_reference(record: dict, line_number: int) -> tuple[str, int]:
-    reference = record.get("hidden_raw_ref")
+def resolve_path(record: dict, path: str, line_number: int) -> object:
+    """Read a dotted JSON path, e.g. ``previous_layer.hidden_raw_ref``."""
+    value: object = record
+    for name in path.split("."):
+        if not isinstance(value, dict) or name not in value:
+            raise ValueError(f"Linea {line_number}: campo {path} mancante.")
+        value = value[name]
+    return value
+
+
+def validate_reference(record: dict, reference_path: str, line_number: int) -> tuple[str, int]:
+    reference = resolve_path(record, reference_path, line_number)
     if not isinstance(reference, dict):
         raise ValueError(f"Linea {line_number}: hidden_raw_ref mancante.")
     if reference.get("dtype") != "float32" or reference.get("shape") != [HIDDEN_DIMENSION]:
@@ -80,6 +90,8 @@ def main() -> None:
     parser.add_argument("--split-by-prompt", type=Path, required=True)
     parser.add_argument("--state-arrays-dir", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
+    parser.add_argument("--reference-path", default="hidden_raw_ref", help="Campo JSON del riferimento hidden; supporta percorsi con punti.")
+    parser.add_argument("--layer-path", default="layer", help="Campo JSON del layer associato al riferimento hidden.")
     parser.add_argument("--batch-size", type=int, default=DEFAULT_BATCH_SIZE)
     args = parser.parse_args()
     if args.batch_size < 1:
@@ -97,10 +109,10 @@ def main() -> None:
         for line_number, line in enumerate(source, start=1):
             record = json.loads(line)
             split = split_mapping.get(int(record["prompt_id"]))
-            layer = int(record["layer"])
+            layer = int(resolve_path(record, args.layer_path, line_number))
             if split not in records or layer not in ROUTED_LAYERS:
                 raise ValueError(f"Linea {line_number}: split o layer non valido.")
-            path, offset = validate_reference(record, line_number)
+            path, offset = validate_reference(record, args.reference_path, line_number)
             records[split].append((path, offset, layer - ROUTED_LAYERS[0]))
     observed = {split: len(values) for split, values in records.items()}
     if observed != counts:
@@ -138,10 +150,17 @@ def main() -> None:
                 layer_counts[layer] += len(selected)
     finally:
         reader.close()
-    if np.any(layer_counts == 0):
-        raise ValueError("Almeno un layer non ha esempi train.")
-    means = sums / layer_counts[:, None]
-    variances = np.maximum(squared_sums / layer_counts[:, None] - np.square(means), 0.0)
+    observed_layers = layer_counts > 0
+    # Build 6 may intentionally omit layer 3 from the current branch or layer
+    # 42 from the preceding branch. Missing statistics are never indexed, but
+    # remain finite to keep a self-contained 40-layer artifact.
+    means = np.zeros_like(sums)
+    means[observed_layers] = sums[observed_layers] / layer_counts[observed_layers, None]
+    variances = np.zeros_like(sums)
+    variances[observed_layers] = np.maximum(
+        squared_sums[observed_layers] / layer_counts[observed_layers, None]
+        - np.square(means[observed_layers]), 0.0
+    )
     stds = np.sqrt(variances)
     stds[stds < 1e-6] = 1.0
     np.save(artifacts_dir / "hidden_train_mean_by_layer.npy", means.astype(np.float32))
@@ -149,6 +168,8 @@ def main() -> None:
     summary = {
         "experiment": "raw_hidden_projection_inputs",
         "raw_hidden_input": str(args.raw_hidden_input),
+        "reference_path": args.reference_path,
+        "layer_path": args.layer_path,
         "state_arrays_dir": str(args.state_arrays_dir),
         "raw_hidden_dimension": HIDDEN_DIMENSION,
         "routed_layers": list(ROUTED_LAYERS),
@@ -157,8 +178,9 @@ def main() -> None:
         "normalization": {
             "formula": "(h - train_mean[layer]) / train_std[layer]",
             "fit_split": "train",
-            "per_layer": True,
+        "per_layer": True,
         },
+        "missing_train_layers": np.flatnonzero(~observed_layers).tolist(),
     }
     (artifacts_dir / "preprocessing_summary.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
     print("\nInput raw hidden preparati.")

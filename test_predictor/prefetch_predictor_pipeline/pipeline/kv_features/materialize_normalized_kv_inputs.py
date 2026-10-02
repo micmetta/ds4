@@ -53,12 +53,22 @@ def expected_counts(state_arrays_dir: Path) -> dict[str, int]:
     return counts
 
 
-def validate_record(record: dict[str, Any], line_number: int) -> tuple[int, int, dict[str, Any]]:
+def resolve_path(record: dict[str, Any], path: str, line_number: int) -> Any:
+    """Read a dotted JSON path, preserving the Build 5 default fields."""
+    value: Any = record
+    for name in path.split("."):
+        if not isinstance(value, dict) or name not in value:
+            raise ValueError(f"Line {line_number}: campo {path} mancante.")
+        value = value[name]
+    return value
+
+
+def validate_record(record: dict[str, Any], line_number: int, reference_path: str, layer_path: str) -> tuple[int, int, dict[str, Any]]:
     """Validate the fields needed to materialize one current KV row."""
     try:
         prompt_id = int(record["prompt_id"])
-        layer_number = int(record["layer"])
-        reference = record["kv_raw_ref"]
+        layer_number = int(resolve_path(record, layer_path, line_number))
+        reference = resolve_path(record, reference_path, line_number)
     except (KeyError, TypeError, ValueError) as error:
         raise ValueError(f"Line {line_number}: record KV incompleto.") from error
     if not FIRST_LAYER <= layer_number < FIRST_LAYER + NUM_LAYERS:
@@ -114,7 +124,7 @@ def iter_records(input_path: Path) -> Iterator[tuple[int, dict[str, Any]]]:
                 yield line_number, json.loads(line)
 
 
-def fit_train_statistics(input_path: Path, assignments: dict[int, str], batch_size: int) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+def fit_train_statistics(input_path: Path, assignments: dict[int, str], batch_size: int, reference_path: str, layer_path: str) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Fit exact per-component train-only mean/std, batching disk reads."""
     counts = np.zeros(NUM_LAYERS, dtype=np.int64)
     sums = np.zeros((NUM_LAYERS, KV_DIMENSION), dtype=np.float64)
@@ -138,7 +148,7 @@ def fit_train_statistics(input_path: Path, assignments: dict[int, str], batch_si
 
     try:
         for line_number, record in iter_records(input_path):
-            prompt_id, layer_index, reference = validate_record(record, line_number)
+            prompt_id, layer_index, reference = validate_record(record, line_number, reference_path, layer_path)
             split = assignments.get(prompt_id)
             if split is None:
                 raise ValueError(f"Line {line_number}: prompt {prompt_id} assente dallo split.")
@@ -151,11 +161,13 @@ def fit_train_statistics(input_path: Path, assignments: dict[int, str], batch_si
     finally:
         reader.close()
 
-    if np.any(counts == 0):
-        missing = np.flatnonzero(counts == 0).tolist()
-        raise ValueError(f"Nessun KV train per i layer: {missing}")
-    means = sums / counts[:, None]
-    variances = np.maximum(squared_sums / counts[:, None] - np.square(means), 0.0)
+    observed = counts > 0
+    means = np.zeros_like(sums)
+    means[observed] = sums[observed] / counts[observed, None]
+    variances = np.zeros_like(sums)
+    variances[observed] = np.maximum(
+        squared_sums[observed] / counts[observed, None] - np.square(means[observed]), 0.0
+    )
     stds = np.sqrt(variances)
     stds = np.maximum(stds, np.float64(1e-6))
     return means.astype(np.float32), stds.astype(np.float32), counts
@@ -167,6 +179,8 @@ def main() -> None:
     parser.add_argument("--split-by-prompt", type=Path, required=True)
     parser.add_argument("--state-arrays-dir", type=Path, required=True, help="Array state per verificare righe e ordine.")
     parser.add_argument("--output-dir", type=Path, required=True)
+    parser.add_argument("--reference-path", default="kv_raw_ref", help="Campo JSON del riferimento KV; supporta percorsi con punti.")
+    parser.add_argument("--layer-path", default="layer", help="Campo JSON del layer associato al riferimento KV.")
     parser.add_argument("--batch-size", type=int, default=DEFAULT_BATCH_SIZE)
     args = parser.parse_args()
     if not args.input.is_file() or not args.split_by_prompt.is_file():
@@ -179,7 +193,7 @@ def main() -> None:
     assignments = load_prompt_splits(args.split_by_prompt)
     counts = expected_counts(args.state_arrays_dir)
     print("1) Calcolo media e deviazione standard KV sul solo train, per layer...")
-    means, stds, train_counts_by_layer = fit_train_statistics(args.input, assignments, args.batch_size)
+    means, stds, train_counts_by_layer = fit_train_statistics(args.input, assignments, args.batch_size, args.reference_path, args.layer_path)
 
     arrays_dir = args.output_dir / "arrays"
     artifacts_dir = args.output_dir / "artifacts"
@@ -214,7 +228,7 @@ def main() -> None:
     try:
         print("2) Materializzo KV 512D normalizzati e allineati agli array state...")
         for line_number, record in iter_records(args.input):
-            prompt_id, layer_index, reference = validate_record(record, line_number)
+            prompt_id, layer_index, reference = validate_record(record, line_number, args.reference_path, args.layer_path)
             split = assignments.get(prompt_id)
             if split is None:
                 raise ValueError(f"Line {line_number}: prompt {prompt_id} assente dallo split.")
@@ -236,6 +250,8 @@ def main() -> None:
             {
                 "experiment": "materialized_normalized_current_kv_inputs",
                 "source_input": str(args.input),
+                "reference_path": args.reference_path,
+                "layer_path": args.layer_path,
                 "split_by_prompt": str(args.split_by_prompt),
                 "state_arrays_dir": str(args.state_arrays_dir),
                 "source_tensor": "kv",
