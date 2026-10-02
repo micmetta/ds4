@@ -319,6 +319,26 @@ def load_materialized_kv_inputs(kv_data_dir: Path, split: str, expected_examples
     return values
 
 
+def load_expert_transition_probabilities_inputs(
+    transition_data_dir: Path,
+    split: str,
+    expected_examples: int,
+) -> np.ndarray:
+    """Load the precomputed causal 256D expert-transition vectors.
+
+    The materialization script stores these probabilities as float16 to keep
+    disk use modest.  The neural network receives the original probability
+    values; it does not standardize each component before the first Dense.
+    """
+    path = transition_data_dir / "arrays" / f"expert_transition_probabilities_{split}.npy"
+    if not path.is_file():
+        raise FileNotFoundError(f"{split}: expert_transition_probabilities mancanti in {transition_data_dir}")
+    values = np.load(path, mmap_mode="r")
+    if values.shape != (expected_examples, NUM_EXPERTS) or values.dtype != np.float16:
+        raise ValueError(f"{split}: shape o dtype delle expert_transition_probabilities non validi.")
+    return values
+
+
 class RawHiddenReader:
     """Read raw hidden vectors through a small LRU cache of binary files."""
 
@@ -635,6 +655,82 @@ def make_fixed_nnz_state_quantized_hidden_token_embedding_kv_dataset(
         },
         tf.TensorSpec(shape=(None, NUM_EXPERTS), dtype=tf.float32),
     )
+    return tf.data.Dataset.from_generator(batches, output_signature=signature).prefetch(tf.data.AUTOTUNE)
+
+
+def make_fixed_nnz_state_two_hidden_two_kv_dataset(
+    state_feature_indices: np.ndarray,
+    state_feature_values: np.ndarray,
+    labels: np.ndarray,
+    token_positions: np.ndarray,
+    current_hidden: np.ndarray,
+    previous_hidden: np.ndarray,
+    current_kv: np.ndarray,
+    previous_kv: np.ndarray,
+    batch_size: int,
+    shuffle_blocks: bool,
+    tf,
+    shuffle_block_size: int = 65536,
+    expert_transition_probabilities: np.ndarray | None = None,
+):
+    """Yield Build 6 fixed-NNZ state, two int8 hidden and two 512D KV branches."""
+    if batch_size < 1 or shuffle_block_size < batch_size:
+        raise ValueError("Batch o shuffle block non validi.")
+    examples, input_slots = state_feature_indices.shape
+    expected_shapes = (
+        (state_feature_values.shape, (examples, input_slots)),
+        (token_positions.shape, (examples, 1)),
+        (current_hidden.shape, (examples, 4096)),
+        (previous_hidden.shape, (examples, 4096)),
+        (current_kv.shape, (examples, 512)),
+        (previous_kv.shape, (examples, 512)),
+    )
+    if expert_transition_probabilities is not None:
+        expected_shapes += ((expert_transition_probabilities.shape, (examples, NUM_EXPERTS)),)
+    if labels.shape[0] != examples or any(actual != expected for actual, expected in expected_shapes):
+        raise ValueError("Input Build 6 fixed-NNZ non allineati.")
+    random_generator = np.random.default_rng(RANDOM_STATE) if shuffle_blocks else None
+
+    def batches() -> Iterator[tuple[dict[str, np.ndarray], np.ndarray]]:
+        starts = np.arange(0, examples, shuffle_block_size)
+        if random_generator is not None:
+            random_generator.shuffle(starts)
+        for block_start in starts:
+            block_stop = min(int(block_start) + shuffle_block_size, examples)
+            for start in range(int(block_start), block_stop, batch_size):
+                stop = min(start + batch_size, block_stop)
+                selected = slice(start, stop)
+                inputs = {
+                    "state_feature_indices": state_feature_indices[selected].astype(np.int32, copy=False),
+                    "state_feature_values": state_feature_values[selected],
+                    "token_position": token_positions[selected].astype(np.float32, copy=False),
+                    "raw_hidden_current": current_hidden[selected],
+                    "raw_hidden_previous": previous_hidden[selected],
+                    "kv_current_state": current_kv[selected].astype(np.float16, copy=False),
+                    "kv_previous_state": previous_kv[selected].astype(np.float16, copy=False),
+                }
+                if expert_transition_probabilities is not None:
+                    inputs["expert_transition_probabilities"] = expert_transition_probabilities[selected].astype(
+                        np.float16, copy=False
+                    )
+                yield inputs, labels[selected].astype(np.float32)
+
+    signature = (
+        {
+            "state_feature_indices": tf.TensorSpec(shape=(None, input_slots), dtype=tf.int32),
+            "state_feature_values": tf.TensorSpec(shape=(None, input_slots), dtype=tf.float32),
+            "token_position": tf.TensorSpec(shape=(None, 1), dtype=tf.float32),
+            "raw_hidden_current": tf.TensorSpec(shape=(None, 4096), dtype=tf.int8),
+            "raw_hidden_previous": tf.TensorSpec(shape=(None, 4096), dtype=tf.int8),
+            "kv_current_state": tf.TensorSpec(shape=(None, 512), dtype=tf.float16),
+            "kv_previous_state": tf.TensorSpec(shape=(None, 512), dtype=tf.float16),
+        },
+        tf.TensorSpec(shape=(None, NUM_EXPERTS), dtype=tf.float32),
+    )
+    if expert_transition_probabilities is not None:
+        signature[0]["expert_transition_probabilities"] = tf.TensorSpec(
+            shape=(None, NUM_EXPERTS), dtype=tf.float16
+        )
     return tf.data.Dataset.from_generator(batches, output_signature=signature).prefetch(tf.data.AUTOTUNE)
 
 
@@ -1294,6 +1390,66 @@ class RecallAtSix:
         return _RecallAtSix()
 
 
+class BinaryCrossentropyWithPairwiseRanking:
+    """Create the optional BCE plus pairwise-ranking loss after importing TensorFlow.
+
+    The existing ``BinaryCrossentropy`` remains the default loss.  This factory
+    is used only when a positive ranking weight is explicitly requested.
+    """
+
+    def __new__(cls, tf, ranking_loss_weight: float, ranking_loss_margin: float):
+        """Return ``BCE + weight * pairwise hinge ranking`` as a Keras loss.
+
+        For each target expert, the ranking term compares its score with every
+        non-target expert of the same example.  A pair has no cost once the
+        target score is at least ``margin`` above the non-target score.
+        """
+        @tf.keras.utils.register_keras_serializable(package="ds4")
+        class _BinaryCrossentropyWithPairwiseRanking(tf.keras.losses.Loss):
+            def __init__(
+                self,
+                ranking_loss_weight: float = ranking_loss_weight,
+                ranking_loss_margin: float = ranking_loss_margin,
+                **kwargs,
+            ) -> None:
+                kwargs.setdefault("name", "binary_crossentropy_with_pairwise_ranking")
+                kwargs.setdefault("reduction", "sum_over_batch_size")
+                super().__init__(**kwargs)
+                self.ranking_loss_weight = float(ranking_loss_weight)
+                self.ranking_loss_margin = float(ranking_loss_margin)
+
+            def call(self, y_true, y_pred):
+                targets = tf.cast(y_true, tf.float32)
+                scores = tf.cast(y_pred, tf.float32)
+                binary_crossentropy = tf.reduce_mean(
+                    tf.keras.backend.binary_crossentropy(targets, scores), axis=-1
+                )
+
+                target_scores = tf.expand_dims(scores, axis=2)
+                non_target_scores = tf.expand_dims(scores, axis=1)
+                target_mask = tf.expand_dims(targets, axis=2)
+                non_target_mask = tf.expand_dims(1.0 - targets, axis=1)
+                violations = tf.nn.relu(
+                    self.ranking_loss_margin - target_scores + non_target_scores
+                )
+                valid_pairs = target_mask * non_target_mask
+                ranking_loss = tf.math.divide_no_nan(
+                    tf.reduce_sum(violations * valid_pairs, axis=(1, 2)),
+                    tf.reduce_sum(valid_pairs, axis=(1, 2)),
+                )
+                return binary_crossentropy + self.ranking_loss_weight * ranking_loss
+
+            def get_config(self) -> dict:
+                config = super().get_config()
+                config.update({
+                    "ranking_loss_weight": self.ranking_loss_weight,
+                    "ranking_loss_margin": self.ranking_loss_margin,
+                })
+                return config
+
+        return _BinaryCrossentropyWithPairwiseRanking()
+
+
 def calculate_recall_at_6(scores: np.ndarray, targets: np.ndarray) -> float:
     """
     Calculate the project Recall@6 from all output scores at once.
@@ -1323,3 +1479,558 @@ def save_json(path: Path, content: dict) -> None:
     """
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(content, indent=2) + "\n", encoding="utf-8")
+
+
+def build_fixed_nnz_state_two_hidden_two_kv_ffn(
+    state_feature_count: int,
+    state_input_slots: int,
+    state_hidden_units: int,
+    fusion_hidden_layers: list[int],
+    activation: str,
+    dropout: float,
+    learning_rate: float,
+    l2_regularization: float,
+    tf,
+    current_hidden_projection_dimension: int,
+    previous_hidden_projection_dimension: int,
+    current_hidden_scale: float,
+    previous_hidden_scale: float,
+    kv_projection_dimension: int | None = None,
+    previous_kv_projection_dimension: int | None = None,
+    ranking_loss_weight: float = 0.0,
+    ranking_loss_margin: float = 0.05,
+    expert_transition_projection_dimension: int | None = None,
+    fusion_batch_normalization: bool = False,
+    expert_transition_gated_residual: bool = False,
+    transition_log_epsilon: float = 1e-6,
+    transition_residual_initial_scale: float = 0.1,
+    branch_dropout: float = 0.0,
+):
+    """Build the compact Build 6 FFN with current and preceding-layer branches.
+
+    The state branch uses the same fixed-NNZ weighted embedding sum as Build 5.
+    Build 6 has no token lookup: token_position is the only token-specific
+    scalar input.  The two raw-hidden and the two normalized-KV inputs remain
+    distinct so the network can learn a different use for layer ``l`` and
+    ``l-1``.
+    """
+    if state_feature_count < 1 or state_input_slots < 2:
+        raise ValueError("Dimensioni state fixed-NNZ non valide.")
+    if (state_hidden_units < 1 or current_hidden_projection_dimension < 1
+            or previous_hidden_projection_dimension < 1
+            or any(units < 1 for units in fusion_hidden_layers)):
+        raise ValueError("Dimensioni hidden non valide.")
+    if previous_kv_projection_dimension is None:
+        previous_kv_projection_dimension = kv_projection_dimension
+    if (kv_projection_dimension not in {None, 64, 128, 256, 512}
+            or previous_kv_projection_dimension not in {None, 64, 128, 256, 512}):
+        raise ValueError("Dimensione proiezione KV non valida.")
+    # None means this historical architecture has no transition branch; zero
+    # means the new 256D probability vector is concatenated directly.
+    if expert_transition_projection_dimension not in {None, 0, 64, 128}:
+        raise ValueError("Dimensione proiezione expert_transition_probabilities non valida.")
+    if (dropout < 0 or dropout >= 1 or branch_dropout < 0 or branch_dropout >= 1
+            or learning_rate <= 0 or l2_regularization < 0
+            or ranking_loss_weight < 0 or ranking_loss_margin <= 0
+            or transition_log_epsilon <= 0 or transition_residual_initial_scale < 0):
+        raise ValueError("Iperparametri FFN non validi.")
+    if expert_transition_gated_residual and expert_transition_projection_dimension is None:
+        raise ValueError("La fusione residuale gated richiede expert_transition_probabilities.")
+    if any(not np.isfinite(scale) or scale <= 0 for scale in (current_hidden_scale, previous_hidden_scale)):
+        raise ValueError("Scale int8 raw hidden non valide.")
+
+    regularizer = tf.keras.regularizers.l2(l2_regularization) if l2_regularization else None
+    state_indices = tf.keras.Input(shape=(state_input_slots,), dtype="int32", name="state_feature_indices")
+    state_feature_values = tf.keras.Input(shape=(state_input_slots,), dtype="float32", name="state_feature_values")
+    token_position = tf.keras.Input(shape=(1,), dtype="float32", name="token_position")
+    raw_current = tf.keras.Input(shape=(4096,), dtype="int8", name="raw_hidden_current")
+    raw_previous = tf.keras.Input(shape=(4096,), dtype="int8", name="raw_hidden_previous")
+    kv_current = tf.keras.Input(shape=(512,), dtype="float16", name="kv_current_state")
+    kv_previous = tf.keras.Input(shape=(512,), dtype="float16", name="kv_previous_state")
+    transition_probabilities = None
+    if expert_transition_projection_dimension is not None:
+        transition_probabilities = tf.keras.Input(
+            shape=(NUM_EXPERTS,), dtype="float16", name="expert_transition_probabilities"
+        )
+
+    state_rows = tf.keras.layers.Embedding(
+        input_dim=state_feature_count + 1,
+        output_dim=state_hidden_units,
+        embeddings_regularizer=regularizer,
+        name="state_fixed_nnz_linear_weights",
+    )(state_indices)
+    state_column = tf.keras.layers.Reshape((state_input_slots, 1), name="state_fixed_nnz_value_column")(state_feature_values)
+    state_values = tf.keras.layers.Lambda(
+        lambda values: tf.reduce_sum(values[0] * values[1], axis=1),
+        output_shape=(state_hidden_units,),
+        name="state_fixed_nnz_linear_sum",
+    )([state_rows, state_column])
+    state_values = tf.keras.layers.Activation(activation, name="state_hidden_1")(state_values)
+    if dropout:
+        state_values = tf.keras.layers.Dropout(dropout, name="state_dropout_1")(state_values)
+
+    def project_hidden(raw_input, scale: float, units: int, prefix: str):
+        values = tf.keras.layers.Rescaling(scale=scale, offset=0.0, dtype="float32", name=f"{prefix}_dequantization")(raw_input)
+        values = tf.keras.layers.Dense(
+            units, activation="relu", kernel_regularizer=regularizer, name=f"{prefix}_projection"
+        )(values)
+        if branch_dropout:
+            values = tf.keras.layers.Dropout(branch_dropout, name=f"{prefix}_dropout")(values)
+        return values
+
+    current_hidden = project_hidden(raw_current, current_hidden_scale, current_hidden_projection_dimension, "raw_hidden_current")
+    previous_hidden = project_hidden(raw_previous, previous_hidden_scale, previous_hidden_projection_dimension, "raw_hidden_previous")
+
+    def project_kv(input_values, prefix: str, projection_dimension: int | None):
+        if projection_dimension is None:
+            return input_values
+        values = tf.keras.layers.Dense(
+            projection_dimension, activation="relu", kernel_regularizer=regularizer, name=f"{prefix}_projection"
+        )(input_values)
+        if branch_dropout:
+            values = tf.keras.layers.Dropout(branch_dropout, name=f"{prefix}_dropout")(values)
+        return values
+
+    current_kv = project_kv(kv_current, "kv_current", kv_projection_dimension)
+    previous_kv = project_kv(kv_previous, "kv_previous", previous_kv_projection_dimension)
+    if transition_probabilities is not None and not expert_transition_gated_residual:
+        if expert_transition_projection_dimension == 0:
+            transition_values = transition_probabilities
+        else:
+            transition_values = tf.keras.layers.Dense(
+                expert_transition_projection_dimension,
+                activation="relu",
+                kernel_regularizer=regularizer,
+                name="expert_transition_projection",
+            )(transition_probabilities)
+    values = tf.keras.layers.Concatenate(name="state_current_previous_fusion")(
+        [state_values, current_hidden, previous_hidden, current_kv, previous_kv, token_position]
+        + ([] if transition_probabilities is None or expert_transition_gated_residual else [transition_values])
+    )
+    if fusion_batch_normalization:
+        # Normalise every concatenated component with train-set moving
+        # statistics before the fusion Dense.  The default remains False so
+        # historical models and checkpoints are reconstructed unchanged.
+        values = tf.keras.layers.BatchNormalization(
+            name="fusion_input_batch_normalization"
+        )(values)
+    for index, units in enumerate(fusion_hidden_layers, start=1):
+        values = tf.keras.layers.Dense(units, activation=activation, kernel_regularizer=regularizer, name=f"fusion_hidden_{index}")(values)
+        if dropout:
+            values = tf.keras.layers.Dropout(dropout, name=f"fusion_dropout_{index}")(values)
+    if expert_transition_gated_residual:
+        # q is intentionally kept out of Concatenate.  Its transformed scores
+        # enter the final expert ranking through a residual path, so the fusion
+        # Dense cannot silently discard all 256 transition components.
+        base_logits = tf.keras.layers.Dense(
+            NUM_EXPERTS, activation=None, dtype="float32", name="expert_base_logits"
+        )(values)
+        transition_log = tf.keras.layers.Lambda(
+            lambda q: tf.math.log(tf.maximum(tf.cast(q, tf.float32), transition_log_epsilon)),
+            output_shape=(NUM_EXPERTS,), name="expert_transition_log_probabilities",
+        )(transition_probabilities)
+        transition_normalized = tf.keras.layers.LayerNormalization(
+            axis=-1, name="expert_transition_log_normalization"
+        )(transition_log)
+        transition_gate = tf.keras.layers.Dense(
+            1, activation="sigmoid", dtype="float32", name="expert_transition_gate"
+        )(values)
+        transition_ones = tf.keras.layers.Lambda(
+            lambda q: tf.ones_like(q[:, :1]), output_shape=(1,), name="expert_transition_scale_input"
+        )(transition_normalized)
+        transition_scale = tf.keras.layers.Dense(
+            1, activation=None, use_bias=False, dtype="float32",
+            kernel_initializer=tf.keras.initializers.Constant(transition_residual_initial_scale),
+            name="expert_transition_residual_scale",
+        )(transition_ones)
+        transition_residual = tf.keras.layers.Lambda(
+            lambda tensors: tensors[0] * tensors[1] * tensors[2], output_shape=(NUM_EXPERTS,),
+            name="expert_transition_gated_scores",
+        )([transition_normalized, transition_gate, transition_scale])
+        logits = tf.keras.layers.Add(name="expert_final_logits")([base_logits, transition_residual])
+        outputs = tf.keras.layers.Activation("sigmoid", dtype="float32", name="expert_scores")(logits)
+    else:
+        outputs = tf.keras.layers.Dense(NUM_EXPERTS, activation="sigmoid", dtype="float32", name="expert_scores")(values)
+    model = tf.keras.Model(
+        inputs={
+            "state_feature_indices": state_indices,
+            "state_feature_values": state_feature_values,
+            "token_position": token_position,
+            "raw_hidden_current": raw_current,
+            "raw_hidden_previous": raw_previous,
+            "kv_current_state": kv_current,
+            "kv_previous_state": kv_previous,
+            **({} if transition_probabilities is None else {
+                "expert_transition_probabilities": transition_probabilities,
+            }),
+        },
+        outputs=outputs,
+        name="prefetch_build6_previous_layer_ffn",
+    )
+    # Con peso zero usiamo la BCE storica come oggetto Keras separato: questa
+    # e' la configurazione predefinita e non cambia nessuna run gia' esistente.
+    loss = tf.keras.losses.BinaryCrossentropy()
+    if ranking_loss_weight:
+        loss = BinaryCrossentropyWithPairwiseRanking(
+            tf, ranking_loss_weight, ranking_loss_margin
+        )
+    model.compile(
+        optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate),
+        loss=loss,
+        metrics=[RecallAtSix(tf)],
+        jit_compile=False,
+    )
+    return model
+
+
+def build_fixed_nnz_state_gated_residual_ffn(
+    state_feature_count: int,
+    state_input_slots: int,
+    state_hidden_units: int,
+    fusion_hidden_units: int,
+    dropout: float,
+    learning_rate: float,
+    l2_regularization: float,
+    tf,
+    transition_log_epsilon: float = 1e-6,
+    transition_residual_initial_scale: float = 0.1,
+):
+    """Build the minimal Build 7 model: current fixed-NNZ state plus q only.
+
+    ``q`` bypasses the fusion trunk and enters the 256 final logits through a
+    gated residual path.  The state branch is the same weighted fixed-NNZ
+    embedding sum used by the larger Build 7 model.
+    """
+    if (state_feature_count < 1 or state_input_slots < 2 or state_hidden_units < 1
+            or fusion_hidden_units < 1 or dropout < 0 or dropout >= 1
+            or learning_rate <= 0 or l2_regularization < 0
+            or transition_log_epsilon <= 0 or transition_residual_initial_scale < 0):
+        raise ValueError("Iperparametri FFN minimale state+q non validi.")
+    regularizer = tf.keras.regularizers.l2(l2_regularization) if l2_regularization else None
+    state_indices = tf.keras.Input(
+        shape=(state_input_slots,), dtype="int32", name="state_feature_indices"
+    )
+    state_feature_values = tf.keras.Input(
+        shape=(state_input_slots,), dtype="float32", name="state_feature_values"
+    )
+    transition_probabilities = tf.keras.Input(
+        shape=(NUM_EXPERTS,), dtype="float16", name="expert_transition_probabilities"
+    )
+    state_rows = tf.keras.layers.Embedding(
+        input_dim=state_feature_count + 1,
+        output_dim=state_hidden_units,
+        embeddings_regularizer=regularizer,
+        name="state_fixed_nnz_linear_weights",
+    )(state_indices)
+    state_column = tf.keras.layers.Reshape(
+        (state_input_slots, 1), name="state_fixed_nnz_value_column"
+    )(state_feature_values)
+    state_values = tf.keras.layers.Lambda(
+        lambda values: tf.reduce_sum(values[0] * values[1], axis=1),
+        output_shape=(state_hidden_units,), name="state_fixed_nnz_linear_sum",
+    )([state_rows, state_column])
+    state_values = tf.keras.layers.Activation("relu", name="state_hidden_1")(state_values)
+    if dropout:
+        state_values = tf.keras.layers.Dropout(dropout, name="state_dropout_1")(state_values)
+    fusion_values = tf.keras.layers.Dense(
+        fusion_hidden_units, activation="relu", kernel_regularizer=regularizer,
+        name="fusion_hidden_1",
+    )(state_values)
+    if dropout:
+        fusion_values = tf.keras.layers.Dropout(dropout, name="fusion_dropout_1")(fusion_values)
+    base_logits = tf.keras.layers.Dense(
+        NUM_EXPERTS, activation=None, dtype="float32", name="expert_base_logits"
+    )(fusion_values)
+    transition_log = tf.keras.layers.Lambda(
+        lambda q: tf.math.log(tf.maximum(tf.cast(q, tf.float32), transition_log_epsilon)),
+        output_shape=(NUM_EXPERTS,), name="expert_transition_log_probabilities",
+    )(transition_probabilities)
+    transition_normalized = tf.keras.layers.LayerNormalization(
+        axis=-1, name="expert_transition_log_normalization"
+    )(transition_log)
+    transition_gate = tf.keras.layers.Dense(
+        1, activation="sigmoid", dtype="float32", name="expert_transition_gate"
+    )(fusion_values)
+    transition_ones = tf.keras.layers.Lambda(
+        lambda q: tf.ones_like(q[:, :1]), output_shape=(1,), name="expert_transition_scale_input"
+    )(transition_normalized)
+    transition_scale = tf.keras.layers.Dense(
+        1, activation=None, use_bias=False, dtype="float32",
+        kernel_initializer=tf.keras.initializers.Constant(transition_residual_initial_scale),
+        name="expert_transition_residual_scale",
+    )(transition_ones)
+    transition_residual = tf.keras.layers.Lambda(
+        lambda tensors: tensors[0] * tensors[1] * tensors[2], output_shape=(NUM_EXPERTS,),
+        name="expert_transition_gated_scores",
+    )([transition_normalized, transition_gate, transition_scale])
+    logits = tf.keras.layers.Add(name="expert_final_logits")([base_logits, transition_residual])
+    outputs = tf.keras.layers.Activation("sigmoid", dtype="float32", name="expert_scores")(logits)
+    model = tf.keras.Model(
+        inputs={
+            "state_feature_indices": state_indices,
+            "state_feature_values": state_feature_values,
+            "expert_transition_probabilities": transition_probabilities,
+        },
+        outputs=outputs,
+        name="prefetch_build7_current_state_gated_residual_ffn",
+    )
+    model.compile(
+        optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate),
+        loss=tf.keras.losses.BinaryCrossentropy(), metrics=[RecallAtSix(tf)], jit_compile=False,
+    )
+    return model
+
+
+def build_fixed_nnz_state_two_hidden_gated_residual_ffn(
+    state_feature_count: int,
+    state_input_slots: int,
+    state_hidden_units: int,
+    current_hidden_projection_dimension: int,
+    previous_hidden_projection_dimension: int,
+    current_hidden_scale: float,
+    previous_hidden_scale: float,
+    fusion_hidden_units: int,
+    dropout: float,
+    learning_rate: float,
+    l2_regularization: float,
+    tf,
+    transition_log_epsilon: float = 1e-6,
+    transition_residual_initial_scale: float = 0.1,
+):
+    """Build the Top-4 Build 7 model: current state, two raw hidden and q."""
+    if (state_feature_count < 1 or state_input_slots < 2 or state_hidden_units < 1
+            or current_hidden_projection_dimension < 1 or previous_hidden_projection_dimension < 1
+            or fusion_hidden_units < 1 or dropout < 0 or dropout >= 1
+            or learning_rate <= 0 or l2_regularization < 0
+            or transition_log_epsilon <= 0 or transition_residual_initial_scale < 0):
+        raise ValueError("Iperparametri FFN Top-4 non validi.")
+    if any(not np.isfinite(scale) or scale <= 0 for scale in (current_hidden_scale, previous_hidden_scale)):
+        raise ValueError("Scale int8 raw hidden Top-4 non valide.")
+    regularizer = tf.keras.regularizers.l2(l2_regularization) if l2_regularization else None
+    state_indices = tf.keras.Input(shape=(state_input_slots,), dtype="int32", name="state_feature_indices")
+    state_feature_values = tf.keras.Input(shape=(state_input_slots,), dtype="float32", name="state_feature_values")
+    raw_current = tf.keras.Input(shape=(4096,), dtype="int8", name="raw_hidden_current")
+    raw_previous = tf.keras.Input(shape=(4096,), dtype="int8", name="raw_hidden_previous")
+    transition_probabilities = tf.keras.Input(
+        shape=(NUM_EXPERTS,), dtype="float16", name="expert_transition_probabilities"
+    )
+    state_rows = tf.keras.layers.Embedding(
+        input_dim=state_feature_count + 1,
+        output_dim=state_hidden_units,
+        embeddings_regularizer=regularizer,
+        name="state_fixed_nnz_linear_weights",
+    )(state_indices)
+    state_column = tf.keras.layers.Reshape(
+        (state_input_slots, 1), name="state_fixed_nnz_value_column"
+    )(state_feature_values)
+    state_values = tf.keras.layers.Lambda(
+        lambda values: tf.reduce_sum(values[0] * values[1], axis=1),
+        output_shape=(state_hidden_units,), name="state_fixed_nnz_linear_sum",
+    )([state_rows, state_column])
+    state_values = tf.keras.layers.Activation("relu", name="state_hidden_1")(state_values)
+    if dropout:
+        state_values = tf.keras.layers.Dropout(dropout, name="state_dropout_1")(state_values)
+
+    def project_hidden(raw_input, scale, units, prefix):
+        values = tf.keras.layers.Rescaling(
+            scale=scale, offset=0.0, dtype="float32", name=f"{prefix}_dequantization"
+        )(raw_input)
+        return tf.keras.layers.Dense(
+            units, activation="relu", kernel_regularizer=regularizer, name=f"{prefix}_projection"
+        )(values)
+
+    current_hidden = project_hidden(
+        raw_current, current_hidden_scale, current_hidden_projection_dimension, "raw_hidden_current"
+    )
+    previous_hidden = project_hidden(
+        raw_previous, previous_hidden_scale, previous_hidden_projection_dimension, "raw_hidden_previous"
+    )
+    fusion_input = tf.keras.layers.Concatenate(name="state_current_previous_fusion")(
+        [state_values, current_hidden, previous_hidden]
+    )
+    fusion_values = tf.keras.layers.Dense(
+        fusion_hidden_units, activation="relu", kernel_regularizer=regularizer,
+        name="fusion_hidden_1",
+    )(fusion_input)
+    if dropout:
+        fusion_values = tf.keras.layers.Dropout(dropout, name="fusion_dropout_1")(fusion_values)
+    base_logits = tf.keras.layers.Dense(
+        NUM_EXPERTS, activation=None, dtype="float32", name="expert_base_logits"
+    )(fusion_values)
+    transition_log = tf.keras.layers.Lambda(
+        lambda q: tf.math.log(tf.maximum(tf.cast(q, tf.float32), transition_log_epsilon)),
+        output_shape=(NUM_EXPERTS,), name="expert_transition_log_probabilities",
+    )(transition_probabilities)
+    transition_normalized = tf.keras.layers.LayerNormalization(
+        axis=-1, name="expert_transition_log_normalization"
+    )(transition_log)
+    transition_gate = tf.keras.layers.Dense(
+        1, activation="sigmoid", dtype="float32", name="expert_transition_gate"
+    )(fusion_values)
+    transition_ones = tf.keras.layers.Lambda(
+        lambda q: tf.ones_like(q[:, :1]), output_shape=(1,), name="expert_transition_scale_input"
+    )(transition_normalized)
+    transition_scale = tf.keras.layers.Dense(
+        1, activation=None, use_bias=False, dtype="float32",
+        kernel_initializer=tf.keras.initializers.Constant(transition_residual_initial_scale),
+        name="expert_transition_residual_scale",
+    )(transition_ones)
+    transition_residual = tf.keras.layers.Lambda(
+        lambda tensors: tensors[0] * tensors[1] * tensors[2], output_shape=(NUM_EXPERTS,),
+        name="expert_transition_gated_scores",
+    )([transition_normalized, transition_gate, transition_scale])
+    logits = tf.keras.layers.Add(name="expert_final_logits")([base_logits, transition_residual])
+    outputs = tf.keras.layers.Activation("sigmoid", dtype="float32", name="expert_scores")(logits)
+    model = tf.keras.Model(
+        inputs={
+            "state_feature_indices": state_indices,
+            "state_feature_values": state_feature_values,
+            "raw_hidden_current": raw_current,
+            "raw_hidden_previous": raw_previous,
+            "expert_transition_probabilities": transition_probabilities,
+        },
+        outputs=outputs,
+        name="prefetch_build7_top4_gated_residual_ffn",
+    )
+    model.compile(
+        optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate),
+        loss=tf.keras.losses.BinaryCrossentropy(), metrics=[RecallAtSix(tf)], jit_compile=False,
+    )
+    return model
+
+
+def build_fixed_nnz_state_two_hidden_two_kv_deeper_ffn(
+    state_feature_count: int,
+    state_input_slots: int,
+    state_hidden_units: int,
+    state_second_units: int,
+    activation: str,
+    state_dropout: float,
+    branch_dropout: float,
+    fusion_dropout: float,
+    learning_rate: float,
+    l2_regularization: float,
+    tf,
+    current_hidden_first_units: int,
+    current_hidden_second_units: int,
+    previous_hidden_first_units: int,
+    previous_hidden_second_units: int,
+    current_hidden_scale: float,
+    previous_hidden_scale: float,
+    previous_kv_first_units: int,
+    previous_kv_second_units: int,
+    fusion_first_units: int,
+    fusion_second_units: int,
+):
+    """Build the separate deeper Build 6 BCE experiment.
+
+    This builder deliberately does not alter the compact Build 6 architecture.
+    Each selected branch has two ReLU layers and one dropout after its final
+    representation; the current KV remains a direct 512D input.
+    """
+    dimensions = (
+        state_feature_count, state_input_slots, state_hidden_units, state_second_units,
+        current_hidden_first_units, current_hidden_second_units,
+        previous_hidden_first_units, previous_hidden_second_units,
+        previous_kv_first_units, previous_kv_second_units,
+        fusion_first_units, fusion_second_units,
+    )
+    if any(value < 1 for value in dimensions):
+        raise ValueError("Dimensioni FFN profonda non valide.")
+    if any(value < 0 or value >= 1 for value in (state_dropout, branch_dropout, fusion_dropout)):
+        raise ValueError("Dropout FFN profonda non valido.")
+    if learning_rate <= 0 or l2_regularization < 0:
+        raise ValueError("Iperparametri FFN profonda non validi.")
+    if any(not np.isfinite(scale) or scale <= 0 for scale in (current_hidden_scale, previous_hidden_scale)):
+        raise ValueError("Scale int8 raw hidden non valide.")
+
+    regularizer = tf.keras.regularizers.l2(l2_regularization) if l2_regularization else None
+    state_indices = tf.keras.Input(shape=(state_input_slots,), dtype="int32", name="state_feature_indices")
+    state_feature_values = tf.keras.Input(shape=(state_input_slots,), dtype="float32", name="state_feature_values")
+    token_position = tf.keras.Input(shape=(1,), dtype="float32", name="token_position")
+    raw_current = tf.keras.Input(shape=(4096,), dtype="int8", name="raw_hidden_current")
+    raw_previous = tf.keras.Input(shape=(4096,), dtype="int8", name="raw_hidden_previous")
+    kv_current = tf.keras.Input(shape=(512,), dtype="float16", name="kv_current_state")
+    kv_previous = tf.keras.Input(shape=(512,), dtype="float16", name="kv_previous_state")
+
+    state_rows = tf.keras.layers.Embedding(
+        input_dim=state_feature_count + 1,
+        output_dim=state_hidden_units,
+        embeddings_regularizer=regularizer,
+        name="state_fixed_nnz_linear_weights",
+    )(state_indices)
+    state_column = tf.keras.layers.Reshape((state_input_slots, 1), name="state_fixed_nnz_value_column")(state_feature_values)
+    state_values = tf.keras.layers.Lambda(
+        lambda values: tf.reduce_sum(values[0] * values[1], axis=1),
+        output_shape=(state_hidden_units,),
+        name="state_fixed_nnz_linear_sum",
+    )([state_rows, state_column])
+    state_values = tf.keras.layers.Activation(activation, name="state_hidden_1")(state_values)
+    state_values = tf.keras.layers.Dense(
+        state_second_units, activation="relu", kernel_regularizer=regularizer,
+        name="state_hidden_2",
+    )(state_values)
+    if state_dropout:
+        state_values = tf.keras.layers.Dropout(state_dropout, name="state_dropout_1")(state_values)
+
+    def project_hidden(raw_input, scale: float, first_units: int, second_units: int, prefix: str):
+        values = tf.keras.layers.Rescaling(scale=scale, offset=0.0, dtype="float32", name=f"{prefix}_dequantization")(raw_input)
+        values = tf.keras.layers.Dense(first_units, activation="relu", kernel_regularizer=regularizer, name=f"{prefix}_projection_1")(values)
+        values = tf.keras.layers.Dense(second_units, activation="relu", kernel_regularizer=regularizer, name=f"{prefix}_projection_2")(values)
+        if branch_dropout:
+            values = tf.keras.layers.Dropout(branch_dropout, name=f"{prefix}_dropout")(values)
+        return values
+
+    current_hidden = project_hidden(
+        raw_current, current_hidden_scale, current_hidden_first_units,
+        current_hidden_second_units, "raw_hidden_current",
+    )
+    previous_hidden = project_hidden(
+        raw_previous, previous_hidden_scale, previous_hidden_first_units,
+        previous_hidden_second_units, "raw_hidden_previous",
+    )
+    previous_kv = tf.keras.layers.Dense(
+        previous_kv_first_units, activation="relu", kernel_regularizer=regularizer,
+        name="kv_previous_projection_1",
+    )(kv_previous)
+    previous_kv = tf.keras.layers.Dense(
+        previous_kv_second_units, activation="relu", kernel_regularizer=regularizer,
+        name="kv_previous_projection_2",
+    )(previous_kv)
+    if branch_dropout:
+        previous_kv = tf.keras.layers.Dropout(branch_dropout, name="kv_previous_dropout")(previous_kv)
+
+    values = tf.keras.layers.Concatenate(name="state_current_previous_fusion")(
+        [state_values, current_hidden, previous_hidden, kv_current, previous_kv, token_position]
+    )
+    values = tf.keras.layers.Dense(
+        fusion_first_units, activation=activation, kernel_regularizer=regularizer,
+        name="fusion_hidden_1",
+    )(values)
+    values = tf.keras.layers.Dense(
+        fusion_second_units, activation=activation, kernel_regularizer=regularizer,
+        name="fusion_hidden_2",
+    )(values)
+    if fusion_dropout:
+        values = tf.keras.layers.Dropout(fusion_dropout, name="fusion_dropout_2")(values)
+    outputs = tf.keras.layers.Dense(NUM_EXPERTS, activation="sigmoid", dtype="float32", name="expert_scores")(values)
+    model = tf.keras.Model(
+        inputs={
+            "state_feature_indices": state_indices,
+            "state_feature_values": state_feature_values,
+            "token_position": token_position,
+            "raw_hidden_current": raw_current,
+            "raw_hidden_previous": raw_previous,
+            "kv_current_state": kv_current,
+            "kv_previous_state": kv_previous,
+        },
+        outputs=outputs,
+        name="prefetch_build6_deeper_previous_layer_ffn",
+    )
+    model.compile(
+        optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate),
+        loss=tf.keras.losses.BinaryCrossentropy(),
+        metrics=[RecallAtSix(tf)],
+        jit_compile=False,
+    )
+    return model
