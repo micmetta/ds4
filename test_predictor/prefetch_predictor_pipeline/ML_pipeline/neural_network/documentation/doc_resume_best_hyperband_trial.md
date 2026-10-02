@@ -5,6 +5,41 @@
 Il trial `0024` del tuning Build 5 ha raggiunto `validation_recall_at_6 =
 0.49085259437561035` all'epoca 20. La sua configurazione e':
 
+## Architettura della rete migliore
+
+Lo state ha semanticamente 4.413 feature, ma entra nella rete nel formato
+fixed-NNZ compatto di 45 coppie indice/valore per esempio: 44 feature attive
+piu' la sentinella del bias. La prima riga del diagramma rappresenta quindi il
+`Dense(512)` equivalente sullo state completo, calcolato senza materializzare
+i valori zero.
+
+```text
+state 4.413D
+  (routing history, layer, router ID/score, 5 statistiche KV)
+        |
+        v
+Dense(512) -> ReLU -> Dropout(0.3) ------------------+
+                                                       |
+hidden raw 4.096D -> Dense(512) -> ReLU -------------+
+                                                       |
+token embedding congelato 4.096D -> Dense(64) -> ReLU +
+                                                       +--> Concatenate(1.601D)
+KV completo normalizzato 512D -> identita' ----------+          |
+                                                       |          v
+token_position standardizzata 1D ---------------------+   Dense(512) -> ReLU
+                                                                  |
+                                                                  v
+                                                           Dropout(0.3)
+                                                                  |
+                                                                  v
+                                                           Dense(256) -> sigmoid
+                                                              (expert_scores)
+```
+
+Le 1.601 componenti concatenate sono `512 + 512 + 64 + 512 + 1`. Il
+`Dense(512)` dopo la concatenazione e' il layer di fusione selezionato dal
+trial migliore; non era presente nel diagramma piÃ¹ piccolo da 1.153D.
+
 | Componente | Valore |
 |---|---:|
 | Ramo state fixed-NNZ | 512 neuroni, ReLU, dropout 0,3 |
