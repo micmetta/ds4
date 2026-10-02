@@ -40,24 +40,22 @@ def calculate_recall_at_k(scores: np.ndarray, targets: np.ndarray, k: int) -> fl
     return float(targets[rows, top_indices].sum(axis=1).mean() / 6.0)
 
 
-def calculate_target_rank_distribution(scores: np.ndarray, targets: np.ndarray) -> dict[str, object]:
-    """Return the exact rank distribution of every target expert."""
+def update_rank_counts(rank_counts: np.ndarray, scores: np.ndarray, targets: np.ndarray) -> None:
+    """Accumulate exact ranks for a prediction batch into ``rank_counts``."""
     if scores.shape != targets.shape or scores.shape[1] != 256:
         raise ValueError("Score e target devono avere shape [N, 256] identica.")
     if not np.all(targets.sum(axis=1) == 6):
         raise ValueError("Ogni esempio deve contenere esattamente sei expert target.")
 
     target_expert_ids = np.argpartition(targets, -6, axis=1)[:, -6:]
-    rank_counts = np.zeros(scores.shape[1] + 1, dtype=np.int64)
-    rows_per_chunk = 8192
-    for start in range(0, scores.shape[0], rows_per_chunk):
-        end = min(start + rows_per_chunk, scores.shape[0])
-        chunk_scores = scores[start:end]
-        chunk_target_ids = target_expert_ids[start:end]
-        rows = np.arange(end - start)[:, None]
-        target_scores = chunk_scores[rows, chunk_target_ids]
-        ranks = 1 + (chunk_scores[:, :, None] > target_scores[:, None, :]).sum(axis=1)
-        rank_counts += np.bincount(ranks.ravel(), minlength=scores.shape[1] + 1)
+    rows = np.arange(scores.shape[0])[:, None]
+    target_scores = scores[rows, target_expert_ids]
+    ranks = 1 + (scores[:, :, None] > target_scores[:, None, :]).sum(axis=1)
+    rank_counts += np.bincount(ranks.ravel(), minlength=scores.shape[1] + 1)
+
+
+def rank_distribution_from_counts(rank_counts: np.ndarray) -> dict[str, object]:
+    """Serialize accumulated rank counts using the Build 6-compatible format."""
 
     total_targets = int(rank_counts.sum())
     counts_top_10 = [int(rank_counts[rank]) for rank in range(1, 11)]
@@ -104,6 +102,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--previous-quantized-hidden-data-dir", type=Path, required=True)
     parser.add_argument("--expert-transition-probabilities-data-dir", type=Path, required=True)
     parser.add_argument("--output-report", type=Path, required=True)
+    parser.add_argument(
+        "--splits", default="validation,test",
+        help="Split separati da virgola da valutare: train, validation e/o test.",
+    )
     parser.add_argument("--state-hidden-units", type=int, default=2048)
     parser.add_argument("--current-hidden-units", type=int, default=64)
     parser.add_argument("--previous-hidden-units", type=int, default=64)
@@ -168,19 +170,33 @@ def load_split(args: argparse.Namespace, split: str) -> dict[str, object]:
 
 
 def evaluate_split(model, data: dict[str, object], batch_size: int, tf) -> dict[str, object]:
+    """Evaluate one split without materializing all prediction scores in RAM."""
     labels = data["labels"]
     dataset = make_dataset(
         data["indices"], data["values"], labels, data["current_hidden"],
         data["previous_hidden"], data["transition"], batch_size, tf,
     )
-    scores = model.predict(dataset, steps=math.ceil(labels.shape[0] / batch_size), verbose=0)
+    recall_counts = {k: 0 for k in (6, 10, 20, 50)}
+    rank_counts = np.zeros(257, dtype=np.int64)
+    examples = 0
+    for inputs, batch_targets in dataset:
+        scores = np.asarray(model.predict_on_batch(inputs))
+        batch_targets = np.asarray(batch_targets)
+        rows = np.arange(scores.shape[0])[:, None]
+        for k in recall_counts:
+            top_indices = np.argpartition(scores, -k, axis=1)[:, -k:]
+            recall_counts[k] += int(batch_targets[rows, top_indices].sum())
+        update_rank_counts(rank_counts, scores, batch_targets)
+        examples += scores.shape[0]
+    if examples != labels.shape[0]:
+        raise RuntimeError(f"Predizioni incomplete: {examples} esempi invece di {labels.shape[0]}.")
     return {
-        "examples": int(labels.shape[0]),
-        "recall_at_6": calculate_recall_at_k(scores, labels, 6),
-        "recall_at_10": calculate_recall_at_k(scores, labels, 10),
-        "recall_at_20": calculate_recall_at_k(scores, labels, 20),
-        "recall_at_50": calculate_recall_at_k(scores, labels, 50),
-        "target_rank_distribution": calculate_target_rank_distribution(scores, labels),
+        "examples": int(examples),
+        "recall_at_6": float(recall_counts[6] / (examples * 6)),
+        "recall_at_10": float(recall_counts[10] / (examples * 6)),
+        "recall_at_20": float(recall_counts[20] / (examples * 6)),
+        "recall_at_50": float(recall_counts[50] / (examples * 6)),
+        "target_rank_distribution": rank_distribution_from_counts(rank_counts),
     }
 
 
@@ -195,38 +211,42 @@ def main() -> None:
         raise ValueError("Dimensioni o batch size non validi.")
     if args.l2_regularization < 0 or not 0 <= args.dropout < 1 or args.learning_rate <= 0:
         raise ValueError("Iperparametri non validi.")
+    allowed_splits = {"train", "validation", "test"}
+    splits = [item.strip() for item in args.splits.split(",") if item.strip()]
+    if not splits or len(set(splits)) != len(splits) or any(split not in allowed_splits for split in splits):
+        raise ValueError("--splits deve contenere una o piu' voci distinte tra train, validation e test.")
 
     tf = require_tensorflow()
     tf.keras.mixed_precision.set_global_policy("float32")
-    print("1) Carico validation e test Build 7 Top-4: state l, raw hidden l/l-1 e q 256D...")
-    validation_data = load_split(args, "validation")
-    test_data = load_split(args, "test")
-    reference_metadata = validation_data["metadata"]
-    if reference_metadata != test_data["metadata"]:
-        raise ValueError("Metadata state validation e test incompatibili.")
-    if (validation_data["current_scale"] != test_data["current_scale"]
-            or validation_data["previous_scale"] != test_data["previous_scale"]):
-        raise ValueError("Scale int8 raw hidden validation e test incompatibili.")
+    print(f"1) Carico Build 7 Top-4 per: {', '.join(splits)}...")
+    data_by_split = {split: load_split(args, split) for split in splits}
+    reference_data = data_by_split[splits[0]]
+    reference_metadata = reference_data["metadata"]
+    for split, data in data_by_split.items():
+        if data["metadata"] != reference_metadata:
+            raise ValueError(f"Metadata state incompatibili per {split}.")
+        if (data["current_scale"] != reference_data["current_scale"]
+                or data["previous_scale"] != reference_data["previous_scale"]):
+            raise ValueError(f"Scale int8 raw hidden incompatibili per {split}.")
     if reference_metadata != {"feature_count": 4411, "nonzero_features_per_example": 44, "input_slots": 45}:
         raise ValueError("Il valutatore Top-4 richiede lo state corrente Build 7 con 4411 feature e 45 slot.")
     print(
-        f"   validation: state={validation_data['indices'].shape}; "
-        f"hidden={validation_data['current_hidden'].shape}/{validation_data['previous_hidden'].shape}; "
-        f"q={validation_data['transition'].shape}"
+        f"   {splits[0]}: state={reference_data['indices'].shape}; "
+        f"hidden={reference_data['current_hidden'].shape}/{reference_data['previous_hidden'].shape}; "
+        f"q={reference_data['transition'].shape}"
     )
     print("2) Ricostruisco il checkpoint Top-4 e carico solo i pesi, senza addestrare...")
     model = build_fixed_nnz_state_two_hidden_gated_residual_ffn(
         reference_metadata["feature_count"], reference_metadata["input_slots"], args.state_hidden_units,
         args.current_hidden_units, args.previous_hidden_units,
-        validation_data["current_scale"], validation_data["previous_scale"],
+        reference_data["current_scale"], reference_data["previous_scale"],
         args.fusion_hidden_units, args.dropout, args.learning_rate, args.l2_regularization, tf,
     )
     load_keras_weights(args.checkpoint, model)
 
-    print("3) Calcolo Recall@6, @10, @20, @50 e posizioni dei target su validation e test...")
-    validation = evaluate_split(model, validation_data, args.batch_size, tf)
-    test = evaluate_split(model, test_data, args.batch_size, tf)
-    for split, result in (("validation", validation), ("test", test)):
+    print("3) Calcolo Recall@6, @10, @20, @50 e posizioni dei target, batch per batch...")
+    results = {split: evaluate_split(model, data_by_split[split], args.batch_size, tf) for split in splits}
+    for split, result in results.items():
         print(
             f"   {split}: Recall@6={result['recall_at_6']:.6f}; "
             f"Recall@10={result['recall_at_10']:.6f}; Recall@20={result['recall_at_20']:.6f}; "
@@ -249,8 +269,8 @@ def main() -> None:
             "recall_at_k": "Frazione dei sei expert target presenti nei k score piu' alti.",
             "target_rank_distribution": "Posizione esatta di ogni expert target nella classifica decrescente di 256 score.",
         },
-        "validation": validation,
-        "test": test,
+        "splits_evaluated": splits,
+        **results,
     })
     print(f"Report: {args.output_report}")
 

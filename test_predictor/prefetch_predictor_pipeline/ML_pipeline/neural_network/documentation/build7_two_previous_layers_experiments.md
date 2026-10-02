@@ -7,9 +7,10 @@ prefetch degli expert del token successivo. Il modello selezionato al momento e'
 la FFN compatta con residuale gated delle probabilita' di transizione e con
 regolarizzazione L2 $= 3 \cdot 10^{-6}$.
 
-La selezione e' stata fatta soltanto su train e validation. Il test set non e'
-ancora stato usato per scegliere architettura, epoca o iperparametri e deve
-essere valutato una sola volta dopo la decisione finale.
+La selezione dell'architettura, dell'epoca e degli iperparametri e' stata fatta
+soltanto su train e validation. Dopo questa scelta definitiva, il checkpoint
+selezionato e' stato valutato una sola volta anche sul test set, senza alcun
+ulteriore addestramento o modifica dei pesi.
 
 Il miglior modello Build 7 e il miglior risultato **assoluto** corrente e'
 `top4_patience10_l2_3e6_bce_v1`, con validation Recall@6 $=0.539002$.
@@ -436,8 +437,8 @@ run, eseguiti con la stessa procedura, sono comunque coerenti.
 Con patience 10 il modello supera la stessa configurazione con patience 5 di
 $0.001907$ Recall@6. Il miglioramento e' modesto ma non solo teorico: il run
 ha continuato oltre il primo plateau e ha trovato un checkpoint migliore prima
-dello stop. Questa e' ora la configurazione selezionata per l'eventuale
-valutazione finale sul test.
+dello stop. Questa e' quindi la configurazione selezionata per la valutazione
+finale.
 
 La semplificazione selettiva ha quindi funzionato: rispetto al modello Build 7
 completo, rimuovere KV, token position e state $l-1$/$l-2$ riduce la capacita'
@@ -446,8 +447,98 @@ e' coerente con le ablation: i rami eliminati erano deboli, ridondanti o meno
 trasferibili, mentre i due raw hidden reinseriti colmano il sotto-adattamento
 osservato nel test soltanto state+$\mathbf q$.
 
-Il confronto sara' effettuato soltanto su validation; il test set resta
-sigillato fino alla scelta definitiva.
+### Valutazione finale Top-6, Top-10, Top-20, Top-50 e posizioni degli expert target
+
+Il checkpoint `top4_patience10_l2_3e6_bce_v1` e' stato valutato localmente in
+sola inferenza sui tre split, senza addestramento e senza modificare i pesi.
+Il report completo e riproducibile e'
+`build_dataset_7/ml/neural_network/top4_patience10_l2_3e6_bce_v1/reports/recall_at_6_10_20_50_rank_distribution_train_validation_test.json`.
+La valutazione streaming processa un batch alla volta, quindi include anche il
+train completo senza materializzare in RAM tutti gli score $N\times256$.
+
+| Split | Recall@6 | Recall@10 | Recall@20 | Recall@50 |
+|---|---:|---:|---:|---:|
+| Train | 0.605569 | 0.725152 | 0.835630 | 0.929502 |
+| Validation | 0.539006 | 0.655730 | 0.775345 | 0.891281 |
+| Test | 0.542485 | 0.659771 | 0.779376 | 0.894476 |
+
+Validation e test sono molto vicini: il test e' persino superiore di $0.003479$
+Recall@6. Questo conferma che il checkpoint scelto su validation trasferisce
+al test senza un degrado osservabile. Il divario train--validation a Recall@6
+e' $0.066563$ (train $0.605569$, validation $0.539006$): il modello e'
+moderatamente overfit, ma non in modo tale da produrre una discrepanza fra
+validation e test. Le metriche train registrate durante `fit` non vanno
+confuse con questa tabella: qui dropout e' disattivato e viene sempre valutato
+lo stesso checkpoint in inference-mode.
+
+Il confronto omogeneo con il checkpoint Build 6 precedentemente selezionato
+mostra un miglioramento a ogni soglia di recupero:
+
+| Split | Modello | Recall@6 | Recall@10 | Recall@20 | Recall@50 |
+|---|---|---:|---:|---:|---:|
+| Validation | Build 6 `candidate_09` | 0.536895 | 0.652267 | 0.770273 | 0.884137 |
+| Validation | Build 7 Top-4 | **0.539006** | **0.655730** | **0.775345** | **0.891281** |
+| Test | Build 6 `candidate_09` | 0.540792 | 0.657125 | 0.775077 | 0.887555 |
+| Test | Build 7 Top-4 | **0.542485** | **0.659771** | **0.779376** | **0.894476** |
+
+| Split | Delta Build 7 − Build 6 Recall@6 | Delta Recall@10 | Delta Recall@20 | Delta Recall@50 |
+|---|---:|---:|---:|---:|
+| Validation | **+0.002111** | **+0.003463** | **+0.005072** | **+0.007144** |
+| Test | **+0.001693** | **+0.002646** | **+0.004299** | **+0.006921** |
+
+I guadagni Build 7 rispetto a Build 6 sono $+0.002111$, $+0.003463$,
+$+0.005072$ e $+0.007144$ su validation per Recall@6/10/20/50; sul test sono
+$+0.001693$, $+0.002646$, $+0.004299$ e $+0.006921$. Il vantaggio cresce
+all'aumentare di $k$: il Top-4 non migliora solo i sei expert immediatamente
+prefetchabili, ma ordina meglio anche gli expert target appena oltre la soglia.
+
+### Confronto della capacita' del modello
+
+| Modello selezionato | Parametri trainable | Differenza rispetto a Build 6 |
+|---|---:|---:|
+| Build 6 `candidate_09` | 27.632.576 | riferimento |
+| Build 7 Top-4 `top4_patience10_l2_3e6_bce_v1` | **14.545.794** | **-13.086.782 (-47,36%)** |
+
+Il Top-4 Build 7 usa quindi solo il 52,64% dei parametri di Build 6, pur
+migliorando tutte le metriche Recall@k riportate sopra. La riduzione non dipende
+da un singolo strato: Build 7 elimina i rami KV e gli state $l-1/l-2$, mantiene
+proiezioni raw hidden piu' compatte e conserva il ramo $\mathbf q$ come
+residuale gated. Il risultato mostra che, per questo task, la selezione dei
+quattro gruppi informativi e' piu' efficace dell'aumento indiscriminato della
+capacita' del modello.
+
+La distribuzione esatta delle posizioni dei sei expert target e':
+
+| Posizione | Train | Validation | Test |
+|---:|---:|---:|---:|
+| 1 | 15.12% | 13.93% | 13.94% |
+| 2 | 13.17% | 11.65% | 11.72% |
+| 3 | 11.02% | 9.55% | 9.62% |
+| 4 | 8.91% | 7.71% | 7.82% |
+| 5 | 6.99% | 6.19% | 6.26% |
+| 6 | 5.36% | 4.88% | 4.90% |
+| 7 | 4.05% | 3.80% | 3.86% |
+| 8 | 3.19% | 3.07% | 3.11% |
+| 9 | 2.58% | 2.59% | 2.58% |
+| 10 | 2.14% | 2.22% | 2.19% |
+| Oltre Top-10 | 27.48% | 34.43% | 34.02% |
+
+Le fasce cumulative rendono piu' immediata la lettura operativa:
+
+| Fascia di posizione del target | Train | Validation | Test |
+|---|---:|---:|---:|
+| 1--6 | 60.56% | 53.90% | 54.25% |
+| 7--10 | 11.96% | 11.67% | 11.73% |
+| 11--20 | 11.05% | 11.96% | 11.96% |
+| 21--50 | 9.39% | 11.59% | 11.51% |
+| Oltre Top-50 | 7.05% | 10.87% | 10.55% |
+
+Su validation e test circa 11.7% degli expert target cade subito fuori dal
+Top-6, nelle posizioni 7--10: e' la quota piu' promettente per un eventuale
+reranking o per un budget di prefetch piu' ampio. Recall@20 raggiunge circa
+77.5--77.9%, mentre Recall@50 circa 89.1--89.4%; rimane quindi una quota di
+circa 10--11% oltre la posizione 50 che non verrebbe risolta ampliando
+indiscriminatamente il Top-k.
 
 ## Tuning Top-4 eseguito: successive halving A1-A3
 
