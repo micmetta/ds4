@@ -618,3 +618,33 @@ Il test MP16 e' stato interrotto dopo tre epoche, perche' il peggioramento dei t
 | 3 | 92 s | 168 s | 0,2851 / 0,2849 |
 
 Sulle prime tre epoche MP16 richiede 373 s contro 229 s in float32: circa 1,63 volte piu' lento. Il ramo state fixed-NNZ e' dominato da embedding gather, moltiplicazioni e riduzioni su tensori `(batch, 45, 512)`, operazioni per le quali i cast e la gestione mixed precision non compensano con Tensor Core come avviene per grandi matmul dense. Il trainer fixed-NNZ **float32** resta quindi il riferimento e non va usato `--mixed-precision` nelle run successive.
+
+## 20. Manutenzione dello spazio: hidden float16 intermedi rimossi
+
+Gli hidden `float16` materializzati sono un passaggio intermedio tra i
+riferimenti raw normalizzati e gli input `int8`. Una volta completata con
+successo la quantizzazione, training ed evaluation della FFN usano gli array
+`int8`, la rispettiva scala di dequantizzazione e le statistiche train-only;
+gli array `float16` non vengono piu' letti.
+
+Per recuperare spazio sul disco fisico del PC sono quindi state rimosse queste
+sole directory rigenerabili:
+
+```text
+build_dataset_5/ml/ablations/12_routing_layer_router_state_kv_current_materialized_raw_hidden_f16
+build_dataset_4/ml/ablations/07_routing_layer_materialized_raw_hidden_f16
+```
+
+Ognuna occupava circa 16 GiB, per un recupero complessivo di circa 32 GiB nel
+filesystem WSL. Restano invece conservati gli input quantizzati necessari:
+
+```text
+build_dataset_5/ml/ablations/13_routing_layer_router_state_kv_current_materialized_raw_hidden_int8
+```
+
+La directory Build 4 rimossa appartiene a una pipeline storica e non e'
+richiesta da Build 5 o Build 6. Entrambi gli intermedi float16 possono essere
+ricostruiti in modo deterministico rieseguendo la corrispondente fase di
+materializzazione hidden sui rispettivi riferimenti raw e statistiche per
+layer. Non vanno invece rimossi gli array int8 o le loro scale se si vuole
+addestrare, valutare o riprodurre i modelli correnti.
