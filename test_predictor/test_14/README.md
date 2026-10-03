@@ -4,7 +4,8 @@ TEST_14 conserva il meccanismo che ha prodotto `TEST_13/output_9`: stesso
 GGUF, stesso bridge Windows che legge gate/up/down direttamente nel buffer CUDA
 pinned, due slot futuri per layer, sei worker DS4 e tre coppie B/C in ordine
 alternato. L'unica sostituzione funzionale e' il predittore: Build 5 viene
-rimpiazzato dal migliore checkpoint Top-4 di Build 7.
+rimpiazzato dal migliore checkpoint Top-4 di Build 7. Il numero di expert
+prefetchati e' configurabile esplicitamente, da Top-6 a Top-10.
 
 ## Predictor usato
 
@@ -50,8 +51,10 @@ $env:DS4_TEST_14_WINDOWS_PORT='38114'
 py '\\wsl.localhost\Debian\home\michele\ds4\test_predictor\test_14\windows_native\test_14_windows_reader_service.py'
 ```
 
-Il servizio usa intenzionalmente lo stesso formato TCP di TEST_13, ma una porta
-diversa (38114) per permettere di tenere separati i due esperimenti.
+Il servizio usa la stessa lettura nativa di gate/up/down di TEST_13, ma una
+porta diversa (38114) e un piccolo header che comunica quanti expert (6--10)
+devono essere letti: questo evita che Windows e DS4 interpretino un gruppo
+Top-K con dimensioni diverse.
 
 ## 3. Avviare TEST_14 in WSL
 
@@ -69,6 +72,7 @@ DS4_TEST_14_WINDOWS_PORT=38114 \
 DS4_TEST_14_PREFETCH_SLOTS_PER_LAYER=2 \
 DS4_TEST_14_PREFETCH_STEP=1 \
 DS4_TEST_14_PREFETCH_NUM_WORKERS=6 \
+DS4_TEST_14_PREFETCH_TOP_K=6 \
 DS4_TEST_14_REPETITIONS=3 \
 python test_predictor/test_14/test_14_runner.py
 ```
@@ -77,9 +81,38 @@ L'output e' salvato in `test_predictor/test_14/output*`. La fase A e la fase B
 restano le baseline standard; soltanto C attiva `DS4_TEST_14_ENABLED=1`, il
 protocollo runtime Build 7 e il bridge Windows.
 
-Per un primo smoke test, sostituire temporaneamente `REPETITIONS=3` con `1` e
-`PREFETCH_NUM_WORKERS=6` con `1`; mantenere tuttavia `SLOTS_PER_LAYER=2`, che
+Per un primo smoke test, sostituire temporaneamente
+`DS4_TEST_14_REPETITIONS=3` con `DS4_TEST_14_REPETITIONS=1` e
+`DS4_TEST_14_PREFETCH_NUM_WORKERS=6` con
+`DS4_TEST_14_PREFETCH_NUM_WORKERS=1`; mantenere tuttavia
+`DS4_TEST_14_PREFETCH_SLOTS_PER_LAYER=2`, che
 e' la configurazione di riferimento di `output_9`.
+
+### Scegliere il numero di expert da prefetchare
+
+`DS4_TEST_14_PREFETCH_TOP_K` controlla quanti expert con score piu' alto il
+checkpoint restituisce e il worker legge proattivamente per ogni richiesta.
+Il valore predefinito e' `6`, per cui la configurazione storica e' invariata;
+sono ammessi i valori interi da `6` a `10`.
+Riavviare il reader Windows prima di una run dopo questo aggiornamento: il
+protocollo gli comunica ora anche il numero di expert della richiesta.
+
+Per isolare l'effetto della Recall@10 mantenendo la configurazione record di
+`output_2`, impostare semplicemente:
+
+```bash
+DS4_TEST_14_PREFETCH_NUM_WORKERS=6 \
+DS4_TEST_14_PREFETCH_TOP_K=10 \
+DS4_TEST_14_REPETITIONS=3 \
+python test_predictor/test_14/test_14_runner.py
+```
+
+Top-10 aumenta il numero di candidati oltre agli expert effettivamente
+richiesti dal router: puo' aumentare il riuso dalla RAM pinned grazie alla
+Recall@10, ma aumenta anche il volume I/O e pinned-RAM per richiesta da 6 a 10
+expert. Il report conserva sia `online_recall_at_6` (solo i primi sei) sia
+`online_recall_at_prefetch_top_k`, cioe' la copertura effettiva del Top-K
+usato dal prefetch.
 
 ## Risultati verificati — `output_2` (40 layer, sei worker, Build 7)
 
@@ -241,3 +274,155 @@ Il report riproducibile della run e'
 [`output_2/benchmark_summary.json`](output_2/benchmark_summary.json). Il record
 precedente e' documentato in
 [`TEST_13/output_9/benchmark_summary.json`](../test_13/output_9/benchmark_summary.json).
+
+## Esperimento Top-10 — `output_4` (Build 7, sei worker)
+
+[`output_4`](output_4) ripete esattamente la configurazione di `output_2`:
+stesso checkpoint Build 7, stessa frase, finestra fisica 3--42, due slot per
+layer, sei worker e tre coppie B/C alternate. L'unica variazione e'
+`DS4_TEST_14_PREFETCH_TOP_K=10` al posto del valore storico `6`.
+
+| Ripetizione | B baseline | C learned prefetch Top-10 | Speedup di C |
+|---:|---:|---:|---:|
+| 1 | 104,408 s | 87,330 s | +16,36% |
+| 2 | 106,823 s | 89,003 s | +16,68% |
+| 3 | 104,672 s | 82,909 s | +20,79% |
+| **Media** | **105,301 s** | **86,414 s** | **+17,94%** |
+
+Tutte le coppie restano positive, ma Top-10 non supera il record Top-6:
+risparmia in media **18,887 s** per generazione contro i **30,582 s** di
+`output_2`. Il miglior risultato verificato di TEST_14 resta dunque
+**Top-6 con +29,65%**.
+
+| Indicatore medio di fase C | `output_2` — Top-6 | `output_4` — Top-10 | Effetto Top-10 |
+|---|---:|---:|---|
+| Recall@6 online | 0,516624 | 0,516624 | Invariata: i primi sei rank sono gli stessi. |
+| Recall@K online effettiva | 0,516624 | **0,624363** | +0,107739 di copertura grazie ai rank 7--10. |
+| Expert prefetched per richiesta | 6 | 10 | +66,7% di dati speculativi. |
+| Inferenza del predictor | ~13,49 ms | ~13,33 ms | Non e' il collo di bottiglia. |
+| Gruppi con riuso parziale | ~2.242 | ~1.760 | Meno gruppi arrivano utilizzabili al momento della domanda. |
+| Expert riusati dalla RAM pinned | ~7.170 | ~6.563 | Diminuiscono nonostante la Recall@10 maggiore. |
+| Expert letti da SSD ai layer predetti | ~7.950 | ~8.557 | Crescono: molti expert aggiuntivi non servono al forward reale. |
+| Attesa media del worker prima della lettura | ~48,38 ms | ~374,99 ms | La coda I/O e' sensibilmente piu' congestionata. |
+| Lettura / trasferimento medio | ~85,11 ms | ~201,33 ms | Ogni gruppo da dieci expert costa di piu'. |
+| RAM pinned stimata osservata | ~3,15 GB | ~5,19 GB | Slot piu' grandi e occupati piu' a lungo. |
+| C learned-prefetch medio | **72,588 s** | 86,414 s | Top-10 e' piu' lento di 13,826 s. |
+| Speedup medio | **+29,65%** | +17,94% | -11,71 punti percentuali. |
+
+La Recall@10 offline e online conferma che il modello riconosce molti target
+aggiuntivi, ma il router reale esegue sempre soltanto sei expert. I quattro
+expert extra vengono quindi letti in modo speculativo: alcuni sono utili, ma
+molti non vengono richiesti e sottraggono banda SSD, RAM pinned e tempo ai sei
+expert realmente necessari. Il risultato e' una coda dei worker molto piu'
+lunga, meno riuso utile e uno speedup end-to-end inferiore. Per questa
+architettura e questo bridge I/O, Top-6 e' il miglior compromesso tra qualita'
+predittiva e costo di prefetch.
+
+`output_3` e' stato interrotto dal riavvio del PC e non viene usato nel
+confronto.
+
+### Top-10 con sette worker — `output_5`
+
+Per verificare se la coda I/O di Top-10 potesse beneficiare di maggiore
+concorrenza, `output_5` mantiene Top-10, due slot e tutte le altre condizioni
+di `output_4`, aumentando soltanto i worker da sei a sette.
+
+| Ripetizione | B baseline | C learned prefetch Top-10 | Speedup di C |
+|---:|---:|---:|---:|
+| 1 | 100,276 s | 82,799 s | +17,43% |
+| 2 | 104,866 s | 85,325 s | +18,63% |
+| 3 | 97,401 s | 81,253 s | +16,58% |
+| **Media** | **100,848 s** | **83,126 s** | **+17,55%** |
+
+Il settimo worker migliora alcuni segnali interni rispetto a Top-10/sei
+worker: i gruppi con riuso parziale salgono da ~1.760 a ~1.862, gli expert
+riusati dalla RAM pinned da ~6.563 a ~6.944 e le letture SSD ai layer predetti
+scendono da ~8.557 a ~8.176. Anche l'attesa media prima della lettura scende
+da ~374,99 ms a ~326,58 ms. Il tempo C assoluto migliora di 3,288 s, ma la
+baseline di questa run e' piu' veloce e lo speedup appaiato resta
+leggermente inferiore a `output_4` (+17,55% contro +17,94%). Sette worker non
+risolvono quindi il costo strutturale del gruppo Top-10.
+
+### Replica di controllo Top-6/sei worker — `output_6`
+
+`output_6` ripete la configurazione record Top-6/sei worker per verificare
+che il vantaggio rispetto a Top-10 non dipenda da una singola esecuzione.
+
+| Ripetizione | B baseline | C learned prefetch Top-6 | Speedup di C |
+|---:|---:|---:|---:|
+| 1 | 95,259 s | 73,911 s | +22,41% |
+| 2 | 105,838 s | 73,423 s | +30,63% |
+| 3 | 97,292 s | 71,920 s | +26,08% |
+| **Media** | **99,463 s** | **73,084 s** | **+26,37%** |
+
+La replica e' meno favorevole di `output_2` per effetto della variabilita'
+I/O (attesa worker ~141,25 ms e ~6.811 expert riusati dalla RAM pinned, contro
+~48,38 ms e ~7.170 in `output_2`), ma resta molto sopra entrambe le prove
+Top-10. Anche nel caso Top-6 meno favorevole, il margine e' circa 8,4 punti
+percentuali rispetto al migliore Top-10 (`output_4`).
+
+### Riepilogo delle run completate
+
+| Run | Top-K | Worker | B medio | C medio | Tempo risparmiato | Speedup medio | Esito |
+|---|---:|---:|---:|---:|---:|---:|---|
+| `output_2` | 6 | 6 | 103,170 s | **72,588 s** | **30,582 s** | **+29,65%** | Record verificato. |
+| `output_4` | 10 | 6 | 105,301 s | 86,414 s | 18,887 s | +17,94% | Top-10: maggiore Recall, I/O congestionato. |
+| `output_5` | 10 | 7 | 100,848 s | 83,126 s | 17,722 s | +17,55% | Il settimo worker migliora C assoluto, non lo speedup. |
+| `output_6` | 6 | 6 | 99,463 s | 73,084 s | 26,379 s | +26,37% | Replica Top-6: conferma robusta del vantaggio. |
+
+Le run completate mostrano quindi due conclusioni complementari: Top-10
+effettivamente aumenta la copertura predittiva, ma non riesce a materializzare
+abbastanza rapidamente i quattro expert aggiuntivi; Top-6 mantiene invece il
+rapporto migliore tra copertura utile e capacità della pipeline SSD/RAM
+pinned. Il record da usare come riferimento rimane `output_2`.
+
+I report riproducibili sono
+[`output_2`](output_2/benchmark_summary.json),
+[`output_4`](output_4/benchmark_summary.json),
+[`output_5`](output_5/benchmark_summary.json) e
+[`output_6`](output_6/benchmark_summary.json).
+
+## Confronto offline dei migliori modelli Build 5 e Build 7
+
+Queste metriche sono calcolate offline sui rispettivi dataset Build 5 e Build
+7, con i checkpoint migliori dei due esperimenti. Non sono le Recall@6 online
+della frase di benchmark riportate sopra: qui ogni target e' valutato rispetto
+alla classifica completa dei 256 expert.
+
+| Modello | Checkpoint |
+|---|---|
+| Build 5, usato da TEST_13 | `build_dataset_5/ml/neural_network/retrain_best_hyperband_trial_0024_EP1000_PAT5/models/best.weights.h5` |
+| Build 7, usato da TEST_14 | `build_dataset_7/ml/neural_network/top4_patience10_l2_3e6_bce_v1/models/ffn.keras` |
+
+### Train
+
+| Metrica | Build 5 | Build 7 | Delta Build 7 - Build 5 |
+|---|---:|---:|---:|
+| Recall@6 | 0,569533 | **0,605569** | **+0,036036** |
+| Recall@10 | 0,683169 | **0,725152** | **+0,041983** |
+| Recall@20 | 0,794818 | **0,835630** | **+0,040812** |
+| Recall@50 | 0,900331 | **0,929502** | **+0,029171** |
+
+### Validation
+
+| Metrica | Build 5 | Build 7 | Delta Build 7 - Build 5 |
+|---|---:|---:|---:|
+| Recall@6 | 0,502362 | **0,539006** | **+0,036644** |
+| Recall@10 | 0,608681 | **0,655730** | **+0,047049** |
+| Recall@20 | 0,724171 | **0,775345** | **+0,051174** |
+| Recall@50 | 0,846626 | **0,891281** | **+0,044655** |
+
+### Test
+
+| Metrica | Build 5 | Build 7 | Delta Build 7 - Build 5 |
+|---|---:|---:|---:|
+| Recall@6 | 0,506059 | **0,542485** | **+0,036426** |
+| Recall@10 | 0,613748 | **0,659771** | **+0,046023** |
+| Recall@20 | 0,728695 | **0,779376** | **+0,050681** |
+| Recall@50 | 0,850735 | **0,894476** | **+0,043741** |
+
+Build 7 supera Build 5 a ogni soglia e su ogni split. Il vantaggio resta
+presente anche oltre il Top-6: non migliora soltanto la posizione dei target
+vicini alla soglia di prefetch, ma rende l'intera classifica degli expert piu'
+corretta. Questo e' coerente con il maggiore riuso pinned e con il record
+end-to-end osservati in TEST_14.

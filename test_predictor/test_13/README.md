@@ -21,6 +21,74 @@ telemetria. Dopo questa verifica potremo riusare connessioni persistenti per
 ridurre ulteriormente la latenza, senza cambiare i buffer pinned né il formato
 dei dati.
 
+## Modello di prefetch usato in tutti i run
+
+Tutti i run conclusi di TEST_13 (`output`, `output_2` fino a `output_10`)
+usano lo stesso predittore offline di **Build 5**; non usano il successivo
+modello migliore di Build 6. Il checkpoint esatto è:
+
+```text
+build_dataset_5/ml/neural_network/
+retrain_best_hyperband_trial_0024_EP1000_PAT5/models/best.weights.h5
+```
+
+L'architettura registrata nei rispettivi `benchmark_summary.json` è:
+
+```text
+state512 + hidden512_relu + token64_relu + kv_direct512 + fusion512_relu
+```
+
+### Valutazione offline estesa
+
+Il checkpoint è stato rivalutato in sola inferenza sui tre split Build 5,
+senza modificare i pesi. Il report riproducibile è
+`build_dataset_5/ml/neural_network/retrain_best_hyperband_trial_0024_EP1000_PAT5/reports/recall_at_6_10_20_50_rank_distribution_train_validation_test.json`.
+
+| Split | Recall@6 | Recall@10 | Recall@20 | Recall@50 |
+|---|---:|---:|---:|---:|
+| Train | 0,569533 | 0,683169 | 0,794818 | 0,900331 |
+| Validation | 0,502362 | 0,608681 | 0,724171 | 0,846626 |
+| Test | 0,506059 | 0,613748 | 0,728695 | 0,850735 |
+
+La distribuzione delle posizioni dei sei expert target è calcolata sullo
+stesso report, per ogni split.
+
+| Posizione | Train | Validation | Test |
+|---:|---:|---:|---:|
+| 1 | 14,55% | 13,36% | 13,41% |
+| 2 | 12,41% | 10,93% | 11,04% |
+| 3 | 10,26% | 8,86% | 8,92% |
+| 4 | 8,25% | 7,10% | 7,13% |
+| 5 | 6,49% | 5,61% | 5,67% |
+| 6 | 4,99% | 4,38% | 4,44% |
+| 7 | 3,80% | 3,45% | 3,48% |
+| 8 | 3,01% | 2,82% | 2,87% |
+| 9 | 2,47% | 2,35% | 2,39% |
+| 10 | 2,08% | 2,01% | 2,03% |
+| Oltre Top-10 | 31,68% | 39,13% | 38,63% |
+
+Le Recall cumulative identificano anche dove si concentra il resto dei target:
+
+| Fascia di posizione del target | Train | Validation | Test |
+|---|---:|---:|---:|
+| 1--6 | 56,95% | 50,24% | 50,61% |
+| 7--10 | 11,36% | 10,63% | 10,77% |
+| 11--20 | 11,16% | 11,55% | 11,49% |
+| 21--50 | 10,55% | 12,25% | 12,20% |
+| Oltre Top-50 | 9,97% | 15,34% | 14,93% |
+
+Validation e test sono coerenti: sul test la Recall@6 è 0,506059 e la
+Recall@10 0,613748. Quindi circa il 10,77% degli expert target è già poco
+fuori dalla soglia attuale Top-6, nelle posizioni 7--10; il 14,93% resta oltre
+il Top-50. Il divario train/test (0,569533 contro 0,506059 a Recall@6) indica
+invece una generalizzazione sensibilmente meno forte rispetto ai modelli migliori
+di Build 6 e Build 7.
+
+Questi valori descrivono la qualità predittiva offline del checkpoint sul
+dataset. Le `online_recall_at_6` riportate nei singoli `output_*` sono invece misurate
+sulla trace realmente eseguita dal benchmark e possono variare con il carico,
+il numero di layer e il relativo scheduling dei worker.
+
 ## Runner A/B/C
 
 Il runner riusa l'orchestratore verificato di TEST_9, ma salva l'output in
