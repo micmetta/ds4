@@ -565,6 +565,27 @@ se i suoi buffer pinned possono essere usati dal decode:
 | `FAILED` | Il worker ha terminato l'I/O con errore e i dati dello slot non sono affidabili. | Non riusa nulla; applica il fallback. Quando quello slot diventa vecchio viene liberato a `EMPTY`. |
 | `TOO_LATE` | Il target `(token, layer)` è già stato superato mentre un worker era ancora in `READING`. Il worker conserva la proprietà dei buffer fino alla conclusione, per non scrivere in uno slot riutilizzato. | Non attende né riusa il risultato; usa il fallback. Alla fine della lettura il worker rende lo slot `EMPTY`. |
 
+### Transizioni della banca: chi agisce e quando
+
+La tabella seguente riprende la struttura descritta in `TEST_9/README.md`, ma
+è aggiornata al percorso record Build 7: il **THREAD DI DECODE DS4** inoltra il
+lavoro predittivo, mentre il **thread asincrono di prefetch DS4** riceve la
+risposta del servizio modello prefetch Build 7 e accoda lo slot. Include anche
+i rami di errore e di riciclo stale presenti nel codice attuale.
+
+| Transizione implementata | Chi la esegue | Quando |
+|---|---|---|
+| `EMPTY → QUEUED` | thread asincrono di prefetch DS4 | Dopo la risposta del servizio modello prefetch Build 7, inserisce nello slot libero `(token target, layer, Top-6)` della previsione learned. |
+| `QUEUED → READING` | worker di I/O | Trova una richiesta della propria partizione `layer % 6`, la prende in carico e inizia la lettura tramite il bridge Windows verso i buffer di RAM pinned dello slot. |
+| `QUEUED → EMPTY` | THREAD DI DECODE DS4 oppure worker di I/O | La richiesta è diventata stale prima che il worker iniziasse l'I/O. Il decode la libera quando supera il token target; il worker può fare lo stesso se rileva che il token è già passato durante la propria scansione. I buffer non sono ancora in scrittura, quindi il riciclo è sicuro. |
+| `READING → TOO_LATE` | THREAD DI DECODE DS4 | Raggiunge quel `(token target, layer)` prima che il worker abbia terminato la lettura. Non può liberare subito lo slot, perché il worker sta ancora scrivendo nei suoi buffer di RAM pinned. |
+| `TOO_LATE → EMPTY` | worker di I/O | Conclude l'I/O ormai tardivo, scarta il risultato e libera logicamente lo slot senza pubblicarlo. |
+| `READING → READY` | worker di I/O | Completa con successo una lettura ancora utile e pubblica `gate`, `up` e `down` nei buffer di RAM pinned dello slot. |
+| `READING → FAILED` | worker di I/O | La lettura o il bridge Windows segnalano un errore: il worker registra l'esito e non pubblica dati riutilizzabili. |
+| `READY → CONSUMING` | THREAD DI DECODE DS4 | Al forward reale trova uno slot del proprio `(token, layer)` con almeno un expert coincidente; riserva lo slot prima dell'upload RAM pinned → VRAM, completo o parziale. |
+| `CONSUMING → EMPTY` | THREAD DI DECODE DS4 | Dopo aver sincronizzato la copia GPU e completato l'eventuale fallback degli expert mancanti, libera lo slot per una nuova richiesta. |
+| `READY → EMPTY` oppure `FAILED → EMPTY` | THREAD DI DECODE DS4 | Lo slot è diventato stale senza essere stato consumato, oppure ha fallito e il token target è ormai passato; il decode lo scarta e lo rende riutilizzabile. |
+
 Il decode non attende mai la lettura speculativa. Uno slot `READY` con hit
 parziale è comunque utile e fornisce gli expert coincidenti; uno slot assente,
    `QUEUED`, `READING`, `FAILED` o `TOO_LATE` non blocca il forward e lascia
@@ -595,12 +616,21 @@ buffer pinned dello slot i tre tensori dell'expert predetto (`gate`, `up` e
    Il decode ha anche un secondo compito, distinto dal routing reale: quando
    per il layer corrente sono disponibili gli input richiesti dal predictor
    (state, hidden corrente, hidden precedente e probabilità di transizione),
-   costruisce una richiesta di prefetch e la consegna al **thread asincrono di
-   prefetch DS4**. Quest'ultimo la invia poi al servizio modello prefetch Build
-   7 e gestisce la risposta Top-K. Il decode non aspetta né l'inferenza né la
-   lettura: continua immediatamente il forward. Questo è il passaggio che apre
-   il punto 1, dove la risposta del predictor diventa uno slot `QUEUED` per un
-   worker di I/O.
+   costruisce un job di prefetch e lo inserisce nella coda del **thread
+   asincrono di prefetch DS4**. Non attende né l'inferenza né la lettura: dopo
+   avere segnalato il job, continua immediatamente il forward.
+
+   Il thread asincrono preleva il job dalla propria coda, lo invia via socket al
+   **servizio modello prefetch Build 7** e attende la risposta Top-6 fuori dal
+   percorso critico del decode. In TEST_14 questo servizio è un processo Python
+   avviato automaticamente dal runner sul lato Linux/WSL: mantiene caricato il
+   checkpoint Build 7 e risponde alle richieste di inferenza, ma non legge i
+   pesi degli expert dal GGUF. Solo dopo avere ricevuto la risposta il thread
+   asincrono acquisisce
+   il mutex della banca, cerca uno slot `EMPTY` compatibile, registra token
+   target, layer, Top-6 e metadati necessari alla lettura GGUF, quindi imposta
+   lo slot a `QUEUED` e notifica i worker. Questo è il passaggio che apre il
+   punto 1, dove la previsione diventa lavoro concreto per un worker di I/O.
 
    **Esempio, il punto di vista del decode.**
 
@@ -624,17 +654,19 @@ buffer pinned dello slot i tre tensori dell'expert predetto (`gate`, `up` e
    |      v
    |  dispone di state, hidden(12), hidden(11) e q del token 50
    |
-   |  3. Avvia il prefetch per il token futuro 51, stesso layer 12
+   |  3. Prepara il prefetch per il token futuro 51, stesso layer 12
    |      |
    |      v
-   |  richiesta (target token 51, layer 12) --> thread asincrono di prefetch DS4
-   |                                                   |
-   |                                                   v
-   |                                      servizio modello prefetch Build 7
-   |                                                   |
-   |                                                   v
-   |                                      risposta Top-6 --> vedi punto 1:
-   |                                      accodamento dello slot `QUEUED`
+   |  inserisce il job nella coda del thread asincrono di prefetch DS4
+   |      |
+   |      +--> il decode non attende e prosegue
+   |
+   |  THREAD ASINCRONO DI PREFETCH DS4
+   |      |
+   |      +--> preleva il job dalla coda
+   |      +--> richiesta socket --> servizio modello prefetch Build 7
+   |      +--> riceve risposta Top-6
+   |      +--> mutex della banca --> accoda lo slot `QUEUED` (vedi punto 1)
    |
    +--> il decode continua subito con il layer successivo del token 50
    ```
@@ -659,14 +691,17 @@ buffer pinned dello slot i tre tensori dell'expert predetto (`gate`, `up` e
    THREAD DI DECODE DS4 — token corrente 50
           |
           v
-   invia una richiesta al thread asincrono di prefetch DS4
+   inserisce un job di prefetch nella coda del thread asincrono di prefetch DS4
           |
-          v
-   servizio modello prefetch Build 7 --> Top-6 per token futuro 51, layer fisico 12
+          +--> il decode prosegue senza attesa
+   
+   THREAD ASINCRONO DI PREFETCH DS4
           |
-          v
-   thread asincrono di prefetch DS4 --> copia token, layer, Top-6 e offset GGUF
-                                        nello slot libero della banca
+          +--> preleva il job dalla coda
+          +--> invia una richiesta socket al servizio modello prefetch Build 7
+          +--> riceve Top-6 per token futuro 51, layer fisico 12
+          +--> acquisisce il mutex della banca
+          +--> registra token, layer, Top-6 e metadati GGUF nello slot libero
           |
           v
    banca[12][distanza libera] = QUEUED
@@ -760,7 +795,10 @@ buffer pinned dello slot i tre tensori dell'expert predetto (`gate`, `up` e
 
    Il **bridge Windows** è il processo Python nativo sul lato Windows, distinto
    sia dal **servizio modello prefetch Build 7** sia dai worker di I/O DS4. Il
-   servizio Build 7 fornisce soltanto gli identificativi degli expert predetti.
+   servizio Build 7, avviato automaticamente dal runner in Linux/WSL, fornisce
+   soltanto gli identificativi degli expert predetti. Il bridge Windows, invece,
+   è il processo da avviare separatamente in PowerShell: legge i loro pesi dal
+   GGUF sull'SSD.
    Il worker, dopo avere riservato lo slot, si assicura che i suoi buffer di
    **RAM pinned** siano disponibili (sono allocati lazy alla prima lettura e poi
    riutilizzati dallo stesso slot), apre/usa la connessione socket e invia al
@@ -871,6 +909,51 @@ buffer pinned dello slot i tre tensori dell'expert predetto (`gate`, `up` e
                  |
                  +--> fallback on-demand per tutti gli expert necessari
    ```
+
+   Se trova uno slot `READY` utile, è il **THREAD DI DECODE DS4** a riportarlo
+   disponibile per il riuso. Prima lo marca `CONSUMING`, così nessun worker può
+   sovrascriverne i buffer mentre gli expert coincidenti vengono copiati dalla
+   RAM pinned alla VRAM; completa poi gli expert mancanti con il fallback
+   on-demand. Soltanto dopo il completamento della copia GPU lo riporta a
+   `EMPTY` e chiama `pthread_cond_broadcast(...)`, rendendolo disponibile per
+   una nuova richiesta e risvegliando i worker eventualmente in attesa:
+
+   ```text
+   READY
+      |
+      v
+   THREAD DI DECODE DS4 --> CONSUMING
+      |                       |
+      |                       +--> expert coincidenti: RAM pinned --> VRAM
+      |                       +--> expert mancanti: fallback on-demand
+      |                       +--> attende il completamento della copia GPU
+      v
+   EMPTY --> slot riutilizzabile per una nuova richiesta
+   ```
+
+   Non viene quindi liberato immediatamente dopo l'avvio di `cudaMemcpyAsync`:
+   il codice sincronizza lo stream prima di permettere il riuso dei buffer di
+   RAM pinned, evitando che una nuova lettura li sovrascriva mentre la GPU li
+   sta ancora leggendo. L'eccezione è uno slot `READING` che il decode ha già
+   marcato `TOO_LATE`: non viene consumato dal decode e sarà il worker, al
+   termine della sua lettura, a riportarlo in sicurezza a `EMPTY`.
+
+   Il broadcast non sceglie un worker specifico: risveglia tutti quelli in
+   attesa sulla condition variable della banca. Ciascuno riacquisisce poi il
+   mutex uno alla volta e cerca lavoro solo nella propria partizione
+   `layer % 6`; se non trova uno slot `QUEUED`, torna ad attendere. In questo
+   caso `EMPTY` non crea di per sé una nuova lettura: il broadcast attuale è
+   una notifica generica del cambiamento di stato, non l'assegnazione di un
+   lavoro preciso.
+
+   Con il **miglioramento architetturale 2** — una condition variable per shard
+   `layer % N` — la notifica mirata sarebbe soprattutto quella prodotta quando
+   il thread asincrono di prefetch DS4 accoda uno slot `QUEUED`: segnalerebbe
+   soltanto la condition dello shard del layer e risveglierebbe quindi il worker
+   che ne è responsabile. Quando il decode libera uno slot a `EMPTY`, invece,
+   non sarebbe normalmente necessario risvegliare alcun worker, salvo che una
+   futura progettazione introduca produttori in attesa di capacità in quello
+   shard. Questo evita risvegli inutili senza cambiare la sicurezza degli slot.
 
 In forma compatta, il percorso normale è:
 
@@ -1068,3 +1151,127 @@ il worker competente si risveglierebbe senza coinvolgere gli altri. Questa
 evoluzione andrebbe progettata insieme ai lock per shard e verificata con
 metriche di latenza tra `QUEUED`, `READING` e `READY`, per confermare che il
 ritardo di risveglio limita realmente lo speedup.
+
+### 3. Riuso degli expert già presenti nella RAM pinned tra richieste future
+
+#### Problema: gli slot sono deduplicati per richiesta, non per expert
+
+La banca attuale tratta ogni slot come un gruppo indivisibile associato a
+`(token target, layer, Top-K)`. Quando il **thread asincrono di prefetch DS4**
+riceve il Top-6 dal servizio modello prefetch Build 7, verifica già se nei due
+slot del medesimo layer esiste una richiesta per **lo stesso token target**:
+in quel caso non accoda un duplicato. Non confronta però gli ID degli expert
+con i gruppi `READY` riferiti a token futuri diversi. Di conseguenza può
+riportare dall'SSD nella RAM pinned un expert che è ancora disponibile nei
+buffer di un altro slot del medesimo layer.
+
+Esempio: il layer 12 ha due slot futuri, entrambi ancora validi.
+
+```text
+slot A: token target 51, layer 12, READY
+        Top-6 = [4, 9, 23, 41, 70, 88]
+
+arriva la previsione per:
+slot B: token target 52, layer 12
+        Top-6 = [9, 23, 41, 56, 91, 101]
+
+oggi
+----
+thread asincrono di prefetch DS4 --> accoda B come QUEUED
+worker di I/O --> bridge Windows legge tutti e 6 gli expert di B dall'SSD
+                 [9, 23, 41, 56, 91, 101]
+
+duplicazione evitabile
+----------------------
+[9, 23, 41] sono già nella RAM pinned dello slot A
+solo [56, 91, 101] richiederebbero una nuova lettura dal GGUF
+```
+
+Il controllo non può essere svolto dal **THREAD DI DECODE DS4** prima di
+accodare il job: in quel momento conosce le feature del token/layer futuro, ma
+non conosce ancora il Top-6. Il punto corretto per confrontare gli expert è
+quindi dopo la risposta del servizio Build 7 e prima di affidare la richiesta
+al worker di I/O.
+
+Non basta tuttavia considerare lo slot A una cache libera. Lo slot A può essere
+consumato dal decode per il token 51 e tornare `EMPTY` mentre si sta preparando
+lo slot B. La soluzione deve perciò proteggere la vita dei buffer e non deve
+mai ritardare il forward reale.
+
+#### Soluzione A: composizione del nuovo slot da expert riusati e mancanti
+
+Dopo avere ottenuto il Top-6 di B, il thread asincrono cercherebbe, sotto il
+mutex della banca, uno slot `READY` dello stesso layer con expert in comune.
+Creerebbe comunque lo slot B separato, ma annoterebbe quali posizioni possono
+essere copiate da A e quali devono essere lette. Il worker riserverebbe B,
+copierebbe nella RAM pinned di B i blocchi `gate/up/down` dei tre expert
+coincidenti da A e chiederebbe al bridge Windows soltanto i tre expert mancanti.
+Quando B è completo, diventerebbe `READY` come oggi.
+
+```text
+slot A READY: [4, 9, 23, 41, 70, 88]
+                 |   |   |
+                 |   |   +--> expert 41: copia RAM pinned A --> RAM pinned B
+                 |   +------> expert 23: copia RAM pinned A --> RAM pinned B
+                 +----------> expert 9:  copia RAM pinned A --> RAM pinned B
+
+slot B in preparazione: [9, 23, 41, 56, 91, 101]
+                                      |   |   |
+                                      +---+---+--> bridge Windows legge dal GGUF
+                                                     e il worker riceve in B
+```
+
+**Perché può essere utile.** Riduce direttamente i byte richiesti al bridge,
+all'SSD e alla rete locale senza cambiare il contratto finale del decode: al
+momento del forward esso vede ancora un normale slot B `READY` e può riusarlo
+con la logica attuale.
+
+**Costo e limiti.** Occorre estendere il protocollo bridge per leggere un
+sottoinsieme di expert e mantenere le corrette posizioni nei buffer di B. Lo
+slot A deve inoltre restare protetto fino al termine della copia host-to-host:
+non può essere liberato o sovrascritto dal decode nel frattempo. La soluzione
+duplica comunque i byte riusati nei buffer di B e consuma due slot durante la
+composizione. È dunque l'approccio meno invasivo, ma il beneficio dipende da
+quanto spesso l'overlap è alto e A è ancora `READY` al momento giusto.
+
+#### Soluzione B: cache pinned condivisa per `(layer, expert)`
+
+In alternativa, la banca può evolvere da cache di *gruppi per token* a cache
+di singoli expert. Ogni ingresso sarebbe indicizzato da `(layer, expert_id)` e
+conterrebbe i buffer `gate/up/down` in RAM pinned. Gli slot futuri
+conserverebbero soltanto i riferimenti ai sei ingressi necessari; B potrebbe
+quindi riferirsi direttamente agli ingressi 9, 23 e 41 già residenti e
+richiedere solo 56, 91 e 101.
+
+```text
+cache pinned del layer 12
+    expert 9   --> buffer gate/up/down condivisi
+    expert 23  --> buffer gate/up/down condivisi
+    expert 41  --> buffer gate/up/down condivisi
+
+slot A (token 51) --> riferimenti a [4, 9, 23, 41, 70, 88]
+slot B (token 52) --> riferimenti a [9, 23, 41, 56, 91, 101]
+                                  ^   ^   ^
+                                  stessi buffer, nessuna seconda lettura
+```
+
+**Perché può essere utile.** Evita sia la seconda lettura SSD sia la copia
+RAM pinned → RAM pinned, e può riusare un expert tra più token futuri dello
+stesso layer. È la soluzione più efficiente se l'overlap temporale delle
+predizioni è frequente.
+
+**Costo e limiti.** Cambia in profondità la proprietà dei buffer: servono
+stati per-expert, riferimenti o contatori di utilizzo, un criterio di
+eviction, protezione contro la liberazione durante un upload verso VRAM e una
+gestione rigorosa degli errori e dei dati `TOO_LATE`. Aumenta quindi la
+complessità di concorrenza e la superficie per bug; non è una modifica da
+introdurre senza misure preliminari.
+
+#### Misura necessaria prima di scegliere
+
+Prima di implementare una delle due opzioni conviene registrare, per ogni
+layer, l'intersezione tra i Top-6 di richieste future consecutive, lo stato
+degli altri slot quando arriva la nuova previsione e i byte effettivamente
+risparmiabili. Solo se una quota rilevante dell'overlap è ancora `READY` in
+tempo utile il costo di questa ottimizzazione può trasformarsi in uno speedup
+end-to-end misurabile.
