@@ -1998,9 +1998,11 @@ static bool ds4_test7_connect(void) {
 #endif
 }
 
+enum { DS4_TEST14_PREFETCH_MAX_EXPERTS = 10 };
+
 static void ds4_test7_trace_prediction(uint32_t source_pos, uint32_t layer,
-                                        const int32_t *experts, double inference_ms,
-                                        const int32_t *actual) {
+                                        const int32_t *experts, uint32_t expert_count,
+                                        double inference_ms, const int32_t *actual) {
     const char *path = getenv("DS4_TEST_7_TRACE_PATH");
     if (!path || !path[0] || !experts) return;
     pthread_mutex_lock(&g_test7_trace_mutex);
@@ -2012,23 +2014,35 @@ static void ds4_test7_trace_prediction(uint32_t source_pos, uint32_t layer,
         }
         setvbuf(g_test7_trace_fp, NULL, _IOLBF, 0);
     }
+    if (expert_count < DS4_N_EXPERT_USED || expert_count > DS4_TEST14_PREFETCH_MAX_EXPERTS) {
+        pthread_mutex_unlock(&g_test7_trace_mutex);
+        return;
+    }
     fprintf(g_test7_trace_fp,
             "{\"source_token_index\":%u,\"target_token_index\":%u,\"layer\":%u,"
-            "\"predicted_experts\":[%d,%d,%d,%d,%d,%d],\"inference_ms\":%.3f",
-            source_pos, source_pos + 1u, layer,
-            experts[0], experts[1], experts[2], experts[3], experts[4], experts[5],
-            inference_ms);
+            "\"prefetch_top_k\":%u,\"predicted_experts\":[",
+            source_pos, source_pos + 1u, layer, expert_count);
+    for (uint32_t i = 0; i < expert_count; ++i) {
+        fprintf(g_test7_trace_fp, "%s%d", i ? "," : "", experts[i]);
+    }
+    fprintf(g_test7_trace_fp, "],\"inference_ms\":%.3f", inference_ms);
     if (actual) {
-        unsigned hits = 0;
+        unsigned hits_at_6 = 0;
+        unsigned hits_at_k = 0;
         for (unsigned i = 0; i < DS4_N_EXPERT_USED; ++i) {
             for (unsigned j = 0; j < DS4_N_EXPERT_USED; ++j) {
-                if (experts[i] == actual[j]) { ++hits; break; }
+                if (experts[j] == actual[i]) { ++hits_at_6; break; }
+            }
+            for (uint32_t j = 0; j < expert_count; ++j) {
+                if (experts[j] == actual[i]) { ++hits_at_k; break; }
             }
         }
         fprintf(g_test7_trace_fp,
-                ",\"actual_experts\":[%d,%d,%d,%d,%d,%d],\"recall_at_6\":%.6f",
+                ",\"actual_experts\":[%d,%d,%d,%d,%d,%d],\"recall_at_6\":%.6f,"
+                "\"recall_at_prefetch_top_k\":%.6f",
                 actual[0], actual[1], actual[2], actual[3], actual[4], actual[5],
-                (double)hits / (double)DS4_N_EXPERT_USED);
+                (double)hits_at_6 / (double)DS4_N_EXPERT_USED,
+                (double)hits_at_k / (double)DS4_N_EXPERT_USED);
     }
     fputs("}\n", g_test7_trace_fp);
     pthread_mutex_unlock(&g_test7_trace_mutex);
@@ -2052,7 +2066,7 @@ typedef struct {
 } ds4_test7_request;
 typedef struct {
     char magic[4];
-    uint32_t pos, token, layer, request_id;
+    uint32_t pos, token, layer, request_id, prefetch_top_k;
     int32_t selected[6];
     float router_logits[256];
     float raw_hidden_current[4096];
@@ -2067,6 +2081,13 @@ typedef struct {
     int32_t experts[6];
     double inference_ms;
 } ds4_test7_response;
+typedef struct {
+    char magic[4];
+    uint32_t request_id;
+    uint32_t expert_count;
+    int32_t experts[DS4_TEST14_PREFETCH_MAX_EXPERTS];
+    double inference_ms;
+} ds4_test14_response;
 #pragma pack(pop)
 
 /* TEST_7 asynchronous predictor ------------------------------------------------
@@ -2082,6 +2103,7 @@ enum {
 };
 typedef struct {
     bool build7;
+    uint32_t prefetch_top_k;
     ds4_test7_request request;
     ds4_test14_request request14;
     ds4_gpu_stream_expert_table table;
@@ -2089,12 +2111,15 @@ typedef struct {
 typedef struct {
     bool valid;
     uint32_t pos;
+    /* The real router still selects exactly six experts.  Only the predicted
+     * prefetch group may grow to Top-10. */
     int32_t experts[6];
 } ds4_test7_actual_routing;
 typedef struct {
     bool valid;
     uint32_t source_pos;
-    int32_t experts[6];
+    uint32_t expert_count;
+    int32_t experts[DS4_TEST14_PREFETCH_MAX_EXPERTS];
     double inference_ms;
 } ds4_test7_completed_prediction;
 typedef struct {
@@ -2115,7 +2140,7 @@ static ds4_test7_async_state g_test7_async = {
 
 static void ds4_test7_match_prediction_and_actual(
         uint32_t source_pos, uint32_t layer, const int32_t *experts,
-        double inference_ms) {
+        uint32_t expert_count, double inference_ms) {
     int32_t actual[6];
     bool matched = false;
     const uint32_t target_pos = source_pos + 1u;
@@ -2125,7 +2150,8 @@ static void ds4_test7_match_prediction_and_actual(
     result->valid = true;
     result->source_pos = source_pos;
     result->inference_ms = inference_ms;
-    memcpy(result->experts, experts, sizeof(result->experts));
+    result->expert_count = expert_count;
+    memcpy(result->experts, experts, expert_count * sizeof(result->experts[0]));
     ds4_test7_actual_routing *known = &g_test7_async.actual[layer][index];
     if (known->valid && known->pos == target_pos) {
         memcpy(actual, known->experts, sizeof(actual));
@@ -2134,7 +2160,23 @@ static void ds4_test7_match_prediction_and_actual(
         matched = true;
     }
     pthread_mutex_unlock(&g_test7_async.mutex);
-    if (matched) ds4_test7_trace_prediction(source_pos, layer, experts, inference_ms, actual);
+    if (matched) ds4_test7_trace_prediction(source_pos, layer, experts, expert_count,
+                                             inference_ms, actual);
+}
+
+static uint32_t ds4_test14_prefetch_top_k(void) {
+    const char *value = getenv("DS4_TEST_14_PREFETCH_TOP_K");
+    if (!value || !value[0]) return DS4_N_EXPERT_USED;
+    char *end = NULL;
+    errno = 0;
+    const unsigned long parsed = strtoul(value, &end, 10);
+    if (errno != 0 || end == value || *end != '\0' ||
+        parsed < DS4_N_EXPERT_USED || parsed > DS4_TEST14_PREFETCH_MAX_EXPERTS) {
+        fprintf(stderr, "ds4: DS4_TEST_14_PREFETCH_TOP_K must be between %u and %u\n",
+                DS4_N_EXPERT_USED, DS4_TEST14_PREFETCH_MAX_EXPERTS);
+        return 0;
+    }
+    return (uint32_t)parsed;
 }
 
 static void *ds4_test7_async_worker(void *unused) {
@@ -2154,13 +2196,21 @@ static void *ds4_test7_async_worker(void *unused) {
         const uint32_t request_id = job.build7 ? job.request14.request_id : job.request.request_id;
         const uint32_t source_pos = job.build7 ? job.request14.pos : job.request.pos;
         const uint32_t layer = job.build7 ? job.request14.layer : job.request.layer;
-        const char *response_magic = job.build7 ? "T7R2" : "T7R1";
-        ds4_test7_response response;
-        if (!ds4_test7_connect() ||
-            !ds4_test7_write_all(g_test7_socket_fd, request, request_size) ||
-            !ds4_test7_read_all(g_test7_socket_fd, &response, sizeof(response)) ||
-            memcmp(response.magic, response_magic, 4) != 0 ||
-            response.request_id != request_id) {
+        ds4_test7_response response = {0};
+        ds4_test14_response response14 = {0};
+        const bool response_ok = job.build7 ?
+            (ds4_test7_connect() &&
+             ds4_test7_write_all(g_test7_socket_fd, request, request_size) &&
+             ds4_test7_read_all(g_test7_socket_fd, &response14, sizeof(response14)) &&
+             memcmp(response14.magic, "T7R3", 4) == 0 &&
+             response14.request_id == request_id &&
+             response14.expert_count == job.prefetch_top_k) :
+            (ds4_test7_connect() &&
+             ds4_test7_write_all(g_test7_socket_fd, request, request_size) &&
+             ds4_test7_read_all(g_test7_socket_fd, &response, sizeof(response)) &&
+             memcmp(response.magic, "T7R1", 4) == 0 &&
+             response.request_id == request_id);
+        if (!response_ok) {
             fprintf(stderr, "ds4: TEST_7 asynchronous predictor request failed\n");
             if (g_test7_socket_fd >= 0) close(g_test7_socket_fd);
             g_test7_socket_fd = -1;
@@ -2169,16 +2219,18 @@ static void *ds4_test7_async_worker(void *unused) {
             pthread_mutex_unlock(&g_test7_async.mutex);
             continue;
         }
-        ds4_test7_match_prediction_and_actual(source_pos, layer,
-                                               response.experts, response.inference_ms);
+        const int32_t *experts = job.build7 ? response14.experts : response.experts;
+        const uint32_t expert_count = job.build7 ? response14.expert_count : DS4_N_EXPERT_USED;
+        const double inference_ms = job.build7 ? response14.inference_ms : response.inference_ms;
+        ds4_test7_match_prediction_and_actual(source_pos, layer, experts, expert_count, inference_ms);
         if (ds4_test7_prefetch_enabled()) {
             const int queued = ds4_gpu_test4_prefetch_enqueue(
                     &job.table, source_pos + 1u, layer,
-                    response.experts, DS4_N_EXPERT_USED);
+                    experts, expert_count);
             if (queued) {
                 (void)ds4_test4_trace_drain_worker_events();
                 (void)ds4_test4_trace_record("learned_prefetch_enqueue", source_pos + 1u,
-                                             layer, response.experts, NULL);
+                                             layer, experts, NULL);
             } else {
                 fprintf(stderr, "ds4: TEST_7 cannot enqueue asynchronous learned prefetch\n");
             }
@@ -2228,7 +2280,8 @@ static bool ds4_test7_predict(uint32_t pos, uint32_t token, uint32_t layer,
         (build7 && !raw_hidden_previous) ||
         layer >= DS4_MAX_LAYER) return false;
 
-    int32_t completed_experts[6];
+    int32_t completed_experts[DS4_TEST14_PREFETCH_MAX_EXPERTS];
+    uint32_t completed_expert_count = DS4_N_EXPERT_USED;
     double completed_inference_ms = 0.0;
     bool completed_match = false;
     const uint32_t index = pos % DS4_TEST7_RESULT_CAPACITY;
@@ -2240,6 +2293,7 @@ static bool ds4_test7_predict(uint32_t pos, uint32_t token, uint32_t layer,
     ds4_test7_completed_prediction *result = &g_test7_async.result[layer][index];
     if (result->valid && result->source_pos + 1u == pos) {
         memcpy(completed_experts, result->experts, sizeof(completed_experts));
+        completed_expert_count = result->expert_count;
         completed_inference_ms = result->inference_ms;
         actual->valid = false;
         result->valid = false;
@@ -2247,20 +2301,23 @@ static bool ds4_test7_predict(uint32_t pos, uint32_t token, uint32_t layer,
     }
     pthread_mutex_unlock(&g_test7_async.mutex);
     if (completed_match) {
-        ds4_test7_trace_prediction(pos - 1u, layer, completed_experts,
+        ds4_test7_trace_prediction(pos - 1u, layer, completed_experts, completed_expert_count,
                                    completed_inference_ms, selected);
     }
 
     ds4_test7_async_job job;
     memset(&job, 0, sizeof(job));
     job.build7 = build7;
+    job.prefetch_top_k = build7 ? ds4_test14_prefetch_top_k() : DS4_N_EXPERT_USED;
+    if (job.prefetch_top_k == 0) return false;
     job.table = *table;
     if (build7) {
-        memcpy(job.request14.magic, "T7P2", 4);
+        memcpy(job.request14.magic, "T7P3", 4);
         job.request14.pos = pos;
         job.request14.token = token;
         job.request14.layer = layer;
         job.request14.request_id = pos * DS4_N_LAYER + layer;
+        job.request14.prefetch_top_k = job.prefetch_top_k;
         memcpy(job.request14.selected, selected, sizeof(job.request14.selected));
         memcpy(job.request14.router_logits, router_logits, sizeof(job.request14.router_logits));
         memcpy(job.request14.raw_hidden_current, raw_hidden, sizeof(job.request14.raw_hidden_current));

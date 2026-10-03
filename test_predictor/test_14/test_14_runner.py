@@ -31,6 +31,7 @@ def start_build7_service(output: Path, checkpoint: Path) -> tuple[subprocess.Pop
     command = [
         sys.executable, str(SERVICE), "--socket-path", str(socket_path),
         "--checkpoint", str(checkpoint),
+        "--prefetch-top-k", os.environ["DS4_TEST_14_PREFETCH_TOP_K"],
         "--state-artifacts", str(BUILD7 / "ablations" / "01_current_previous_previous_state" / "artifacts"),
         "--fixed-nnz-artifacts", str(BUILD7 / "ablations" / "11_current_fixed_nnz_state" / "artifacts"),
         "--current-hidden-artifacts", str(BUILD7 / "ablations" / "03_current_hidden_refs" / "artifacts"),
@@ -63,7 +64,7 @@ def start_build7_service(output: Path, checkpoint: Path) -> tuple[subprocess.Pop
 
 
 def run_c_build7(*args, **kwargs):
-    """Enable protocol T7P2 only for phase C; A/B remain pure reference runs."""
+    """Enable protocol T7P3 only for phase C; A/B remain pure reference runs."""
     previous = os.environ.get("DS4_TEST_14_ENABLED")
     os.environ["DS4_TEST_14_ENABLED"] = "1"
     try:
@@ -86,6 +87,9 @@ def main() -> None:
         raise SystemExit("--repetitions deve essere positivo.")
 
     checkpoint = required("DS4_TEST_14_CHECKPOINT")
+    prefetch_top_k = int(os.environ.get("DS4_TEST_14_PREFETCH_TOP_K", "6"))
+    if not 6 <= prefetch_top_k <= 10:
+        raise SystemExit("DS4_TEST_14_PREFETCH_TOP_K deve essere un intero tra 6 e 10.")
     # TEST_9's orchestration retains the physical window 3--42 (40 layers),
     # so its pinned worker accepts layer 42.  Build 7 itself sends requests
     # only for its valid learned interval 5--42 (38 layers).
@@ -96,15 +100,17 @@ def main() -> None:
         "DS4_TEST_9_PREFETCH_SLOTS_PER_LAYER": os.environ.get("DS4_TEST_14_PREFETCH_SLOTS_PER_LAYER", "2"),
         "DS4_TEST_9_PREFETCH_STEP": os.environ.get("DS4_TEST_14_PREFETCH_STEP", "1"),
         "DS4_TEST_9_PREFETCH_NUM_WORKERS": os.environ.get("DS4_TEST_14_PREFETCH_NUM_WORKERS", "6"),
+        "DS4_TEST_14_PREFETCH_TOP_K": str(prefetch_top_k),
         "DS4_TEST_9_EXPERIMENT": "test_14_build7_top4_async_learned_prefetch",
         "DS4_TEST_9_ARCHITECTURE": (
             "Build7 Top-4: fixed-NNZ state2048 + raw_hidden_l64 + raw_hidden_l_minus_1_64 "
-            "+ q256 gated residual + fusion2048; learned physical layers 5-42"
+            "+ q256 gated residual + fusion2048; learned physical layers 5-42; "
+            f"prefetch Top-{prefetch_top_k}"
         ),
     })
-    # The native Windows reader is unchanged from TEST_13.  Keep its existing
-    # DS4 bridge namespace internally while exposing a clean TEST_14-facing
-    # configuration to the user.
+    # Keep the existing DS4 bridge namespace internally while exposing a clean
+    # TEST_14-facing configuration to the user.  The TEST_14 Windows reader
+    # accepts the requested Top-K in the native request header.
     os.environ["DS4_TEST_13_WINDOWS_BRIDGE"] = "1"
     os.environ["DS4_TEST_13_WINDOWS_HOST"] = required("DS4_TEST_14_WINDOWS_HOST")
     os.environ["DS4_TEST_13_WINDOWS_PORT"] = os.environ.get("DS4_TEST_14_WINDOWS_PORT", "38114")

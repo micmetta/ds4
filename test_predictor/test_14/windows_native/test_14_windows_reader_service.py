@@ -17,9 +17,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "test_10" / "window
 from test_10_windows_native import NativeDirectReader, parse_expert_read_plan, sector_size
 
 
-# The wire protocol is deliberately unchanged from TEST_13.  Only the
-# listener port and user-facing environment variables belong to TEST_14.
-REQUEST = struct.Struct("<II6i")
+# TEST_14 adds the number of predicted experts to the header.  The payload
+# remains intentionally small and supports the explicit 6--10 Top-K range.
+REQUEST_HEADER = struct.Struct("<III")
+MIN_PREFETCH_TOP_K = 6
+MAX_PREFETCH_TOP_K = 10
 MAGIC = 0x31335444
 
 
@@ -38,12 +40,16 @@ def receive_exact(connection: socket.socket, size: int) -> bytes | None:
 def handle(connection: socket.socket, model: Path, plan, alignment: int) -> None:
     reader = NativeDirectReader(model, plan.largest_read_bytes + alignment, alignment)
     try:
-        payload = receive_exact(connection, REQUEST.size)
+        payload = receive_exact(connection, REQUEST_HEADER.size)
         if payload is None:
             return
-        magic, layer, *experts = REQUEST.unpack(payload)
-        if magic != MAGIC or layer not in plan.layers:
+        magic, layer, expert_count = REQUEST_HEADER.unpack(payload)
+        if magic != MAGIC or layer not in plan.layers or not MIN_PREFETCH_TOP_K <= expert_count <= MAX_PREFETCH_TOP_K:
             return
+        experts_payload = receive_exact(connection, expert_count * struct.calcsize("<i"))
+        if experts_payload is None:
+            return
+        experts = struct.unpack(f"<{expert_count}i", experts_payload)
         gate, up, down = plan.layers[layer]
         for expert in experts:
             if expert < 0 or expert >= gate.expert_count:

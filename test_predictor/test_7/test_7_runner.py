@@ -62,12 +62,18 @@ def learned_trace_summary(path: Path) -> dict[str, float | int]:
         len(set(record["predicted_experts"]) & set(record["actual_experts"]))
         for record in scored
     )
+    prefetch_top_k = max(int(record.get("prefetch_top_k", 6)) for record in scored)
     return {
         "predictions_with_target": len(scored),
         "online_recall_at_6": sum(float(record["recall_at_6"]) for record in scored) / len(scored),
+        "prefetch_top_k": prefetch_top_k,
+        "online_recall_at_prefetch_top_k": sum(
+            float(record.get("recall_at_prefetch_top_k", record["recall_at_6"]))
+            for record in scored
+        ) / len(scored),
         "predictor_inference_ms_average": sum(float(record["inference_ms"]) for record in scored) / len(scored),
         "correct_predicted_experts_total": correct_experts,
-        "predicted_experts_total": len(scored) * 6,
+        "predicted_experts_total": sum(len(record["predicted_experts"]) for record in scored),
         "correct_predicted_experts_average_per_prediction": correct_experts / len(scored),
         "fully_correct_six_expert_predictions": sum(
             len(set(record["predicted_experts"]) & set(record["actual_experts"])) == 6

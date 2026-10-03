@@ -4,7 +4,8 @@
 The service preserves TEST_13's asynchronous inference contract.  DS4 sends
 the causal routing event at physical layer ``l`` plus raw hidden vectors for
 ``l`` and ``l-1``; this process recreates the fixed-NNZ current state and the
-transition vector ``q`` before returning six experts for token ``t + 1``.
+transition vector ``q`` before returning the requested Top-K experts for token
+``t + 1``.
 """
 from __future__ import annotations
 
@@ -30,14 +31,18 @@ from ffn_utils import build_fixed_nnz_state_two_hidden_gated_residual_ffn, requi
 
 
 EXPERTS = 256
-TOP_K = 6
+CURRENT_ROUTER_EXPERTS = 6
+DEFAULT_PREFETCH_TOP_K = 6
+MAX_PREFETCH_TOP_K = 10
 RANKED_ROUTER = 16
 HIDDEN = 4096
 KV = 512
 FIRST_MODEL_LAYER = 5
 LAST_MODEL_LAYER = 42
-REQUEST = struct.Struct("<4sIIII6i256f4096f4096f512f")
-RESPONSE = struct.Struct("<4sI6id")
+# ``prefetch_top_k`` belongs to the request so DS4 and the Python service
+# cannot silently disagree about the number of experts in a response.
+REQUEST = struct.Struct("<4sIIIII6i256f4096f4096f512f")
+RESPONSE = struct.Struct("<4sII10id")
 
 
 def receive_exact(connection: socket.socket, size: int) -> bytes:
@@ -104,7 +109,7 @@ class RuntimePredictor:
                       router_logits: np.ndarray, kv: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
         if not FIRST_MODEL_LAYER <= layer <= LAST_MODEL_LAYER:
             raise ValueError(f"Layer Build 7 non predetto: {layer}")
-        if selected.shape != (TOP_K,) or np.any(selected < 0) or np.any(selected >= EXPERTS):
+        if selected.shape != (CURRENT_ROUTER_EXPERTS,) or np.any(selected < 0) or np.any(selected >= EXPERTS):
             raise ValueError("Sei expert correnti non validi.")
         ranked_ids = np.argsort(-router_logits, kind="stable")[:RANKED_ROUTER].astype(np.int32)
         ranked_values = router_logits[ranked_ids].astype(np.float32, copy=False)
@@ -124,9 +129,9 @@ class RuntimePredictor:
         values = np.empty((1, 45), dtype=np.float32)
         cursor = 0
         history = np.sort(selected)
-        indices[0, cursor:cursor + TOP_K] = history
-        values[0, cursor:cursor + TOP_K] = 1.0
-        cursor += TOP_K
+        indices[0, cursor:cursor + CURRENT_ROUTER_EXPERTS] = history
+        values[0, cursor:cursor + CURRENT_ROUTER_EXPERTS] = 1.0
+        cursor += CURRENT_ROUTER_EXPERTS
         indices[0, cursor] = layer_offset
         values[0, cursor] = 1.0
         cursor += 1
@@ -151,7 +156,8 @@ class RuntimePredictor:
         return np.clip(np.rint(normalized / scale), -127, 127).astype(np.int8)[None, :]
 
     def predict(self, layer: int, selected: np.ndarray, router_logits: np.ndarray,
-                current_hidden: np.ndarray, previous_hidden: np.ndarray, kv: np.ndarray) -> np.ndarray:
+                current_hidden: np.ndarray, previous_hidden: np.ndarray, kv: np.ndarray,
+                prefetch_top_k: int) -> np.ndarray:
         current_index = layer - 3
         previous_index = layer - 4
         state_indices, state_values = self._state_inputs(layer, selected, router_logits, kv)
@@ -174,7 +180,7 @@ class RuntimePredictor:
             "raw_hidden_previous": previous_int8,
             "expert_transition_probabilities": transition,
         }, training=False).numpy()[0]
-        return np.argsort(-scores, kind="stable")[:TOP_K].astype(np.int32)
+        return np.argsort(-scores, kind="stable")[:prefetch_top_k].astype(np.int32)
 
 
 def parse_arguments() -> argparse.Namespace:
@@ -188,11 +194,15 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument("--transition-artifacts", type=Path, required=True)
     parser.add_argument("--current-hidden-scale", type=float, default=0.030650221456692914)
     parser.add_argument("--previous-hidden-scale", type=float, default=0.03066560039370079)
+    parser.add_argument("--prefetch-top-k", type=int, default=DEFAULT_PREFETCH_TOP_K,
+                        help="Numero di expert predetti da restituire (6--10, default: 6).")
     return parser.parse_args()
 
 
 def main() -> None:
     args = parse_arguments()
+    if not CURRENT_ROUTER_EXPERTS <= args.prefetch_top_k <= MAX_PREFETCH_TOP_K:
+        raise ValueError(f"--prefetch-top-k deve essere tra {CURRENT_ROUTER_EXPERTS} e {MAX_PREFETCH_TOP_K}")
     if not args.checkpoint.is_file():
         raise FileNotFoundError(f"Checkpoint Build 7 non trovato: {args.checkpoint}")
     args.socket_path.unlink(missing_ok=True)
@@ -211,11 +221,15 @@ def main() -> None:
                         values = REQUEST.unpack(receive_exact(connection, REQUEST.size))
                     except EOFError:
                         break
-                    magic, _pos, _token, layer, request_id = values[:5]
-                    if magic != b"T7P2":
+                    magic, _pos, _token, layer, request_id, prefetch_top_k = values[:6]
+                    if magic != b"T7P3":
                         raise ValueError("Protocollo TEST_14 non riconosciuto")
-                    selected = np.asarray(values[5:11], dtype=np.int32)
-                    logits_begin = 11
+                    if prefetch_top_k != args.prefetch_top_k:
+                        raise ValueError(
+                            f"Top-K richiesto da DS4 ({prefetch_top_k}) diverso dal servizio ({args.prefetch_top_k})"
+                        )
+                    selected = np.asarray(values[6:12], dtype=np.int32)
+                    logits_begin = 12
                     current_begin = logits_begin + EXPERTS
                     previous_begin = current_begin + HIDDEN
                     kv_begin = previous_begin + HIDDEN
@@ -224,9 +238,13 @@ def main() -> None:
                     previous = np.asarray(values[previous_begin:kv_begin], dtype=np.float32)
                     kv = np.asarray(values[kv_begin:kv_begin + KV], dtype=np.float32)
                     started = time.perf_counter()
-                    experts = predictor.predict(layer, selected, logits, current, previous, kv)
+                    experts = predictor.predict(layer, selected, logits, current, previous, kv, prefetch_top_k)
                     elapsed_ms = (time.perf_counter() - started) * 1000.0
-                    connection.sendall(RESPONSE.pack(b"T7R2", request_id, *experts, elapsed_ms))
+                    padded_experts = np.full(MAX_PREFETCH_TOP_K, -1, dtype=np.int32)
+                    padded_experts[:prefetch_top_k] = experts
+                    connection.sendall(RESPONSE.pack(
+                        b"T7R3", request_id, prefetch_top_k, *padded_experts, elapsed_ms
+                    ))
     finally:
         server.close()
         args.socket_path.unlink(missing_ok=True)

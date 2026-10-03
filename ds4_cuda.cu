@@ -26441,7 +26441,8 @@ enum {
     CUDA_TEST4_MAX_SLOT_COUNT = 43,
     CUDA_TEST4_DEFAULT_PREFETCH_DISTANCE = 1,
     CUDA_TEST4_MAX_PREFETCH_DISTANCE = 8,
-    CUDA_TEST4_SELECTED_COUNT = 6,
+    CUDA_TEST4_MIN_SELECTED_COUNT = 6,
+    CUDA_TEST4_MAX_SELECTED_COUNT = 10,
     CUDA_TEST4_EVENT_CAPACITY = 1024,
     /* TEST_13 can compare up to seven layer-partitioned readers. */
     CUDA_TEST4_MAX_WORKERS = 7,
@@ -26452,7 +26453,7 @@ typedef struct {
     uint32_t target_token;
     uint32_t layer;
     uint32_t n_selected;
-    int32_t selected[CUDA_TEST4_SELECTED_COUNT];
+    int32_t selected[CUDA_TEST4_MAX_SELECTED_COUNT];
     ds4_gpu_stream_expert_table table;
     void *gate_raw;
     void *up_raw;
@@ -26477,7 +26478,7 @@ typedef struct {
     uint32_t kind;
     uint32_t target_token;
     uint32_t layer;
-    int32_t selected[CUDA_TEST4_SELECTED_COUNT];
+    int32_t selected[CUDA_TEST4_MAX_SELECTED_COUNT];
     uint64_t bytes;
     uint32_t failure_code;
     double enqueue_sec;
@@ -26854,7 +26855,8 @@ static uint32_t cuda_test4_read_exact(cuda_test4_pinned_slot *slot,
 static int cuda_test4_read_slot(cuda_test4_pinned_slot *slot) {
     if (!slot) return 0;
     if (!cuda_stream_selected_ranges_valid(&slot->table) ||
-        slot->n_selected != CUDA_TEST4_SELECTED_COUNT) {
+        slot->n_selected < CUDA_TEST4_MIN_SELECTED_COUNT ||
+        slot->n_selected > CUDA_TEST4_MAX_SELECTED_COUNT) {
         slot->failure_code = DS4_GPU_TEST4_FAILURE_INVALID_SLOT;
         return 0;
     }
@@ -26907,8 +26909,8 @@ static int cuda_test4_read_slot(cuda_test4_pinned_slot *slot) {
 typedef struct __attribute__((packed)) {
     uint32_t magic;
     uint32_t layer;
-    int32_t selected[CUDA_TEST4_SELECTED_COUNT];
-} cuda_test13_request;
+    uint32_t expert_count;
+} cuda_test13_request_header;
 
 static int cuda_test13_recv_full(int fd, void *dst, size_t bytes) {
     char *p = (char *)dst;
@@ -26950,9 +26952,12 @@ static int cuda_test13_read_slot(cuda_test4_pinned_slot *slot) {
         connect(fd, (struct sockaddr *)&address, sizeof(address)) != 0) {
         if (fd >= 0) close(fd); return 0;
     }
-    cuda_test13_request request = {0x31335444u, slot->table.layer, {0}};
-    for (uint32_t i = 0; i < slot->n_selected; ++i) request.selected[i] = slot->selected[i];
-    int ok = cuda_test13_send_full(fd, &request, sizeof(request));
+    cuda_test13_request_header request = {
+        0x31335444u, slot->table.layer, slot->n_selected
+    };
+    int ok = cuda_test13_send_full(fd, &request, sizeof(request)) &&
+             cuda_test13_send_full(fd, slot->selected,
+                                   slot->n_selected * sizeof(slot->selected[0]));
     for (uint32_t i = 0; ok && i < slot->n_selected; ++i) {
         uint64_t g = (uint64_t)i * slot->table.gate_expert_bytes;
         uint64_t d = (uint64_t)i * slot->table.down_expert_bytes;
@@ -27110,7 +27115,8 @@ static void cuda_test4_prefetch_shutdown(void) {
 
 static int cuda_test4_upload_slot(const cuda_test4_pinned_slot *slot,
                                   ds4_gpu_stream_expert_load_stats *stats) {
-    if (!slot || slot->n_selected != CUDA_TEST4_SELECTED_COUNT ||
+    if (!slot || slot->n_selected < CUDA_TEST4_MIN_SELECTED_COUNT ||
+        slot->n_selected > CUDA_TEST4_MAX_SELECTED_COUNT ||
         !cuda_stream_selected_ranges_valid(&slot->table)) return 0;
     const uint64_t gate_bytes = (uint64_t)slot->n_selected * slot->table.gate_expert_bytes;
     const uint64_t down_bytes = (uint64_t)slot->n_selected * slot->table.down_expert_bytes;
@@ -27127,7 +27133,7 @@ static int cuda_test4_upload_slot(const cuda_test4_pinned_slot *slot,
                                            &g_stream_selected_cache.down_capacity,
                                            down_bytes, "TEST_4 down experts") ||
         !cuda_stream_selected_ensure_i32(slot->n_selected)) return 0;
-    int32_t remap[CUDA_TEST4_SELECTED_COUNT];
+    int32_t remap[CUDA_TEST4_MAX_SELECTED_COUNT];
     for (uint32_t i = 0; i < slot->n_selected; ++i) remap[i] = (int32_t)i;
     cudaStream_t stream = g_stream_selected_upload_stream;
     if (!stream && cudaStreamCreateWithFlags(&stream, cudaStreamNonBlocking) != cudaSuccess) return 0;
@@ -27192,8 +27198,9 @@ static int cuda_test4_upload_slot_partial(
         uint32_t *reused_experts,
         ds4_gpu_stream_expert_load_stats *stats) {
     if (reused_experts) *reused_experts = 0;
-    if (!slot || !selected_ids || n_selected != CUDA_TEST4_SELECTED_COUNT ||
-        slot->n_selected != CUDA_TEST4_SELECTED_COUNT ||
+    if (!slot || !selected_ids || n_selected != CUDA_TEST4_MIN_SELECTED_COUNT ||
+        slot->n_selected < CUDA_TEST4_MIN_SELECTED_COUNT ||
+        slot->n_selected > CUDA_TEST4_MAX_SELECTED_COUNT ||
         !cuda_stream_selected_ranges_valid(&slot->table)) return 0;
     const uint64_t gate_bytes = (uint64_t)n_selected * slot->table.gate_expert_bytes;
     const uint64_t down_bytes = (uint64_t)n_selected * slot->table.down_expert_bytes;
@@ -27267,7 +27274,7 @@ static int cuda_test4_upload_slot_partial(
             }
         }
     }
-    int32_t remap[CUDA_TEST4_SELECTED_COUNT];
+    int32_t remap[CUDA_TEST4_MAX_SELECTED_COUNT];
     for (uint32_t i = 0; i < n_selected; ++i) remap[i] = (int32_t)i;
     if (copy_err == cudaSuccess) copy_err = cudaMemcpyAsync(
             g_stream_selected_cache.slot_selected_ptr, remap,
@@ -31490,7 +31497,8 @@ extern "C" int ds4_gpu_test4_prefetch_enqueue(
         const int32_t *selected_ids,
         uint32_t n_selected) {
     if (!cuda_test4_prefetch_enabled()) return 1;
-    if (!table || !selected_ids || n_selected != CUDA_TEST4_SELECTED_COUNT ||
+    if (!table || !selected_ids || n_selected < CUDA_TEST4_MIN_SELECTED_COUNT ||
+        n_selected > CUDA_TEST4_MAX_SELECTED_COUNT ||
         layer >= cuda_test4_prefetch_layer_count() ||
         !cuda_stream_selected_ranges_valid(table)) {
         return 0;
@@ -31560,7 +31568,7 @@ extern "C" int ds4_gpu_test4_prefetch_try_selected_load(
         ds4_gpu_stream_expert_load_stats *out_stats) {
     if (out_stats) memset(out_stats, 0, sizeof(*out_stats));
     if (!cuda_test4_prefetch_enabled() || !table || !selected_ids ||
-        n_selected != CUDA_TEST4_SELECTED_COUNT ||
+        n_selected != CUDA_TEST4_MIN_SELECTED_COUNT ||
         layer >= cuda_test4_prefetch_layer_count()) return 0;
     pthread_mutex_lock(&g_test4_prefetch.mutex);
     if (!g_test4_prefetch.last_decoded_token_valid[layer] ||
@@ -31597,7 +31605,7 @@ extern "C" int ds4_gpu_test4_prefetch_try_selected_load(
             }
         }
         if (candidate->target_token == token && candidate->layer == layer) {
-            const int same_experts =
+            const int same_experts = candidate->n_selected == n_selected &&
                 memcmp(candidate->selected, selected_ids,
                        n_selected * sizeof(selected_ids[0])) == 0;
             if ((candidate->state == CUDA_TEST4_SLOT_QUEUED ||
@@ -31614,6 +31622,7 @@ extern "C" int ds4_gpu_test4_prefetch_try_selected_load(
         }
         if (candidate->state == CUDA_TEST4_SLOT_READY &&
             candidate->target_token == token && candidate->layer == layer &&
+            candidate->n_selected == n_selected &&
             memcmp(candidate->selected, selected_ids,
                    n_selected * sizeof(selected_ids[0])) == 0) {
             slot = candidate;
