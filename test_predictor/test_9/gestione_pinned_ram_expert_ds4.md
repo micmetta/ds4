@@ -1269,9 +1269,561 @@ introdurre senza misure preliminari.
 
 #### Misura necessaria prima di scegliere
 
-Prima di implementare una delle due opzioni conviene registrare, per ogni
-layer, l'intersezione tra i Top-6 di richieste future consecutive, lo stato
-degli altri slot quando arriva la nuova previsione e i byte effettivamente
-risparmiabili. Solo se una quota rilevante dell'overlap è ancora `READY` in
-tempo utile il costo di questa ottimizzazione può trasformarsi in uno speedup
-end-to-end misurabile.
+La misura è ora isolata in **TEST_15**. Riusa senza modifiche la
+configurazione record di `TEST_14/output_2` (Build 7 Top-6, due slot, sei
+worker), esegue A una volta solo per l'oracolo e poi tre sole fasi C. Per ogni
+`prefetch_worker_queued` la trace registra anche gli ID degli expert degli
+altri slot dello stesso layer; il report calcola l'intersezione, lo stato dello
+slot fratello e i byte immediatamente riusabili soltanto se esso è `READY`.
+
+Solo se una quota rilevante dell'overlap è ancora `READY` in tempo utile il
+costo di questa ottimizzazione può trasformarsi in uno speedup end-to-end
+misurabile. Il report di TEST_15 è dunque la base quantitativa per scegliere
+fra composizione di slot e cache per-expert, non l'implementazione di una delle
+due politiche.
+
+## Approfondimento sulla soluzione B
+
+> Questa sezione descrive un possibile sviluppo architetturale; **non è il
+> comportamento attualmente implementato** dalla banca pinned record. La banca
+> attuale conserva gruppi Top-6 per `(token target, layer)`. La soluzione B
+> sostituirebbe la proprietà esclusiva degli expert da parte di uno slot con una
+> cache di buffer condivisi, indicizzata per `(layer fisico, expert_id)`.
+
+### Sincronizzazione per shard `layer % N`: un worker proprietario per gruppo
+
+La cache per-expert non dovrebbe conservare un solo mutex e una sola condition
+variable globali. Fissato `N` al numero dei worker di I/O (nel record, `N = 6`),
+ogni layer fisico appartiene a uno shard deterministico:
+
+```text
+shard(layer) = layer % N
+
+layer 12 -> shard 0 -> worker di I/O 0
+layer 13 -> shard 1 -> worker di I/O 1
+...
+layer 17 -> shard 5 -> worker di I/O 5
+layer 18 -> shard 0 -> worker di I/O 0
+```
+
+Ogni shard possiede la propria coda di entry `QUEUED`, il proprio mutex e la
+propria condition variable. Il **THREAD DI DECODE DS4** e il **thread
+asincrono di prefetch DS4** calcolano sempre `shard(layer)` prima di consultare
+o aggiornare una entry `(layer, expert)`; prendono quindi soltanto il lock di
+quello shard. Il worker associato è l'unico worker di I/O che estrae lavori da
+quella coda e attende sulla sua condition variable.
+
+```text
+THREAD DI DECODE DS4: richiesta futura per layer 12
+        |
+        v
+thread asincrono di prefetch DS4
+        |
+        +--> shard(12) = 12 % 6 = 0
+        +--> lock shard 0: crea/aggiorna le entry (12, expert)
+        +--> accoda solo i miss nello shard 0
+        +--> signal condition variable dello shard 0
+        v
+worker di I/O 0
+        |
+        +--> prende il mutex dello shard 0: verifica la coda e riserva
+        |    atomicamente una entry QUEUED
+        |    (serve a impedire che decode o thread asincrono modifichino,
+        |     riusino o espellano proprio quell'entry mentre il worker la prende)
+        +--> QUEUED -> READING, poi rilascia il mutex
+        +--> bridge Windows
+```
+
+Così il lavoro del layer 12 non può risvegliare per errore il worker 1--5, né
+deve contendere il mutex della propria coda con essi. La concorrenza resta
+intenzionalmente possibile **dentro il singolo shard**: decode, thread
+asincrono e il suo worker devono coordinare stato, lease, riferimenti futuri e
+possibile riuso dei buffer della medesima entry. Operazioni davvero globali, come il
+pool di capacità pinned o le statistiche aggregate, richiederebbero una
+sincronizzazione separata e breve; non devono riportare la scansione ordinaria
+degli shard sotto un lock unico.
+
+Il worker non tiene il mutex mentre attende il bridge Windows né mentre i byte
+sono trasferiti nei buffer RAM pinned: in quel periodo non deve proteggere
+alcuna modifica ai metadati, e tenere il lock bloccherebbe inutilmente decode e
+thread asincrono del medesimo shard. Lo riprende solo per operazioni indivisibili
+sullo stato condiviso: scegliere/rimuovere una `QUEUED`, pubblicare
+`READING → READY` o `READING → FAILED` e aggiornare i riferimenti. Il riuso di
+un buffer per un nuovo expert è una sostituzione atomica della chiave sotto
+questo stesso lock: non esiste uno stato intermedio osservabile dagli altri
+attori.
+
+#### Risveglio del worker: il segnale non è il lavoro
+
+La condition variable non trasporta una richiesta e non deve essere trattata
+come una coda di eventi. Il lavoro reale è l'entry `QUEUED`, che resta
+materialmente nella coda dello shard finché il suo worker non la riserva. Il
+**thread asincrono di prefetch DS4** deve quindi, sotto il mutex dello shard,
+prima inserire l'entry nella coda e poi eseguire `pthread_cond_signal()` sulla
+condition variable di quello stesso shard.
+
+Il worker attende sempre ricontrollando il predicato “la mia coda contiene
+almeno una `QUEUED`” in un ciclo `while`:
+
+```text
+worker di I/O 0
+        |
+        +--> lock mutex shard 0
+        |
+        +--> finché la coda dello shard 0 è vuota:
+        |      pthread_cond_wait(cond shard 0, mutex shard 0)
+        |
+        +--> trova una QUEUED, la riserva: QUEUED -> READING
+        +--> unlock mutex shard 0
+        v
+bridge Windows
+```
+
+`pthread_cond_wait()` rilascia il mutex e mette il worker in attesa in modo
+atomico. Perciò non esiste una finestra in cui il thread asincrono possa
+inserire il lavoro e il worker possa poi addormentarsi senza averlo visto.
+Anche un risveglio spurio è innocuo: il `while` ricontrolla la coda prima di
+prendere lavoro.
+
+Può accadere che il worker sia stato segnalato ma non riesca subito a
+riacquisire il mutex perché il **THREAD DI DECODE DS4** sta aggiornando lease o
+riferimenti futuri dello stesso shard. In tal caso il worker resta bloccato
+sul mutex; **non torna a dormire e non perde il segnale**. Quando il decode
+rilascia il lock, il worker lo acquisisce, trova ancora la `QUEUED` persistente
+e inizia la lettura:
+
+```text
+thread asincrono di prefetch DS4
+        |
+        +--> lock shard 0
+        +--> inserisce (12, X) = QUEUED nella coda shard 0
+        +--> pthread_cond_signal(cond shard 0)
+        +--> unlock shard 0
+        |
+        v
+worker di I/O 0 si risveglia
+        |
+        +--> mutex shard 0 temporaneamente detenuto dal THREAD DI DECODE DS4
+        |      (aggiornamento breve di lease/future_refcount)
+        |
+        +--> attende il mutex, non la condition variable
+        |
+        v
+THREAD DI DECODE DS4 rilascia il mutex shard 0
+        |
+        v
+worker di I/O 0: vede ancora (12, X) = QUEUED
+        |
+        +--> QUEUED -> READING
+```
+
+Questo può introdurre soltanto un ritardo breve, non la perdita del lavoro. È
+proprio per limitarlo che il decode non deve trattenere il mutex durante
+l'upload RAM pinned → VRAM, né il worker durante I/O bridge/SSD: il lock serve
+solo alle transizioni e agli aggiornamenti di metadati.
+
+### Il token pianifica il prefetch, ma non identifica il buffer dell'expert
+
+Un expert di un dato layer ha gli stessi pesi per tutti i token. Perciò la
+chiave corretta della cache non deve contenere il token:
+
+```text
+richiesta futura
+  (token target 52, layer 12, Top-6 predetto)
+                         |
+                         v
+cache pinned condivisa
+  chiave (layer 12, expert 9)  --> buffer RAM pinned gate/up/down
+  chiave (layer 12, expert 23) --> buffer RAM pinned gate/up/down
+  chiave (layer 12, expert 41) --> buffer RAM pinned gate/up/down
+```
+
+Il token target resta utile nel record della **richiesta futura**: permette al
+thread asincrono di prefetch DS4 di sapere per quale forward la previsione è
+stata prodotta, di assegnare una priorità e di scrivere l'audit. Non è invece
+necessario per cercare un expert già caricato. Quando il **THREAD DI DECODE
+DS4** raggiunge davvero il layer 12 del token 52, il router reale produce i sei
+expert necessari e il decode cerca semplicemente le sei chiavi `(12, expert)`
+nella cache.
+
+```text
+THREAD DI DECODE DS4: forward reale token 52, layer 12
+        |
+        v
+router reale --> [9, 23, 41, 56, 91, 101]
+        |
+        v
+cache --> (12,9), (12,23), (12,41) = READY
+        |       (12,56), (12,91), (12,101) = assenti/non pronte
+        |
+        +--> expert READY: RAM pinned --> VRAM
+        +--> altri expert: fallback on-demand, senza attendere
+```
+
+Quindi una previsione precedente per il token 51 può rendere riusabile
+`(12, 9)` anche per il token 52: non occorre né una lettura SSD duplicata né
+una copia RAM pinned dallo slot A allo slot B. I due slot futuri conserverebbero
+riferimenti allo stesso buffer cache, non due copie dei suoi byte.
+
+### Capacità minima per layer: due richieste Top-K, fino a `2 × Top-K` entry
+
+La cache non dovrebbe affidarsi a una sola capacità globale senza garantire
+spazio ai layer che hanno già ricevuto una previsione. Mantiene infatti le due
+richieste future per layer della configurazione record. Se ciascuna contiene al
+massimo `Top-K` expert, la quota massima riservata a un layer è:
+
+```text
+capacità_massima_layer = 2 × Top-K
+
+Top-K = 6
+capacità_massima_layer = 2 × 6 = 12 entry cache distinte
+```
+
+Per il layer 12 ciò significa al massimo dodici porzioni di RAM pinned, una
+per ciascun `(12, expert)` distinto; ogni porzione contiene i buffer
+`gate/up/down` di quell'expert. Non sono dodici copie per forza: se le due
+Top-6 condividono expert, ad esempio `9`, `23` e `41`, quei tre buffer sono
+una sola entry condivisa e la quota effettivamente occupata è inferiore a 12.
+
+```text
+richiesta futura A, layer 12 -> [4, 9, 23, 41, 70, 88]
+richiesta futura B, layer 12 -> [9, 23, 41, 56, 91, 101]
+
+entry distinte necessarie per layer 12 =
+  [4, 9, 23, 41, 70, 88, 56, 91, 101] = 9 <= 12
+```
+
+Questa quota è un limite di sicurezza, non un invito a riempire sempre dodici
+entry. Evita che una nuova previsione del medesimo layer debba espellere un
+expert `READY` ancora pianificato solo perché il decode non ha ancora raggiunto
+il forward corrispondente. Se una terza richiesta o un insieme di expert oltre
+la quota non può essere ammesso senza espellere dati protetti, il sistema non
+deve forzare l'eviction: lascia quegli expert al fallback on-demand. La
+capacità totale pinned andrà dimensionata in modo compatibile con la somma
+delle quote dei layer learned effettivamente gestiti, non soltanto con il
+numero di worker.
+
+### Due strutture con responsabilità diverse
+
+La separazione evita di confondere *per quale token è stata fatta una
+previsione* con *quale peso è fisicamente residente*.
+
+| Struttura | Chiave / contenuto | Responsabilità |
+|---|---|---|
+| Richiesta futura | `(token target, layer, Top-6 predetto)` | Pianifica il prefetch, conserva priorità e audit; può riferirsi a sei entry cache. |
+| Entry della cache pinned | `(layer fisico, expert_id)` → buffer `gate/up/down` | Rappresenta una sola copia in RAM pinned dei pesi dell'expert, riusabile da più richieste e da più forward. |
+
+Una entry dovrebbe quindi contenere almeno il proprio stato, i buffer pinned,
+la dimensione, **due contatori distinti** e metadati per l'eviction, come
+`last_used` o priorità. Il `token_predetto` può essere mantenuto come
+diagnostica o indizio per la priorità, ma non è parte della chiave né deve
+impedire il riuso tra token diversi.
+
+| Contatore | Chi lo modifica | Perché esiste |
+|---|---|---|
+| `future_refcount` (`0, 1, 2, ...`) | thread asincrono di prefetch DS4, quando registra o rimuove una richiesta futura | Protegge l'entry prima del forward reale: una o più richieste future pianificate la potrebbero ancora usare. |
+| `lease_count` (`0, 1, 2, ...`) | THREAD DI DECODE DS4, durante l'uso reale | Protegge l'entry soltanto mentre il decode sta trasferendo i suoi byte RAM pinned → VRAM. |
+
+Una entry diventa candidata all'eviction esclusivamente se entrambi i
+contatori sono zero:
+
+```text
+evictable = (future_refcount == 0) AND (lease_count == 0)
+```
+
+Il lease non protegge quindi una previsione appena registrata ma non ancora
+raggiunta; quel compito è di `future_refcount`. Viceversa, il
+`future_refcount` non sostituisce il lease: una richiesta può essere stata già
+consumata mentre l'upload verso VRAM è ancora in corso.
+
+### Stati proposti per una entry `(layer, expert)`
+
+Gli stati non coinciderebbero esattamente con quelli degli slot attuali.
+In particolare non conviene trasformare una entry `READY` in `CONSUMING`:
+un buffer condiviso può essere letto dal decode per un upload verso VRAM e,
+nello stesso tempo, restare disponibile per una richiesta futura. Il suo uso
+temporaneo è espresso dai lease, non da uno stato esclusivo.
+
+| Stato | Significato | Il decode può usarla? |
+|---|---|---|
+| `QUEUED` | Il thread asincrono di prefetch DS4 ha creato l'entry, incrementato `future_refcount` per la richiesta che la pianifica e accodato il lavoro, ma nessun worker di I/O ha ancora iniziato a leggere dal GGUF. Mantiene la stessa separazione fra accodamento e I/O della banca record attuale. | No: fallback on-demand. Una seconda richiesta può incrementare il riferimento alla stessa entry, senza accodare un duplicato. |
+| `READING` | Un worker di I/O ha riservato l'entry e il bridge Windows sta leggendo `gate/up/down` dal GGUF nei suoi buffer RAM pinned. È lo stesso significato di `READING` nella banca record attuale, applicato a un singolo expert invece che a un gruppo Top-6. | No: il decode non attende la lettura e usa il fallback. Una richiesta futura può però agganciarsi alla stessa entry in caricamento, senza avviare una seconda lettura. |
+| `READY` | I buffer pinned sono completi, coerenti e riusabili. Quando occorre capacità per un nuovo expert dello stesso layer, se entrambi i contatori sono zero i buffer possono essere riassegnati atomicamente alla nuova chiave. | Sì: il decode acquisisce un lease, trasferisce i byte necessari in VRAM e poi rilascia il lease. |
+| `FAILED` | La lettura o il protocollo bridge è fallito; i buffer non sono affidabili. | No: fallback on-demand. Una richiesta futura può decidere un nuovo tentativo controllato. |
+
+`ABSENT` non è uno stato memorizzato: indica soltanto che la chiave non è nella
+mappa. Anche `EVICTING` non è uno stato persistente: la rimozione della vecchia
+chiave e l'inserimento della nuova avvengono nella stessa sezione critica dello
+shard. Può restare un evento di audit, ad esempio “`(12,9)` sostituito da
+`(12,X)`”, ma non una condizione osservabile dalla cache.
+
+### Transizioni proposte della cache condivisa
+
+La tabella segue lo stile delle transizioni della banca attuale, ma descrive la
+semantica proposta per una singola entry `(layer, expert)`. Tutte le modifiche
+a stato, lease e mappa devono avvenire sotto il mutex dello **shard del
+layer**, non sotto un lock globale: `shard(layer) = layer % N`. Il
+trasferimento SSD → RAM pinned e RAM pinned → VRAM resta invece fuori dal
+lock dello shard, come nel disegno record, per non serializzare l'I/O.
+
+| Transizione proposta | Chi la esegue | Quando |
+|---|---|---|
+| Chiave assente nella mappa → `QUEUED` | thread asincrono di prefetch DS4 | Ricevuto il Top-6 dal servizio modello prefetch Build 7, calcola `shard(layer)`, prende il solo lock di quello shard e trova una chiave `(layer, expert)` non residente. Verifica prima la quota `2 × Top-K` del layer; se può ammetterla, crea una sola entry, porta `future_refcount` da `0` a `1`, la accoda nella coda dello shard e segnala la condition variable di quello shard. Se la quota è satura di entry protette, non espelle dati pianificati: lascia quell'expert al fallback. |
+| `QUEUED → READING` | worker di I/O proprietario dello shard | Prende il mutex del proprio shard per rimuovere e riservare atomicamente la `QUEUED`: così decode e thread asincrono vedono subito che l'entry è in carico e non possono né accodarla di nuovo né riassegnarne i buffer a un'altra chiave. Rilascia poi il mutex e solo in quel momento avvia la richiesta al bridge Windows per leggere l'expert dal GGUF. |
+| `QUEUED` o `READING` invariato, con nuovo riferimento | thread asincrono di prefetch DS4 | Una seconda richiesta futura predice lo stesso `(layer, expert)` mentre il primo lavoro è già accodato o in lettura. Sotto il lock dello stesso shard non reimposta lo stato e non avvia una seconda lettura: incrementa soltanto `future_refcount` per la stessa entry. |
+| `READING → READY` | worker di I/O proprietario dello shard | Terminato il bridge Windows, riprende il mutex del proprio shard per pubblicare insieme completezza dei buffer e cambio di stato: senza questo passaggio atomico il decode potrebbe osservare `READY` prima che i metadati siano coerenti, oppure il thread asincrono potrebbe riassegnare i buffer durante la pubblicazione. Non deve risvegliare il decode: il THREAD DI DECODE DS4 non aspetta mai questa lettura e, quando consulterà la cache, userà l'entry solo se la troverà già `READY`. |
+| `READING → FAILED` | worker di I/O / bridge Windows | Dopo un errore, il worker riprende il mutex del proprio shard e marca l'entry `FAILED`, così nessun altro attore può scambiarne buffer parziali per dati riusabili. |
+| `READY` invariato, con lease acquisito | THREAD DI DECODE DS4 | Calcola `shard(layer)`, prende quel lock, verifica l'entry richiesta dal router reale e incrementa il lease; poi rilascia il lock e trasferisce RAM pinned → VRAM. L'entry resta `READY` e altri utenti possono ancora riferirsi agli stessi byte immutabili. |
+| `READY` invariato, con lease rilasciato | THREAD DI DECODE DS4 | Terminato l'upload/uso sicuro nel forward, riprende il lock dello stesso shard e decrementa il lease. Non deve "rimettere" l'entry in `READY`, perché non ne è mai uscita; potrà essere espulsa solo dopo la rimozione di tutte le richieste future che la referenziano. |
+| Rimozione del riferimento futuro | thread asincrono di prefetch DS4 / THREAD DI DECODE DS4 | Quando una richiesta futura è stata consumata o è diventata obsoleta, rimuove i suoi riferimenti alle entry del proprio layer e decrementa i rispettivi `future_refcount`, senza cambiare per forza lo stato `READY`. |
+| Sostituzione atomica `READY(layer, vecchio) → QUEUED(layer, nuovo)` | thread asincrono di prefetch DS4 / gestore della cache | Serve capacità per un nuovo expert dello stesso layer. Sotto il mutex del suo shard seleziona solo un'entry con `lease_count = 0` e `future_refcount = 0`, rimuove la chiave vecchia dalla mappa, conserva i suoi buffer RAM pinned e li associa subito alla chiave nuova con `future_refcount = 1` e stato `QUEUED`. Non esistono passaggi osservabili `EVICTING` o `ABSENT`; rilasciato il lock, segnala il worker di quello shard, che farà `QUEUED → READING`. |
+| `FAILED → QUEUED` | thread asincrono di prefetch DS4 | Dopo audit e pulizia dei metadati dell'errore, una nuova richiesta futura per la stessa chiave può riusare l'entry e i suoi buffer, aggiornare `future_refcount`, riportarla a `QUEUED` e segnalare il worker dello shard. Se invece occorre davvero ridurre la cache, la chiave viene semplicemente rimossa dalla mappa: non serve registrare uno stato `ABSENT`. |
+
+### Esempio completo: riuso di un expert anche mentre un'altra richiesta lo usa
+
+```text
+token 51, layer 12: richiesta A -> [4, 9, 23, 41, 70, 88]
+token 52, layer 12: richiesta B -> [9, 23, 41, 56, 91, 101]
+
+cache del layer 12
+  (12, 9)  = READY, future_refcount = 1, lease_count = 0
+  (12,23)  = READY, future_refcount = 1, lease_count = 0
+  (12,41)  = READY, future_refcount = 1, lease_count = 0
+
+THREAD DI DECODE DS4 esegue A
+  -> acquisisce lease per 9, 23, 41
+  -> copia gli expert necessari RAM pinned -> VRAM
+  -> consuma la richiesta futura A: future_refcount 1 -> 0
+  -> al termine degli upload: lease_count 1 -> 0
+  -> gli expert restano READY: non vengono svuotati dopo il forward A
+
+thread asincrono di prefetch DS4 riceve B
+  -> calcola shard(12) e prende soltanto il suo lock
+  -> B referenzia 9, 23, 41 gia' READY: future_refcount 0 -> 1
+  -> crea QUEUED soltanto per 56, 91, 101
+     con future_refcount = 1, entro la quota massima 2 x Top-K = 12
+  -> segnala soltanto la condition variable di shard(12)
+
+worker di I/O proprietario di shard(12)
+  -> prende il mutex del proprio shard per riservare le entry 56, 91, 101
+     e portarle atomicamente QUEUED -> READING
+  -> rilascia il mutex: l'I/O non deve bloccare decode e thread asincrono
+  -> il bridge Windows legge soltanto 56, 91, 101 dal GGUF
+  -> al termine riprende il mutex per pubblicare ogni READING -> READY
+
+THREAD DI DECODE DS4 esegue B
+  -> usa 9, 23, 41 dalla cache READY
+  -> usa 56, 91, 101 se diventati READY; altrimenti fallback on-demand
+  -> consuma B: rimuove i suoi future_refcount e rilascia i lease
+```
+
+#### Esempio separato: vita di una entry e significato del lease
+
+Un **lease** è un permesso temporaneo di usare un buffer cache. Non duplica i
+byte e non cambia `READY` in un altro stato: incrementa soltanto un contatore
+protetto dalla cache. La sua funzione è impedire che la politica di eviction
+liberi o riutilizzi i buffer RAM pinned mentre il **THREAD DI DECODE DS4** sta
+ancora trasferendo quei pesi verso la VRAM. Al termine dell'upload il decode
+rilascia il lease; l'entry può comunque restare `READY` per un riuso futuro.
+
+L'esempio seguente segue la singola entry `(layer 12, expert 9)` dal primo
+prefetch fino all'eventuale riassegnazione dei suoi buffer a un nuovo expert.
+
+```text
+1. La previsione richiede per la prima volta (12, 9)
+
+THREAD DI DECODE DS4: durante il forward del token corrente
+        |
+        +--> delega una richiesta per un token/layer futuro
+             al thread asincrono di prefetch DS4
+        v
+thread asincrono di prefetch DS4
+        |
+        +--> cache: (12, 9) assente
+        |
+        +--> shard(12) = 0: lock shard 0
+        +--> crea l'entry e la marca QUEUED
+        |    (nessun altro thread puo' creare una seconda lettura per 12,9)
+        +--> registra la richiesta futura: future_refcount 0 -> 1
+        +--> accoda il lavoro nello shard 0 e segnala solo la sua condition
+        v
+worker di I/O 0, proprietario dello shard 0
+        |
+        +--> prende mutex shard 0: QUEUED -> READING e riserva il lavoro
+        |    (evita che decode/thread asincrono cambino o espellano l'entry
+        |     mentre il worker ne assume la proprietà)
+        +--> rilascia mutex shard 0
+        +--> bridge Windows legge gate/up/down dal GGUF
+        |    nei buffer RAM pinned della entry (12, 9)
+        +--> riprende mutex shard 0: pubblica READING -> READY solo se
+        |    metadati e buffer sono completi
+        +--> rilascia mutex shard 0
+        v
+cache: (12, 9) = READY, future_refcount = 1, lease_count = 0
+
+2. Il forward reale ne ha bisogno
+
+THREAD DI DECODE DS4: router reale richiede expert 9 al layer 12
+        |
+        +--> trova (12, 9) = READY
+        +--> acquisisce lease: lease_count 0 -> 1
+        +--> consuma la richiesta futura: future_refcount 1 -> 0
+        +--> avvia RAM pinned -> VRAM
+        |
+        +--> stato resta READY: una richiesta futura puo' gia' referenziare
+             gli stessi byte; non viene avviata una seconda lettura SSD
+
+3. L'uso del forward termina
+
+THREAD DI DECODE DS4
+        |
+        +--> upload terminato in modo sicuro
+        +--> rilascia lease: lease_count 1 -> 0
+        v
+cache: (12, 9) resta READY
+        |
+        +--> e' ancora riusabile da un altro token/layer request
+        +--> non puo' essere espulsa se future_refcount > 0
+        +--> diventa candidata solo se future_refcount = 0 e lease_count = 0
+
+4. Serve spazio per un nuovo expert del layer richiesto, ma non esistono piu'
+   utilizzatori dell'entry candidata: riuso diretto dei buffer
+
+THREAD DI DECODE DS4: forward token corrente
+        |
+        +--> delega una richiesta futura (token target, layer 12)
+             al thread asincrono di prefetch DS4
+        v
+thread asincrono di prefetch DS4
+        |
+        +--> riceve il Top-6 per il layer 12
+        +--> shard(12) = 0: lavora sotto il lock dello shard 0
+        +--> cerca/riusa le entry (12, expert) gia' residenti
+        |
+        +--> se serve capacita' nel pool pinned:
+             1. pulisce subito le entry FAILED
+             2. considera solo entry con lease_count = 0
+                e future_refcount = 0
+             3. sceglie la meno utile: frequenza d'uso con aging piu' bassa,
+                poi last_used piu' vecchio
+        |
+        +--> sceglie (12, 9), che è READY, lease_count = 0
+        |    e future_refcount = 0
+        +--> nello stesso lock rimuove la chiave (12, 9) dalla mappa
+        |    ma conserva i suoi buffer RAM pinned
+        +--> associa gli stessi buffer alla nuova chiave (12, X)
+        |    con future_refcount 0 -> 1 e stato QUEUED
+        +--> accoda (12, X) nella coda dello shard 0
+        +--> rilascia mutex shard 0
+        +--> segnala soltanto la condition variable dello shard 0
+        v
+worker di I/O 0
+        |
+        +--> QUEUED -> READING
+        +--> bridge Windows sovrascrive i buffer riusati con i byte di X
+        +--> READING -> READY
+        v
+cache: (12, X) = READY
+```
+
+Il caso di errore segue un ramo alternativo, senza mai esporre dati parziali al
+decode:
+
+```text
+worker di I/O / bridge Windows
+        |
+        +--> errore durante la lettura di (12, 9)
+        v
+worker di I/O 0 prende mutex shard 0: READING -> FAILED
+        |
+        +--> il mutex impedisce al decode di usare buffer incompleti come READY
+        +--> rilascia mutex shard 0
+        +--> il THREAD DI DECODE DS4 applica il fallback on-demand
+        +--> il gestore registra l'audit e conserva l'entry FAILED finché non
+        |    arriva un nuovo tentativo oppure serve riutilizzarne i buffer
+        +--> una previsione futura potra' riportare la stessa chiave a QUEUED
+             oppure sostituirla atomicamente con una nuova chiave dello stesso layer
+```
+
+#### Frequenza d'uso con aging: scegliere cosa espellere senza premiare il passato remoto
+
+Il contatore di utilizzo non dovrebbe essere il semplice totale cumulato
+dall'avvio. Un expert molto usato all'inizio della generazione, ma mai più
+richiesto, non deve restare in RAM pinned per sempre solo grazie alla sua
+storia passata. La cache può usare una frequenza esponenzialmente decadente
+(*decayed LFU*), calcolata sui token generati e non sul tempo di parete: rende
+la politica riproducibile e legata al vero avanzamento del decode.
+
+Per ogni entry la cache conserva `score_salvato` e
+`token_ultimo_aggiornamento`. Al token corrente `t`, il valore utile per
+confrontare due candidate è:
+
+```text
+score_effettivo(t) = score_salvato × 2 ^ (-(t - token_ultimo_aggiornamento) / H)
+```
+
+`H` è l'*half-life* in token: dopo `H` token senza un nuovo utilizzo, lo score
+si dimezza. L'aggiornamento può essere lazy, cioè eseguito soltanto quando il
+**THREAD DI DECODE DS4** usa davvero l'entry o quando il gestore deve
+confrontarla per l'eviction:
+
+```text
+quando il decode usa (layer, expert) al token t:
+
+score_salvato = score_salvato × 2 ^ (-(t - token_ultimo_aggiornamento) / H) + 1
+token_ultimo_aggiornamento = t
+```
+
+L'incremento deve avvenire soltanto per un vero hit del router reale: entry
+`READY`, lease acquisito e upload RAM pinned → VRAM avviato. Una semplice
+predizione del modello non deve aumentare il punteggio, altrimenti expert
+predetti male ma mai usati dal forward sembrerebbero artificialmente popolari.
+
+Esempio con `H = 64` token:
+
+```text
+expert A
+  score_salvato = 32
+  ultimo uso = 128 token fa
+  score_effettivo = 32 × 2 ^ (-128 / 64) = 8
+
+expert B
+  score_salvato = 4
+  ultimo uso = token corrente
+  score_effettivo = 4 × 2 ^ (0) = 4
+
+oggi: A resta preferibile a B (8 > 4)
+
+dopo altri 64 token senza nuovi utilizzi di A:
+  A = 8 × 2 ^ (-64 / 64) = 4
+  B = 4 se nel frattempo non viene usato
+
+a parita' di score: si espelle quello con last_used piu' vecchio
+```
+
+La politica proposta per liberare memoria diventa quindi:
+
+```text
+1. pulire subito FAILED;
+2. considerare solo entry con lease_count = 0 e senza riferimenti futuri;
+3. scegliere score_effettivo minimo;
+4. usare last_used piu' vecchio come spareggio.
+```
+
+Un valore iniziale ragionevole da misurare sarebbe `H = 64` o `H = 128`
+token: abbastanza lungo da trattenere un expert riusato in una finestra vicina,
+ma non tanto da rendere permanente il vantaggio di utilizzi molto vecchi.
+
+Questo è il vantaggio principale rispetto alla composizione A → B: gli expert
+in comune non vengono copiati tra buffer slot-specifici e possono rimanere
+validi anche quando A è nel suo consumo. In cambio serve una politica di
+capacità/eviction accurata: trattenere ogni expert troppo a lungo può saturare
+la RAM pinned e ridurre, anziché aumentare, il prefetch utile.
+
+I dati di TEST_15 mostrano che il riuso già `READY` nel preciso istante di
+accodamento è piccolo; hanno però evidenziato molti overlap con slot
+`CONSUMING`. La cache per-expert potrebbe rendere sfruttabile parte di questi
+ultimi proprio perché separa la vita del buffer dalla vita di uno slot. Prima
+di implementarla resta necessario misurare per quanti di tali match l'entry
+sarebbe `READY` entro il forward reale della richiesta successiva e quale
+capacità pinned aggiuntiva richiederebbe.
