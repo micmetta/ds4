@@ -286,6 +286,11 @@ typedef struct ds4_gpu_test4_prefetch_event {
     uint32_t same_layer_slot_state[8];
     uint32_t same_layer_slot_target_token[8];
     double   same_layer_slot_age_ms[8];
+    /* TEST_15: snapshot read-only degli expert gia' associati agli altri
+     * slot del layer. Serve a misurare l'overlap fra richieste future senza
+     * modificare la politica di prefetch. */
+    uint32_t same_layer_slot_n_selected[8];
+    int32_t  same_layer_slot_selected[8][10];
     uint32_t pinned_slots_allocated;
     uint64_t pinned_bytes_estimated;
 } ds4_gpu_test4_prefetch_event;

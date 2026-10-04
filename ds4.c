@@ -1848,11 +1848,18 @@ static bool ds4_test4_trace_drain_worker_events(void) {
             for (uint32_t future = 0; rc >= 0 && future < distance; ++future) {
                 rc = fprintf(g_test4_trace.fp,
                     "%s{\"distance_index\":%u,\"state\":\"%s\","
-                    "\"target_token_index\":%u,\"age_ms\":%.3f}",
+                    "\"target_token_index\":%u,\"age_ms\":%.3f,\"experts\":[",
                     future ? "," : "", future,
                     ds4_test4_slot_state_name(event->same_layer_slot_state[future]),
                     event->same_layer_slot_target_token[future],
                     event->same_layer_slot_age_ms[future]);
+                const uint32_t expert_count = event->same_layer_slot_n_selected[future] > 10u ?
+                    10u : event->same_layer_slot_n_selected[future];
+                for (uint32_t expert = 0; rc >= 0 && expert < expert_count; ++expert) {
+                    rc = fprintf(g_test4_trace.fp, "%s%d", expert ? "," : "",
+                        event->same_layer_slot_selected[future][expert]);
+                }
+                if (rc >= 0) rc = fputs("]}", g_test4_trace.fp);
             }
             if (rc >= 0) rc = fputs("]}", g_test4_trace.fp);
         }

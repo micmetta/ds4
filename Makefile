@@ -62,7 +62,7 @@ DS4_LINK_LIBS ?= $(CUDA_LDLIBS)
 METAL_LDLIBS := $(LDLIBS)
 endif
 
-.PHONY: all help clean test test_0_runner test-predictor-0 test_1_runner test-predictor-1 test_2_runner test-predictor-2 test_3_runner test-predictor-3 test_4_runner test-predictor-4 test_5_runner test-predictor-5 test_6_runner test-predictor-6 test_7_runner test-predictor-7 test_8_runner test-predictor-8 test_9_runner test-predictor-9 test_10_runner test-predictor-10 test_13_runner test-predictor-13 test_14_runner test-predictor-14 dataset_runner test-metal-session-batch test-mxfp4-cuda test-cuda-session-batch test-cuda-mixed-batch dspark-acceptance dspark-verify-depth mtp-verify-depth cpu cuda cuda-spark cuda-generic cuda-regression strix-halo rocm
+.PHONY: all help clean test test_0_runner test-predictor-0 test_1_runner test-predictor-1 test_2_runner test-predictor-2 test_3_runner test-predictor-3 test_4_runner test-predictor-4 test_5_runner test-predictor-5 test_6_runner test-predictor-6 test_7_runner test-predictor-7 test_8_runner test-predictor-8 test_9_runner test-predictor-9 test_10_runner test-predictor-10 test_13_runner test-predictor-13 test_14_runner test-predictor-14 test_15_runner test-predictor-15 dataset_runner test-metal-session-batch test-mxfp4-cuda test-cuda-session-batch test-cuda-mixed-batch dspark-acceptance dspark-verify-depth mtp-verify-depth cpu cuda cuda-spark cuda-generic cuda-regression strix-halo rocm
 
 ifeq ($(UNAME_S),Darwin)
 .PHONY: metal-decode-schedule-bench metal-prefill-variant-bench check-mxfp4-half-lut
@@ -300,6 +300,17 @@ test_14_runner: test_predictor/test_14/test_14_runner
 
 test-predictor-14: test_14_runner
 	./test_predictor/test_14/test_14_runner
+
+test_predictor/test_15/test_15_runner: test_predictor/test_15/test_15_runner.c
+	$(CC) $(CFLAGS) -o $@ $<
+
+test_15_runner: test_predictor/test_15/test_15_runner
+	$(MAKE) -j1 ds4 CUDA_ARCH=sm_89 \
+		CFLAGS='-O2 -ffast-math -g -march=native -Wall -Wextra -std=c99 -D_GNU_SOURCE -fno-finite-math-only' \
+		NVCCFLAGS='-O2 -g -lineinfo --use_fast_math -arch=sm_89 -Xcompiler -march=native -Xcompiler -pthread'
+
+test-predictor-15: test_15_runner
+	./test_predictor/test_15/test_15_runner
 
 test_predictor/prefetch_predictor_pipeline/collector/dataset_runner: test_predictor/prefetch_predictor_pipeline/collector/dataset_runner.c
 	$(CC) $(CFLAGS) -o $@ $<

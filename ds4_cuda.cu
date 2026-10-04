@@ -127,6 +127,8 @@ typedef struct ds4_gpu_test4_prefetch_event {
     uint32_t same_layer_slot_state[8];
     uint32_t same_layer_slot_target_token[8];
     double   same_layer_slot_age_ms[8];
+    uint32_t same_layer_slot_n_selected[8];
+    int32_t  same_layer_slot_selected[8][10];
     uint32_t pinned_slots_allocated;
     uint64_t pinned_bytes_estimated;
 } ds4_gpu_test4_prefetch_event;
@@ -26501,6 +26503,9 @@ typedef struct {
     uint32_t same_layer_slot_state[CUDA_TEST4_MAX_PREFETCH_DISTANCE];
     uint32_t same_layer_slot_target_token[CUDA_TEST4_MAX_PREFETCH_DISTANCE];
     double same_layer_slot_age_ms[CUDA_TEST4_MAX_PREFETCH_DISTANCE];
+    uint32_t same_layer_slot_n_selected[CUDA_TEST4_MAX_PREFETCH_DISTANCE];
+    int32_t same_layer_slot_selected[CUDA_TEST4_MAX_PREFETCH_DISTANCE]
+                                    [CUDA_TEST4_MAX_SELECTED_COUNT];
     uint32_t pinned_slots_allocated;
     uint64_t pinned_bytes_estimated;
 } cuda_test4_worker_event;
@@ -26648,6 +26653,9 @@ static void cuda_test4_event_snapshot(cuda_test4_worker_event *event,
         event->same_layer_slot_target_token[future] = slot->target_token;
         event->same_layer_slot_age_ms[future] = slot->enqueue_sec > 0.0 ?
             (now - slot->enqueue_sec) * 1000.0 : 0.0;
+        event->same_layer_slot_n_selected[future] = slot->n_selected;
+        memcpy(event->same_layer_slot_selected[future], slot->selected,
+               sizeof(event->same_layer_slot_selected[future]));
     }
 }
 
@@ -31733,6 +31741,10 @@ extern "C" uint32_t ds4_gpu_test4_prefetch_drain_events(
                sizeof(dst->same_layer_slot_target_token));
         memcpy(dst->same_layer_slot_age_ms, src->same_layer_slot_age_ms,
                sizeof(dst->same_layer_slot_age_ms));
+        memcpy(dst->same_layer_slot_n_selected, src->same_layer_slot_n_selected,
+               sizeof(dst->same_layer_slot_n_selected));
+        memcpy(dst->same_layer_slot_selected, src->same_layer_slot_selected,
+               sizeof(dst->same_layer_slot_selected));
         dst->pinned_slots_allocated = src->pinned_slots_allocated;
         dst->pinned_bytes_estimated = src->pinned_bytes_estimated;
     }

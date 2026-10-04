@@ -1,0 +1,4 @@
+# Benchmark traces, reports, generated oracle and Unix socket are reproducible.
+/output*/
+/predictor.sock
+/test_15_runner
