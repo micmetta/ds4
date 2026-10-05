@@ -1827,3 +1827,290 @@ ultimi proprio perché separa la vita del buffer dalla vita di uno slot. Prima
 di implementarla resta necessario misurare per quanti di tali match l'entry
 sarebbe `READY` entro il forward reale della richiesta successiva e quale
 capacità pinned aggiuntiva richiederebbe.
+
+## Approfondimento sulla soluzione B.1
+
+### Correzione minimale della soluzione B: riallocare i buffer già sicuri da riusare
+
+La soluzione B introduce già la cache condivisa per `(layer, expert)`, gli
+shard, `future_refcount` e `lease_count`. TEST_15 ha però mostrato un limite
+residuo: un buffer RAM pinned può restare associato a un'entry `READY` ormai
+inutile per il suo layer, mentre un altro layer fallisce la creazione di una
+nuova entry con `persistent_pinned_allocation_failed`.
+
+La soluzione B.1 non richiede più RAM pinned e non modifica il comportamento
+del decode o del fallback. Aggiunge soltanto la possibilità di **riassegnare
+in sicurezza un buffer fisico già allocato** quando la nuova richiesta non
+trova capacità libera.
+
+```text
+prima della correzione
+
+layer 12: (12, 9) = READY, future_refcount = 0, lease_count = 0
+          buffer pinned occupato ma inattivo
+
+layer 27: vuole accodare (27, X)
+          -> nessuna capacità locale disponibile
+          -> persistent_pinned_allocation_failed
+
+dopo B.1
+
+layer 12: (12, 9) sicuro da rimuovere
+          -> conserva il suo buffer fisico
+
+layer 27: (27, X) = QUEUED sullo stesso buffer fisico
+          -> il worker di shard(27) legge X e lo pubblica READY
+```
+
+Un'entry `READY` è una candidata sicura alla riallocazione **solo** se:
+
+```text
+future_refcount == 0    # nessuna previsione futura la richiede
+lease_count == 0        # il THREAD DI DECODE DS4 non la sta caricando in VRAM
+```
+
+Questo non significa necessariamente che l'expert non sia mai stato utile:
+significa che il decode lo ha già consumato, oppure che non esiste più alcuna
+richiesta futura che possa usarlo. In entrambi i casi i suoi byte possono
+essere sovrascritti senza compromettere il forward.
+
+### Modifiche minime necessarie
+
+1. **Separare chiave logica e buffer fisico.** Ogni entry `(layer, expert)`
+   deve conservare un `buffer_id`; i buffer `gate/up/down` già allocati
+   confluiscono in un piccolo registro/pool fisico. Non occorre riallocarli né
+   aumentare il budget pinned della macchina.
+
+2. **Cercare una candidata solo quando manca spazio.** Il thread asincrono di
+   prefetch DS4 prova prima un buffer libero. Solo se non ce n'è uno, cerca:
+   prima una entry `FAILED` che trattiene ancora buffer, poi una `READY` con
+   entrambi i contatori a zero. La normale richiesta non paga quindi il costo
+   della scansione globale quando il pool ha ancora capacità libera.
+
+3. **Sostituire direttamente la mappa sotto lock.** La vecchia chiave viene
+   rimossa e la nuova viene associata allo stesso `buffer_id` nella stessa
+   sezione critica. La nuova entry nasce già `QUEUED`, con
+   `future_refcount = 1`; dopo il rilascio del lock viene segnalata soltanto la
+   condition variable del suo shard. Non serve esporre stati intermedi
+   `ABSENT` o `EVICTING`.
+
+4. **Mantenere i lock per shard.** Se la vecchia e la nuova entry appartengono
+   a shard diversi, si prendono i due mutex in ordine crescente di indice;
+   il registro dei buffer richiede un lock brevissimo solo per trasferire la
+   proprietà del `buffer_id`. Il worker continua a fare l'I/O senza lock e
+   resta proprietario del lavoro per `layer % N`.
+
+5. **Non toccare il percorso critico del decode.** Il THREAD DI DECODE DS4
+   continua a usare soltanto entry trovate già `READY`. Se una richiesta è
+   ancora `QUEUED`, `READING`, assente o non sicura da riallocare, il fallback
+   on-demand resta immediato: B.1 non può introdurre attese nel forward.
+
+### Flusso di riallocazione
+
+```text
+THREAD DI DECODE DS4
+        |
+        +--> delega il prefetch futuro di (layer 27, expert X)
+        v
+thread asincrono di prefetch DS4
+        |
+        +--> nessun buffer libero nel pool fisico
+        +--> trova (12, 9) = READY,
+        |    future_refcount = 0, lease_count = 0
+        |
+        +--> lock shard(12) e shard(27), in ordine canonico
+        +--> rimuove (12, 9) dalla mappa
+        +--> associa il suo buffer_id a (27, X) = QUEUED
+        +--> future_refcount di (27, X): 0 -> 1
+        +--> rilascia i lock
+        +--> segnala solo il worker di shard(27)
+        v
+worker di shard(27)
+        |
+        +--> QUEUED -> READING
+        +--> bridge Windows sovrascrive il buffer con i byte di X
+        +--> READING -> READY
+```
+
+### Cosa non cambia: I/O raggruppato e upload del forward reale
+
+B.1 cambia esclusivamente **quale buffer pinned già esistente** viene
+assegnato a una nuova entry. Non cambia la modalità con cui il worker riempie
+il buffer né allarga il gruppo realmente eseguito dal modello.
+
+```text
+SSD -> RAM pinned
+
+worker dello shard
+        |
+        +--> raccoglie il normale batch di entry QUEUED del proprio layer
+        +--> invia al bridge Windows una richiesta raggruppata
+        +--> il bridge legge gate/up/down dal GGUF direttamente nei buffer
+             RAM pinned già associati alle entry del batch
+
+RAM pinned -> VRAM
+
+THREAD DI DECODE DS4
+        |
+        +--> router reale sceglie sempre e soltanto i 6 expert del forward
+        +--> riusa i cache-hit READY tra quei 6
+        +--> usa il fallback on-demand solo per i mancanti
+```
+
+In particolare, un `Top-K = 10` è soltanto la previsione da mettere in cache:
+non fa eseguire dieci expert e non trasferisce automaticamente dieci expert
+in VRAM. Al forward il gruppo reale resta Top-6. Nell'implementazione attuale
+l'upload dei cache-hit RAM pinned -> VRAM è ancora effettuato per singolo
+expert pronto; l'eventuale batching di queste copie è una possibile
+ottimizzazione successiva, distinta da B.1 e non necessaria per risolvere la
+saturazione.
+
+### Perché questa è la priorità per la saturazione osservata in TEST_15
+
+I dati raccolti da TEST_15 mostrano che, mentre avvengono i fallimenti,
+esistono in media circa 2 GiB di buffer già occupati da entry sicure da
+riassegnare. Prima di chiedere altra RAM pinned al sistema, B.1 permette di
+trasformare questa capacità logicamente bloccata in capacità utile per le
+nuove predizioni.
+
+L'effetto atteso non è soltanto ridurre il contatore dei `FAILED`: più expert
+potranno arrivare a `READY` entro il loro forward reale, quindi il decode
+dovrà ricorrere meno spesso al fallback on-demand. Il guadagno di speedup va
+poi dimostrato sperimentalmente, perché dipende anche da accuratezza del
+predictor, ritardo del bridge Windows e tempi di upload RAM pinned -> VRAM.
+La metrica di successo primaria è comunque chiara: i fallimenti di allocazione
+persistente devono diminuire senza mai riallocare entry con riferimento futuro
+o lease attivo.
+
+## Risultati TEST_15 `output_11`: saturazione logica, non assenza fisica di RAM pinned
+
+L'esecuzione `output_11` usa la cache condivisa per `(layer, expert)`,
+`Top-K = 10` e otto worker. Ha confermato che i `FAILED` osservati in TEST_15
+non sono causati dal bridge Windows: in tutte le ripetizioni il contatore
+`bridge_failed` è zero. Il problema è invece
+`persistent_pinned_allocation_failed`: la cache non riesce ad ammettere nuovi
+expert pur avendo ancora molti buffer RAM pinned residenti ma già inutili.
+
+Il sintomo è visibile anche end-to-end: in questa configurazione la fase C
+richiede in media **121,282 s** contro **98,235 s** della baseline B
+(-23,45% di speedup). La tabella seguente spiega perché il peggioramento non
+va attribuito al modello di prefetch o al bridge: la cache cade spesso nel
+fallback proprio mentre conserva capacità pinned riutilizzabile.
+
+| Misura della fase C | Rip. 1 | Rip. 2 | Rip. 3 |
+|---|---:|---:|---:|
+| `persistent_pinned_allocation_failed` | 16.404 | 16.004 | 16.171 |
+| RAM pinned occupata al primo fallimento | 2,947 GiB | 2,960 GiB | 2,960 GiB |
+| Coppie subito riallocabili al primo fallimento | 238 | 81 | 208 |
+| Byte subito riallocabili al primo fallimento | 1,607 GiB | 0,547 GiB | 1,404 GiB |
+| Byte riallocabili medi durante i fallimenti | 1,983 GiB | 2,014 GiB | 1,969 GiB |
+| Byte riallocabili massimi | 2,248 GiB | 2,282 GiB | 2,248 GiB |
+| Entry protette da `future_refcount > 0` (media) | 113,2 | 121,2 | 117,8 |
+| Entry con `lease_count > 0` (media) | 1,2 | 1,3 | 1,3 |
+| `bridge_failed` | 0 | 0 | 0 |
+
+Il primo campione varia perché il primo fallimento può arrivare in momenti
+diversi della generazione. La misura stabile è quindi quella media: circa
+**2 GiB di RAM pinned** risultano contemporaneamente occupati da entry `READY`
+senza riferimenti futuri e senza lease. Sono byte già allocati, ma non sono
+riutilizzabili da un layer che sta tentando di accodare un nuovo expert.
+
+Le coppie candidate sono inoltre riportate nei file
+`shared_expert_cache_metrics.json` di `output_11`, con il motivo
+`ready_unreferenced_and_unleased` oppure
+`failed_entry_retains_pinned_buffer`. Questo rende il problema verificabile:
+non è necessario aumentare subito la memoria pinned del PC; prima bisogna
+riutilizzare correttamente quella che è già stata allocata.
+
+## Correzione consigliata: pool fisico globale di buffer RAM pinned
+
+La soluzione B descritta sopra conserva ancora un limite importante: la cache
+è logica per `(layer, expert)`, ma nella pratica i buffer RAM pinned restano
+vincolati alla capacità locale del layer. Quando il layer 27 è saturo, non può
+usare i buffer che il layer 12 mantiene `READY` ma non utilizzerà più. Questa
+è la differenza che va eliminata.
+
+La modifica consigliata è separare definitivamente **entry logica** e
+**buffer fisico**:
+
+```text
+oggi
+  entry (layer, expert)  ---> possiede direttamente i suoi buffer RAM pinned
+
+proposto
+  entry (layer, expert)  ---> buffer_id opzionale
+                                  |
+                                  v
+                       pool globale di buffer RAM pinned riutilizzabili
+```
+
+Il numero totale di buffer resta fissato a un limite prudente per la macchina;
+non viene quindi richiesta più RAM pinned del budget attuale. Cambia solo chi
+può usare un buffer diventato inutile: qualunque layer, non soltanto il layer
+che lo aveva ottenuto per primo.
+
+### Cosa deve cambiare rispetto all'implementazione attuale
+
+1. **Pool fisico unico.** I blocchi pinned vengono allocati una volta e messi
+   in una free-list globale. Ogni entry cache contiene un `buffer_id`, non la
+   proprietà permanente dei buffer `gate/up/down`.
+
+2. **Riassegnazione globale sicura.** Quando una nuova predizione per
+   `(layer_nuovo, expert_nuovo)` non trova un buffer libero, il thread
+   asincrono di prefetch cerca in tutto il pool prima le entry `FAILED`, poi le
+   entry `READY` con `future_refcount = 0` e `lease_count = 0`. Se trova una
+   candidata, scollega in modo atomico la vecchia chiave, mantiene il
+   `buffer_id` e lo collega subito alla nuova chiave, che passa a `QUEUED`.
+   Il worker proprietario di `layer_nuovo % N` viene quindi segnalato e fa
+   `QUEUED -> READING` nel buffer appena riusato.
+
+3. **Lock con ordine deterministico.** La mappa di ogni layer continua a
+   essere protetta dal mutex del suo shard. Se una riassegnazione coinvolge un
+   layer vecchio e uno nuovo, i due shard vanno presi sempre in ordine di
+   indice crescente; una piccola protezione del pool serve solo per togliere o
+   restituire un `buffer_id`. L'I/O del bridge Windows e la copia RAM
+   pinned -> VRAM restano fuori dai lock.
+
+4. **Le garanzie esistenti non cambiano.** Un buffer non può essere
+   riassegnato se è ancora richiesto da una previsione futura
+   (`future_refcount > 0`) o se il THREAD DI DECODE DS4 lo sta caricando in
+   VRAM (`lease_count > 0`). Il fallback resta identico quando non c'è una
+   candidata sicura: il decode non deve mai attendere la cache.
+
+```text
+nuova richiesta: (layer 27, expert X)
+        |
+        +--> nessun buffer libero nel pool
+        |
+        +--> trova (layer 12, expert 9): READY,
+        |    future_refcount = 0, lease_count = 0
+        |
+        +--> scollega (12, 9) dal suo buffer_id
+        +--> collega lo stesso buffer_id a (27, X) = QUEUED
+        +--> segnala soltanto il worker di shard(27)
+        v
+worker di shard(27): QUEUED -> READING -> READY
+```
+
+### Miglioramento atteso e come verificarlo
+
+Questa correzione dovrebbe trasformare una quota importante dei fallimenti di
+allocazione persistente in normali richieste `QUEUED -> READING -> READY`.
+I circa 1,97--2,01 GiB medi rilevati come riutilizzabili equivalgono a
+centinaia di buffer-expert che oggi restano inutilmente bloccati. Ci si aspetta
+quindi più entry `READY` al momento del decode, meno fallback on-demand e una
+maggiore possibilità di sfruttare davvero Top-K elevati.
+
+Non è però corretto promettere automaticamente il record di speedup: restano
+da misurare accuratezza del predictor, ritardo del bridge, numero di chiamate
+di I/O e costo di upload verso VRAM. La correzione è soprattutto necessaria
+per rimuovere un limite artificiale di capacità; lo speedup end-to-end dovrà
+essere verificato contro TEST_14 `output_2`.
+
+Dopo l'implementazione, il test deve mostrare contemporaneamente:
+
+1. una forte riduzione di `persistent_pinned_allocation_failed`;
+2. contatori di buffer effettivamente riutilizzati tra layer diversi;
+3. crescita di hit e copertura `READY` al decode;
+4. riduzione del fallback on-demand e del tempo della fase C;
+5. assenza di riassegnazioni con `future_refcount > 0` o `lease_count > 0`.
