@@ -1,5 +1,5 @@
-/* Entry point nativo per CLion. TEST_15 misura l'overlap dei due slot
- * pinned della configurazione record, senza cambiarne la politica I/O. */
+/* Entry point nativo per CLion. TEST_15 confronta la cache condivisa di
+ * expert in RAM pinned con il replay baseline della configurazione record. */
 
 #include <stdio.h>
 #include <unistd.h>

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""TEST_15: misura non invasiva dell'overlap fra slot pinned di TEST_14."""
+"""TEST_15: misura dell'overlap e benchmark della cache pinned per expert."""
 from __future__ import annotations
 
 import argparse
@@ -24,15 +24,15 @@ def required(name: str) -> str:
     return value
 
 
-def configure_record_environment() -> tuple[str, str, str, str, int, Path]:
+def configure_record_environment() -> tuple[str, str, str, str, int, int, Path]:
     """Mappa l'interfaccia TEST_15 sulla collaudata infrastruttura TEST_9/14."""
     checkpoint = Path(required("DS4_TEST_15_CHECKPOINT"))
     top_k = int(os.environ.get("DS4_TEST_15_PREFETCH_TOP_K", "6"))
-    if top_k != 6:
-        raise SystemExit("TEST_15 misura la configurazione record: DS4_TEST_15_PREFETCH_TOP_K deve essere 6.")
+    if not 6 <= top_k <= 10:
+        raise SystemExit("DS4_TEST_15_PREFETCH_TOP_K deve essere un intero tra 6 e 10.")
     workers = int(os.environ.get("DS4_TEST_15_PREFETCH_NUM_WORKERS", "6"))
-    if workers != 6:
-        raise SystemExit("TEST_15 misura la configurazione record: DS4_TEST_15_PREFETCH_NUM_WORKERS deve essere 6.")
+    if workers not in (6, 8):
+        raise SystemExit("TEST_15 supporta 6 worker (record) oppure 8 worker (confronto di scalabilità).")
     if not checkpoint.is_file():
         raise SystemExit(f"Checkpoint TEST_15 non trovato: {checkpoint}")
 
@@ -55,11 +55,19 @@ def configure_record_environment() -> tuple[str, str, str, str, int, Path]:
         "DS4_TEST_9_PREFETCH_STEP": step,
         "DS4_TEST_9_PREFETCH_NUM_WORKERS": str(workers),
         "DS4_TEST_14_PREFETCH_TOP_K": str(top_k),
+        # Il dispatcher C mantiene il predictor e il bridge di TEST_14, ma
+        # sostituisce la banca a gruppi con la cache (layer, expert) di TEST_15.
+        "DS4_TEST_15_SHARED_EXPERT_CACHE": "1",
+        "DS4_TEST_9_EXPERIMENT": f"test_15_build7_top{top_k}_shared_pinned_expert_cache",
+        "DS4_TEST_9_ARCHITECTURE": (
+            "Build7 Top-4; cache RAM pinned condivisa per (layer, expert); "
+            f"2 x Top-{top_k} entry per layer; {workers} shard layer % {workers}"
+        ),
         "DS4_TEST_13_WINDOWS_BRIDGE": "1",
         "DS4_TEST_13_WINDOWS_HOST": required("DS4_TEST_15_WINDOWS_HOST"),
         "DS4_TEST_13_WINDOWS_PORT": os.environ.get("DS4_TEST_15_WINDOWS_PORT", "38114"),
     })
-    return model, prefetch_model, layers, distance, workers, checkpoint
+    return model, prefetch_model, layers, distance, workers, top_k, checkpoint
 
 
 def overlap_report(trace_path: Path) -> dict:
@@ -179,16 +187,25 @@ def aggregate_overlap(repetitions: list[dict]) -> dict:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="TEST_15: profiling read-only dell'overlap nella banca pinned.")
+    parser = argparse.ArgumentParser(description="TEST_15: cache pinned condivisa per expert Build 7.")
     parser.add_argument("--repetitions", type=int, default=int(os.environ.get("DS4_TEST_15_REPETITIONS", "3")))
+    parser.add_argument("--mode", choices=("benchmark", "overlap-measurement"), default="benchmark")
     arguments = parser.parse_args()
     if arguments.repetitions < 1:
         raise SystemExit("--repetitions deve essere positivo.")
 
-    model, prefetch_model, layers, distance, workers, checkpoint = configure_record_environment()
+    model, prefetch_model, layers, distance, workers, top_k, checkpoint = configure_record_environment()
     test9.TEST_DIR = TEST_DIR
     test9.start_service = test14.start_build7_service
     test9.run_c_with_automatic_audit = test14.run_c_build7
+    if arguments.mode == "benchmark":
+        print("TEST_15: A/B/C con cache RAM pinned condivisa per (layer, expert)...")
+        test9.benchmark_with_automatic_audits(arguments)
+        return
+
+    # Modalità conservata per riprodurre il profiling read-only che ha motivato
+    # la soluzione B, senza attivare la cache condivisa.
+    os.environ.pop("DS4_TEST_15_SHARED_EXPERT_CACHE", None)
     output = test9.next_output()
     oracle = output / "routing_oracle.bin"
     report_path = output / "overlap_measurement_report.json"
@@ -198,7 +215,7 @@ def main() -> None:
         "configuration": {
             "source_record": "TEST_14/output_2",
             "checkpoint": str(checkpoint),
-            "prefetch_top_k": 6,
+            "prefetch_top_k": top_k,
             "learned_physical_layers": "5-42",
             "worker_window": "3-42",
             "slots_per_layer": 2,

@@ -381,7 +381,7 @@ def statistics_summary(values: list[float]) -> dict[str, float | int]:
 def prefetch_worker_count() -> int:
     """Legge e valida il numero di worker SSD richiesti per TEST_9.
 
-    DS4 contiene spazio per al massimo sette worker. Il default è tre,
+    DS4 contiene spazio per al massimo otto worker. Il default è tre,
     perché output_10 ha mostrato che tre letture concorrenti sono il miglior
     compromesso misurato su questa macchina.
     """
@@ -390,11 +390,11 @@ def prefetch_worker_count() -> int:
         worker_count = int(raw_value)
     except ValueError as error:
         raise SystemExit(
-            "DS4_TEST_9_PREFETCH_NUM_WORKERS deve essere un intero tra 1 e 7."
+            "DS4_TEST_9_PREFETCH_NUM_WORKERS deve essere un intero tra 1 e 8."
         ) from error
-    if worker_count < 1 or worker_count > 7:
+    if worker_count < 1 or worker_count > 8:
         raise SystemExit(
-            "DS4_TEST_9_PREFETCH_NUM_WORKERS deve essere compreso tra 1 e 7."
+            "DS4_TEST_9_PREFETCH_NUM_WORKERS deve essere compreso tra 1 e 8."
         )
     return worker_count
 
@@ -434,6 +434,7 @@ def run_c_with_automatic_audit(
     previous_worker_policy = os.environ.get("DS4_TEST_9_WORKER_POLICY")
     previous_fifo_workers = os.environ.get("DS4_TEST_9_FIFO_WORKERS")
     previous_partition_workers = os.environ.get("DS4_TEST_9_PARTITION_WORKERS")
+    previous_test15_metrics = os.environ.get("DS4_TEST_15_METRICS_PATH")
     # run_ds4 copia l'ambiente del processo. Questa variabile rende più ricca
     # la trace solo per TEST_9; TEST_7 e TEST_8 mantengono il loro formato.
     os.environ["DS4_TEST_9_PINNED_DIAGNOSTICS"] = "1"
@@ -444,6 +445,12 @@ def run_c_with_automatic_audit(
     os.environ["DS4_TEST_9_WORKER_POLICY"] = "layer_partition"
     os.environ["DS4_TEST_9_FIFO_WORKERS"] = "0"
     os.environ["DS4_TEST_9_PARTITION_WORKERS"] = str(worker_count)
+    # TEST_15 usa una cache diversa dalla banca storica a gruppi.  Il CUDA
+    # backend scrive qui metriche native della cache, una per fase C, senza
+    # cambiare il formato della trace condivisa con TEST_9.
+    test15_metrics_path = output / "shared_expert_cache_metrics.json"
+    if os.environ.get("DS4_TEST_15_SHARED_EXPERT_CACHE") == "1":
+        os.environ["DS4_TEST_15_METRICS_PATH"] = str(test15_metrics_path)
     try:
         result = run_ds4(
             "C", output, model, None, oracle, "prefetch", prefetch_model,
@@ -470,6 +477,10 @@ def run_c_with_automatic_audit(
             os.environ.pop("DS4_TEST_9_PARTITION_WORKERS", None)
         else:
             os.environ["DS4_TEST_9_PARTITION_WORKERS"] = previous_partition_workers
+        if previous_test15_metrics is None:
+            os.environ.pop("DS4_TEST_15_METRICS_PATH", None)
+        else:
+            os.environ["DS4_TEST_15_METRICS_PATH"] = previous_test15_metrics
         stop_service(service)
 
     prefetch_trace = output / "run_C.prefetch.jsonl"
@@ -483,6 +494,11 @@ def run_c_with_automatic_audit(
     audit_path = output / "pinned_ram_policy_audit.json"
     write_json(audit_path, audit_report)
 
+    test15_metrics = None
+    if test15_metrics_path.is_file():
+        with test15_metrics_path.open("r", encoding="utf-8") as handle:
+            test15_metrics = json.load(handle)
+
     return {
         **result,
         **learned_trace_summary(output / "run_C.learned_predictions.jsonl"),
@@ -492,6 +508,10 @@ def run_c_with_automatic_audit(
         ),
         "pinned_ram_policy_audit_file": str(audit_path),
         "pinned_ram_policy_audit": audit_report["audit"],
+        **({
+            "shared_expert_cache_metrics_file": str(test15_metrics_path),
+            "shared_expert_cache_metrics": test15_metrics,
+        } if test15_metrics is not None else {}),
     }
 
 
