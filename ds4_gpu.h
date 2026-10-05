@@ -349,6 +349,22 @@ int ds4_gpu_test4_prefetch_try_selected_load(
         const int32_t                     *selected_ids,
         uint32_t                           n_selected,
         ds4_gpu_stream_expert_load_stats  *out_stats);
+/* TEST_15: optional shared pinned cache keyed by (physical layer, expert).
+ * It is deliberately separate from TEST_4's group-slot bank and is active
+ * only when DS4_TEST_15_SHARED_EXPERT_CACHE=1. */
+int ds4_gpu_test15_shared_expert_cache_enqueue(
+        const ds4_gpu_stream_expert_table *table,
+        uint32_t                           target_token,
+        uint32_t                           layer,
+        const int32_t                     *selected_ids,
+        uint32_t                           n_selected);
+int ds4_gpu_test15_shared_expert_cache_try_selected_load(
+        const ds4_gpu_stream_expert_table *table,
+        uint32_t                           token,
+        uint32_t                           layer,
+        const int32_t                     *selected_ids,
+        uint32_t                           n_selected,
+        ds4_gpu_stream_expert_load_stats  *out_stats);
 uint32_t ds4_gpu_test4_prefetch_drain_events(
         ds4_gpu_test4_prefetch_event      *out_events,
         uint32_t                            max_events);

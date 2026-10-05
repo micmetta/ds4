@@ -2186,6 +2186,13 @@ static uint32_t ds4_test14_prefetch_top_k(void) {
     return (uint32_t)parsed;
 }
 
+/* TEST_15 replaces only the host-pinned storage policy.  The predictor
+ * protocol and the normal TEST_14 group-slot path remain untouched. */
+static bool ds4_test15_shared_cache_enabled(void) {
+    const char *value = getenv("DS4_TEST_15_SHARED_EXPERT_CACHE");
+    return value && value[0] && strcmp(value, "0") != 0;
+}
+
 static void *ds4_test7_async_worker(void *unused) {
     (void)unused;
     for (;;) {
@@ -2231,7 +2238,10 @@ static void *ds4_test7_async_worker(void *unused) {
         const double inference_ms = job.build7 ? response14.inference_ms : response.inference_ms;
         ds4_test7_match_prediction_and_actual(source_pos, layer, experts, expert_count, inference_ms);
         if (ds4_test7_prefetch_enabled()) {
-            const int queued = ds4_gpu_test4_prefetch_enqueue(
+            const int queued = ds4_test15_shared_cache_enabled() ?
+                ds4_gpu_test15_shared_expert_cache_enqueue(
+                    &job.table, source_pos + 1u, layer, experts, expert_count) :
+                ds4_gpu_test4_prefetch_enqueue(
                     &job.table, source_pos + 1u, layer,
                     experts, expert_count);
             if (queued) {
@@ -22464,7 +22474,10 @@ static bool metal_graph_decode_set_hash_selected_override(
         const double trace_t0 = ssd_trace ? now_sec() : 0.0;
         if (!ds4_test4_trace_drain_worker_events()) return false;
         ds4_gpu_stream_expert_load_stats prefetch_stats = {0};
-        const int prefetch_hit = ds4_gpu_test4_prefetch_try_selected_load(
+        const int prefetch_hit = ds4_test15_shared_cache_enabled() ?
+            ds4_gpu_test15_shared_expert_cache_try_selected_load(
+                &table, pos, il, selected_i32, DS4_N_EXPERT_USED, &prefetch_stats) :
+            ds4_gpu_test4_prefetch_try_selected_load(
                 &table, pos, il, selected_i32, DS4_N_EXPERT_USED, &prefetch_stats);
         if (!ds4_test4_trace_drain_worker_events()) return false;
         if (prefetch_hit < 0) return false;
@@ -22855,7 +22868,10 @@ static bool metal_graph_decode_cuda_selected_load(
         }
         if (ok && !ds4_test4_trace_drain_worker_events()) ok = false;
         ds4_gpu_stream_expert_load_stats prefetch_stats = {0};
-        const int prefetch_hit = ds4_gpu_test4_prefetch_try_selected_load(
+        const int prefetch_hit = ds4_test15_shared_cache_enabled() ?
+            ds4_gpu_test15_shared_expert_cache_try_selected_load(
+                &table, pos, il, selected_ids, DS4_N_EXPERT_USED, &prefetch_stats) :
+            ds4_gpu_test4_prefetch_try_selected_load(
                 &table, pos, il, selected_ids, DS4_N_EXPERT_USED, &prefetch_stats);
         if (ok && !ds4_test4_trace_drain_worker_events()) ok = false;
         if (prefetch_hit < 0) {
