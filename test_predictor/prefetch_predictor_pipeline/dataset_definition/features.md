@@ -1867,3 +1867,132 @@ Ordine proposto di sperimentazione:
 3. se il segnale e' utile, aggiungere anche gli score/router logits compatti;
 4. valutare costo CPU, latenza e Recall@6 online prima di aggiungere feature
    dense del layer precedente.
+
+---
+
+# Build 7 — candidata promossa: `hidden_delta` fra raw hidden corrente e precedente
+
+Build 7 dispone gia' dei raw hidden causalmente disponibili del layer corrente
+`l` e del layer precedente `l-1` per lo stesso token. La famiglia candidata
+`hidden_delta` non aggiunge una terza sorgente: rende invece esplicito **come
+cambia** la rappresentazione fra i due layer:
+
+$$
+\Delta h_{t,l} = h_{t,l} - h_{t,l-1}.
+$$
+
+Il vettore $Δh_{t,l}$ e' materializzato in 4096 dimensioni `int8` dopo
+dequantizzazione dei due input e ricalibrazione del delta; il clipping al
+percentile 99,99 e' risultato pari a circa $9,63\cdot10^{-5}$ delle
+componenti. Lo accompagnano quattro statistiche `float16`:
+
+| Statistica | Significato |
+|---|---|
+| `current_l2_norm` | intensita' del raw hidden di `l` |
+| `previous_l2_norm` | intensita' del raw hidden di `l-1` |
+| `delta_l2_norm` | entita' complessiva della trasformazione fra i due layer |
+| `cosine_current_previous` | allineamento direzionale fra le due rappresentazioni |
+
+La disponibilita' e' causale: quando il predictor deve stimare gli expert del
+token successivo nel layer `l`, entrambe le rappresentazioni appartengono al
+token corrente gia' elaborato. I file restano separati dal dataset e dagli
+input gia' usati da Build 7, in
+`build_dataset_7/ml/feature_candidates/priority_1_2_v1/01_hidden_delta/`, con
+allineamento riga-per-riga a `y_{split}.npy`; nessun artefatto esistente viene
+sovrascritto.
+
+## Risultato dello screening `hidden_delta`
+
+Lo screening usa l'architettura Top-4 di Build 7 e aggiunge soltanto un ramo
+per il delta (64 unita') e il ramo delle quattro statistiche. La run iniziale
+di 60 epoche ha raggiunto validation Recall@6 `0.530481` senza early stopping;
+il training e' stato poi ripreso dai migliori pesi fino a un massimo di 1000
+epoche con patience 10, terminando dopo l'epoca 164. Il miglior checkpoint ha
+raggiunto **0.540081** su validation Recall@6.
+
+| Misura validation Recall@6 | Valore | Delta dal riferimento |
+|---|---:|---:|
+| Build 7 Top-4 di riferimento | 0.539006 | — |
+| `hidden_delta`, checkpoint migliore | **0.540081** | **+0.001075** |
+| Stesso checkpoint, delta azzerato | 0.525594 | -0.014487 dal riferimento del checkpoint |
+| Stesso checkpoint, delta permutato tra righe | 0.529714 | -0.010367 dal riferimento del checkpoint |
+
+L'incremento rispetto al record Build 7 e' piccolo e richiedera' un controllo
+matched senza il ramo candidato per attribuirlo con rigore alla feature. Le
+ablazioni sono pero' nette: azzerare o disallineare il delta riduce la Recall,
+quindi il modello sta effettivamente usando l'informazione di variazione tra
+layer. `hidden_delta` e' pertanto una candidata prioritaria per i successivi
+tuning controllati; le famiglie `routing_dynamics`, `layer_expert_ema` e
+`router_confidence` restano da valutare separatamente prima di combinarle.
+
+## Screening completato delle feature prioritarie e migliore candidata combinata
+
+Lo screening successivo ha mantenuto invariati gli input e il checkpoint Top-4
+di Build 7 e ha aggiunto, una alla volta, i nuovi rami candidati. Per le
+famiglie che continuavano a migliorare dopo 60 epoche, il training e' stato
+ripreso dal miglior checkpoint fino a 1000 epoche, con early stopping
+`patience=10`. Tutte le misure seguenti sono su validation; il test set resta
+non usato per la selezione.
+
+| Configurazione | Migliore validation Recall@6 | Esito |
+|---|---:|---|
+| Top-4 Build 7 di riferimento | 0.539006 | riferimento originale |
+| Top-4 + `hidden_delta` | 0.540081 | segnale utile ma guadagno contenuto |
+| Top-4 + `routing_dynamics` | 0.544162 | miglior famiglia singola |
+| Top-4 + `layer_expert_ema` | 0.539546 | non selezionata |
+| Top-4 + `router_confidence` (60 epoche) | 0.530200 | non selezionata |
+| Top-4 + `hidden_delta` + `routing_dynamics` | **0.544672** | **migliore candidata validata** |
+
+`layer_expert_ema` non aggiunge segnale utilizzabile: sul suo checkpoint il
+valore di riferimento e quelli con feature azzerata o permutata sono quasi
+identici (`0.539546`, `0.539491`, `0.539511`). `router_confidence` e' rimasta
+nettamente sotto il riferimento gia' nello screening iniziale, quindi non e'
+stata combinata.
+
+La configurazione migliore combina due rami indipendenti: il delta hidden
+4096D con le sue quattro statistiche e le 261 feature `routing_dynamics`.
+Raggiunge `0.544672`, cioe' **+0.005666** assoluto sul Top-4 originario e
+**+0.000510** sulla migliore famiglia singola. Il vantaggio finale piccolo
+rispetto a `routing_dynamics` richiede prudenza: prima di promuoverla nel
+runtime occorre la valutazione completa train/validation/test e un controllo
+matched senza i due rami nuovi.
+
+### Ablazione della configurazione combinata
+
+| Variante validation | Recall@6 | Delta dal modello combinato |
+|---|---:|---:|
+| `hidden_delta` + `routing_dynamics` | **0.544672** | — |
+| solo `hidden_delta` azzerato | 0.531719 | -0.012953 |
+| solo `hidden_delta` permutato | 0.535413 | -0.009259 |
+| solo `routing_dynamics` azzerato | 0.529729 | -0.014943 |
+| solo `routing_dynamics` permutato | 0.533344 | -0.011328 |
+| entrambi i rami azzerati | 0.521415 | -0.023257 |
+
+Azzerare o disallineare ciascun ramo degrada sostanzialmente la Recall. Le
+feature non sono quindi semplicemente ignorate dal modello: entrambe portano
+informazione predittiva complementare.
+
+### Tuning AutoML e verifica finale su test
+
+La combinazione è stata poi ottimizzata dal tuner riproducibile
+`ML_pipeline/neural_network/tune_build7_hidden_delta_routing_dynamics.py`.
+Il run `automl_hidden_delta_routing_v1` ha usato successive halving
+(24 trial: budget 10/40/150 epoche, promozioni 8/3) selezionando solo su
+validation. Il miglior checkpoint, `trial_006`, usa state 3072, proiezioni
+hidden corrente/precedente 64/96, fusione 3072, dropout 0,4, learning rate
+`2e-4`, L2 `1e-6`, ramo delta 64 e ramo routing 128 unità.
+
+Il test è rimasto escluso dalla selezione e, nella valutazione finale del
+checkpoint salvato, ha confermato il nuovo record offline:
+
+| Split | Recall@6 | Recall@10 | Recall@20 | Recall@50 |
+|---|---:|---:|---:|---:|
+| validation | 0.548003 | 0.668154 | 0.790963 | 0.903837 |
+| test | **0.551882** | **0.672929** | **0.795027** | **0.906925** |
+
+Il confronto con il Top-4 Build 7 originale sul test (`0.542485`, `0.659771`,
+`0.779376`, `0.894476`) migliora tutte le metriche; per Recall@6 il delta è
+**+0.009397**. `hidden_delta + routing_dynamics` con questo checkpoint è
+quindi la configurazione ML migliore confermata finora. Il suo impatto sullo
+speedup reale non è ancora misurato: il record runtime resta TEST_14 `output_2`
+finché non verrà eseguito il benchmark end-to-end con il nuovo checkpoint.
