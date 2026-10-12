@@ -1899,6 +1899,163 @@ def build_fixed_nnz_state_two_hidden_gated_residual_ffn(
     return model
 
 
+def build_fixed_nnz_state_two_hidden_gated_residual_candidate_ffn(
+    state_feature_count: int,
+    state_input_slots: int,
+    state_hidden_units: int,
+    current_hidden_projection_dimension: int,
+    previous_hidden_projection_dimension: int,
+    current_hidden_scale: float,
+    previous_hidden_scale: float,
+    fusion_hidden_units: int,
+    dropout: float,
+    learning_rate: float,
+    l2_regularization: float,
+    candidate_dimension: int,
+    candidate_units: int,
+    candidate_dtype: str,
+    tf,
+    candidate_scale: float | None = None,
+    candidate_aux_dimension: int = 0,
+):
+    """Add a single, explicitly named candidate branch to the Build 7 Top-4 model.
+
+    The Top-4 path is intentionally preserved verbatim.  The candidate only
+    contributes an additive expert-logit residual, so experiments can isolate
+    its contribution with zero/permutation ablation after training.
+    """
+    if candidate_dimension < 1 or candidate_units < 1 or candidate_aux_dimension < 0:
+        raise ValueError("Dimensioni candidate feature non valide.")
+    base = build_fixed_nnz_state_two_hidden_gated_residual_ffn(
+        state_feature_count, state_input_slots, state_hidden_units,
+        current_hidden_projection_dimension, previous_hidden_projection_dimension,
+        current_hidden_scale, previous_hidden_scale, fusion_hidden_units, dropout,
+        learning_rate, l2_regularization, tf,
+    )
+    regularizer = tf.keras.regularizers.l2(l2_regularization) if l2_regularization else None
+    candidate_input = tf.keras.Input(
+        shape=(candidate_dimension,), dtype=candidate_dtype, name="candidate_features"
+    )
+    candidate_values = candidate_input
+    if candidate_dtype == "int8":
+        if candidate_scale is None or not np.isfinite(candidate_scale) or candidate_scale <= 0:
+            raise ValueError("La candidate int8 richiede candidate_scale positiva.")
+        candidate_values = tf.keras.layers.Rescaling(
+            scale=candidate_scale, offset=0.0, dtype="float32", name="candidate_dequantization"
+        )(candidate_values)
+    else:
+        candidate_values = tf.keras.layers.Lambda(
+            lambda x: tf.cast(x, tf.float32), name="candidate_cast_float32"
+        )(candidate_values)
+    candidate_values = tf.keras.layers.Dense(
+        candidate_units, activation="relu", kernel_regularizer=regularizer,
+        name="candidate_projection",
+    )(candidate_values)
+    inputs = {tensor.name.split(":")[0]: tensor for tensor in base.inputs}
+    inputs["candidate_features"] = candidate_input
+    if candidate_aux_dimension:
+        candidate_aux = tf.keras.Input(
+            shape=(candidate_aux_dimension,), dtype="float16", name="candidate_aux_features"
+        )
+        aux_values = tf.keras.layers.Lambda(
+            lambda x: tf.cast(x, tf.float32), name="candidate_aux_cast_float32"
+        )(candidate_aux)
+        aux_values = tf.keras.layers.Dense(
+            max(8, candidate_units // 4), activation="relu", kernel_regularizer=regularizer,
+            name="candidate_aux_projection",
+        )(aux_values)
+        candidate_values = tf.keras.layers.Concatenate(name="candidate_feature_fusion")(
+            [candidate_values, aux_values]
+        )
+        inputs["candidate_aux_features"] = candidate_aux
+    candidate_logits = tf.keras.layers.Dense(
+        NUM_EXPERTS, activation=None, dtype="float32", kernel_regularizer=regularizer,
+        name="candidate_expert_logits",
+    )(candidate_values)
+    logits = tf.keras.layers.Add(name="expert_final_logits_with_candidate")(
+        [base.get_layer("expert_final_logits").output, candidate_logits]
+    )
+    outputs = tf.keras.layers.Activation("sigmoid", dtype="float32", name="expert_scores_with_candidate")(logits)
+    model = tf.keras.Model(inputs=inputs, outputs=outputs, name="prefetch_build7_top4_candidate_feature_ffn")
+    model.compile(
+        optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate),
+        loss=tf.keras.losses.BinaryCrossentropy(), metrics=[RecallAtSix(tf)], jit_compile=False,
+    )
+    return model
+
+
+def build_fixed_nnz_state_two_hidden_gated_residual_two_candidate_ffn(
+    state_feature_count: int,
+    state_input_slots: int,
+    state_hidden_units: int,
+    current_hidden_projection_dimension: int,
+    previous_hidden_projection_dimension: int,
+    current_hidden_scale: float,
+    previous_hidden_scale: float,
+    fusion_hidden_units: int,
+    dropout: float,
+    learning_rate: float,
+    l2_regularization: float,
+    first_dimension: int,
+    first_units: int,
+    first_dtype: str,
+    first_scale: float | None,
+    first_aux_dimension: int,
+    second_dimension: int,
+    second_units: int,
+    second_dtype: str,
+    tf,
+):
+    """Add separate hidden-delta and routing-dynamics residual branches to Top-4."""
+    if any(value < 1 for value in (first_dimension, first_units, second_dimension, second_units)):
+        raise ValueError("Dimensioni candidate combinate non valide.")
+    if first_aux_dimension < 0 or first_dtype != "int8" or second_dtype not in {"float16", "float32"}:
+        raise ValueError("Configurazione candidate combinate non valida.")
+    if first_scale is None or not np.isfinite(first_scale) or first_scale <= 0:
+        raise ValueError("La candidate hidden delta richiede una scala positiva.")
+    base = build_fixed_nnz_state_two_hidden_gated_residual_ffn(
+        state_feature_count, state_input_slots, state_hidden_units,
+        current_hidden_projection_dimension, previous_hidden_projection_dimension,
+        current_hidden_scale, previous_hidden_scale, fusion_hidden_units, dropout,
+        learning_rate, l2_regularization, tf,
+    )
+    regularizer = tf.keras.regularizers.l2(l2_regularization) if l2_regularization else None
+    inputs = {tensor.name.split(":")[0]: tensor for tensor in base.inputs}
+
+    delta_input = tf.keras.Input(shape=(first_dimension,), dtype=first_dtype, name="hidden_delta_features")
+    delta_values = tf.keras.layers.Rescaling(
+        scale=first_scale, offset=0.0, dtype="float32", name="hidden_delta_dequantization"
+    )(delta_input)
+    delta_values = tf.keras.layers.Dense(first_units, activation="relu", kernel_regularizer=regularizer,
+                                         name="hidden_delta_projection")(delta_values)
+    inputs["hidden_delta_features"] = delta_input
+    if first_aux_dimension:
+        delta_aux = tf.keras.Input(shape=(first_aux_dimension,), dtype="float16", name="hidden_delta_aux_features")
+        aux_values = tf.keras.layers.Lambda(lambda x: tf.cast(x, tf.float32), name="hidden_delta_aux_cast_float32")(delta_aux)
+        aux_values = tf.keras.layers.Dense(max(8, first_units // 4), activation="relu", kernel_regularizer=regularizer,
+                                           name="hidden_delta_aux_projection")(aux_values)
+        delta_values = tf.keras.layers.Concatenate(name="hidden_delta_feature_fusion")([delta_values, aux_values])
+        inputs["hidden_delta_aux_features"] = delta_aux
+    delta_logits = tf.keras.layers.Dense(NUM_EXPERTS, activation=None, dtype="float32", kernel_regularizer=regularizer,
+                                         name="hidden_delta_expert_logits")(delta_values)
+
+    routing_input = tf.keras.Input(shape=(second_dimension,), dtype=second_dtype, name="routing_dynamics_features")
+    routing_values = tf.keras.layers.Lambda(lambda x: tf.cast(x, tf.float32), name="routing_dynamics_cast_float32")(routing_input)
+    routing_values = tf.keras.layers.Dense(second_units, activation="relu", kernel_regularizer=regularizer,
+                                           name="routing_dynamics_projection")(routing_values)
+    routing_logits = tf.keras.layers.Dense(NUM_EXPERTS, activation=None, dtype="float32", kernel_regularizer=regularizer,
+                                           name="routing_dynamics_expert_logits")(routing_values)
+    inputs["routing_dynamics_features"] = routing_input
+    logits = tf.keras.layers.Add(name="expert_final_logits_with_two_candidates")([
+        base.get_layer("expert_final_logits").output, delta_logits, routing_logits,
+    ])
+    outputs = tf.keras.layers.Activation("sigmoid", dtype="float32", name="expert_scores_with_two_candidates")(logits)
+    model = tf.keras.Model(inputs=inputs, outputs=outputs, name="prefetch_build7_top4_two_candidate_feature_ffn")
+    model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate),
+                  loss=tf.keras.losses.BinaryCrossentropy(), metrics=[RecallAtSix(tf)], jit_compile=False)
+    return model
+
+
 def build_fixed_nnz_state_two_hidden_two_kv_deeper_ffn(
     state_feature_count: int,
     state_input_slots: int,
