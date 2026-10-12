@@ -6,6 +6,54 @@ indicizzata da `(layer fisico, expert)`. Il percorso record di TEST_14 resta
 inalterato; questa nuova politica e' attiva soltanto quando il runner di
 TEST_15 imposta `DS4_TEST_15_SHARED_EXPERT_CACHE=1`.
 
+## Riepilogo degli esperimenti e record operativo attuale
+
+TEST_15 ha verificato che la cache condivisa B.1 risolve la saturazione della
+RAM pinned e permette di riusare i buffer tra layer; non ha pero' superato il
+percorso a **slot batch Top-6**. Il record operativo resta quindi
+**TEST_14 `output_2`**: modello di prefetch **Build 7 Top-4**, Top-6,
+due slot per layer e **sei worker** (`layer % 6`). In quella configurazione
+il batching legge e pubblica insieme il gruppo primario di sei expert,
+evitando il costo aggiuntivo di gestione per-expert del percorso condiviso.
+
+| Esperimento | Approccio | Worker | B medio | C medio | Speedup medio |
+|---|---|---:|---:|---:|---:|
+| TEST_14 `output_2` | slot batch Top-6 Build 7 | 6 | 103,170 s | **72,588 s** | **+29,65%** |
+| TEST_15 `output_6` | cache condivisa, Top-6, remap corretto | 8 | 100,630 s | 70,938 s | +29,39% |
+| TEST_15 `output_7` | cache condivisa, Top-6 | 6 | 106,996 s | 76,507 s | +28,62% |
+| TEST_15 `output_12` | cache condivisa B.1, Top-10 | 8 | 102,706 s | 79,306 s | +22,73% |
+| TEST_15 `output_13` | cache condivisa B.1, Top-10 | 10 | 97,972 s | 77,690 s | +20,55% |
+| TEST_15 `output_16` | Top-10, primi 6 prioritari | 6 | 105,525 s | 77,826 s | +26,25% |
+| TEST_15 `output_17` | slot batch Top-6 + cache tail 7--10 | 6 | 102,738 s | 110,263 s | -6,82% |
+
+La cache B.1 e la priorita' Top-6 sono miglioramenti corretti e utili per
+misurare il riuso oltre il gruppo primario, ma il record appartiene ancora
+all'architettura piu' semplice: prefetch batch degli stessi sei expert che il
+forward MoE puo' consumare. Le sezioni seguenti documentano anche i run
+negativi e diagnostici, per rendere riproducibile questa conclusione.
+
+## Percorso ibrido attuale: slot Top-6 primario + cache tail
+
+L'esecuzione predefinita del runner attiva anche
+`DS4_TEST_15_HYBRID_GROUP_PRIMARY=1`. Non sostituisce il percorso record con
+la cache per-expert: preserva lo **slot batch Top-6** del TEST_14 come primo
+livello e usa la cache condivisa solo per i ranghi aggiuntivi `7..K` del
+predictor (con `K = DS4_TEST_14_PREFETCH_TOP_K`).
+
+Per ogni previsione il thread asincrono accoda una sola lettura batch degli
+expert 1--6 nello slot del gruppo. Gli expert 7--K sono inseriti come entry
+secondarie della cache per `(layer, expert)`: non duplicano mai i byte già
+richiesti dal gruppo. Al forward reale il decode prova prima lo slot Top-6;
+se trova un gruppo `READY` (anche parziale), riusa quel percorso, che già
+gestisce gli expert mancanti con il fallback ordinario. Solo se non c'è alcun
+gruppo utilizzabile per quel `(token, layer)` consulta la cache tail: un suo
+`READY` può allora evitare una lettura on-demand.
+
+Questo è deliberatamente un ibrido conservativo: evita sia la granularità
+I/O per-expert sui primi sei sia le letture duplicate. Il contributo della
+cache tail dipende però da quanti expert classificati dal modello fra 7 e K
+diventino realmente necessari proprio quando manca lo slot primario.
+
 La configurazione di partenza resta quella record di TEST_14:
 
 ```text
@@ -553,6 +601,230 @@ I dati completi sono in
 [`output_10/benchmark_summary.json`](output_10/benchmark_summary.json) e nei
 rispettivi `output_10/repetition_*/shared_expert_cache_metrics.json`.
 
+## Conferma della saturazione prima di B.1 — `output_11`
+
+`output_11` ripete Top-10 con **otto worker**, prima della riallocazione
+fisica sicura B.1. Include la telemetria delle entry candidate alla
+riallocazione, ma il runtime non puo' ancora sostituire il buffer pinned di un
+donor sicuro con quello di un nuovo expert.
+
+| Ripetizione | B baseline | C cache condivisa Top-10 | Speedup di C |
+|---|---:|---:|---:|
+| 1 | 95,474 s | 115,108 s | -20,56% |
+| 2 | 100,747 s | 121,886 s | -20,98% |
+| 3 | 98,484 s | 126,852 s | -28,80% |
+| Media | **98,235 s** | **121,282 s** | **-23,45%** |
+
+Questo e' il run diagnostico che ha quantificato la capacita' pinned gia'
+occupata ma non ancora riusabile dall'implementazione precedente: entry
+`READY` senza `future_refcount` e senza lease potevano essere donor sicuri,
+ma non venivano sostituite. Tale evidenza ha motivato B.1; il risultato
+positivo di `output_12` non e' quindi un cambiamento del modello di prefetch,
+ma l'effetto della riallocazione fisica dei buffer gia' disponibili.
+
+I dati completi sono in
+[`output_11/benchmark_summary.json`](output_11/benchmark_summary.json).
+
+## Riallocazione fisica sicura B.1 — `output_12`
+
+`output_12` verifica la correzione B.1 della cache condivisa. Quando un nuovo
+expert non dispone di un buffer persistente, il suo layer può ricevere il
+buffer fisico di una entry `READY` che non ha più né riferimenti futuri né
+lease attivi. La configurazione resta il caso più gravoso: **Top-10**, due
+finestre logiche per layer (`2 × 10 = 20` entry), **otto worker I/O / otto
+shard**.
+
+| Ripetizione | B baseline | C cache condivisa B.1 | Speedup di C |
+|---|---:|---:|---:|
+| 1 | 101,158 s | 77,685 s | +23,21% |
+| 2 | 106,446 s | 79,501 s | +25,31% |
+| 3 | 100,514 s | 80,733 s | +19,68% |
+| Media | **102,706 s** | **79,306 s** | **+22,73%** |
+
+| Telemetria cache B.1, media per ripetizione | Valore |
+|---|---:|
+| `persistent_pinned_allocation_failed` | **0** |
+| `bridge_failed` | **0** |
+| `scatter_invariant_failed` | **0** |
+| Riallocazioni fisiche sicure tra layer | ~13.020 |
+| Byte riallocati tra layer | ~85,8 GiB |
+| Entry `READY` riusate dal decode | ~8.693 |
+| Hit `READY` del decode | ~53,65% |
+| Expert on-demand rimanenti | ~4.931 |
+| Expert per chiamata bridge | ~5,74 |
+
+La correzione elimina il limite che aveva reso `output_11` negativo
+(-23,45%): non si osserva più alcun `FAILED` né per il bridge né per
+l'allocazione pinned persistente. Le circa tredicimila riallocazioni per run
+provengono tutte da donor `READY` sicuri; nessun donor `FAILED` è stato
+necessario. La capacità pinned già allocata viene quindi davvero riutilizzata
+tra layer senza sottrarre buffer al decode.
+
+Il risultato è positivo in tutte le ripetizioni, ma non supera ancora il record
+a slot di TEST_14 `output_2` (+29,65%). Rimane il costo del percorso
+per-expert: circa 2.387 chiamate bridge per run e un'attesa media in coda di
+circa 155 ms per job. B.1 elimina la saturazione, non l'overhead residuo di
+pianificazione e I/O della cache condivisa.
+
+I report completi sono
+[`output_12/benchmark_summary.json`](output_12/benchmark_summary.json) e
+`output_12/repetition_*/shared_expert_cache_metrics.json`.
+
+## Scalabilità Top-10 con dieci worker — `output_13`
+
+`output_13` mantiene cache condivisa B.1, capacità logica `2 × Top-10` per
+layer e batching del bridge per layer, ma porta i reader a **dieci worker I/O /
+dieci shard**. L'obiettivo è verificare se la minore attesa in coda riesca a
+trasformarsi in uno speedup end-to-end maggiore rispetto agli otto worker di
+`output_12`.
+
+| Ripetizione | B baseline | C cache condivisa B.1 | Speedup di C |
+|---|---:|---:|---:|
+| 1 | 93,635 s | 77,706 s | +17,01% |
+| 2 | 103,308 s | 76,835 s | +25,63% |
+| 3 | 96,974 s | 78,528 s | +19,02% |
+| Media | **97,972 s** | **77,690 s** | **+20,55%** |
+
+| Telemetria media | `output_12`: 8 worker | `output_13`: 10 worker |
+|---|---:|---:|
+| Hit `READY` del decode | ~53,65% | **~53,82%** |
+| Attesa in coda per expert | ~155 ms | **~94 ms** |
+| Lettura per expert | ~27,4 ms | ~28,8 ms |
+| Expert per chiamata bridge | ~5,74 | **~5,80** |
+| `persistent_pinned_allocation_failed` | 0 | **0** |
+| `bridge_failed` | 0 | **0** |
+
+Dieci worker riducono realmente il backlog del relativo shard e il tempo C
+assoluto passa da **79,306 s** a **77,690 s**. Il confronto percentuale non
+migliora però perché in questa run anche la baseline è sensibilmente più veloce
+(97,972 s contro 102,706 s); le sole tre ripetizioni non rendono confrontabile
+quella variabilità come un guadagno architetturale certo.
+
+Un punto importante: la cache **non** esegue una chiamata bridge per expert.
+Ogni worker estrae dalla propria coda la sequenza FIFO contigua di entry
+`QUEUED` dello stesso layer, fino a Top-K, e invia un unico batch al bridge
+Windows; soltanto dopo disperde i dati ricevuti nelle entry persistenti per
+expert. In `output_13`, 13.866 expert sono stati serviti da 2.391 chiamate,
+pari a **5,80 expert per chiamata**. Perciò il prossimo collo di bottiglia non
+si risolve duplicando il batching: restano la copertura `READY` (~54%), gli
+upload/fallback degli expert mancanti e il costo intrinseco della cache
+per-expert.
+
+I dati completi sono in
+[`output_13/benchmark_summary.json`](output_13/benchmark_summary.json) e in
+`output_13/repetition_*/shared_expert_cache_metrics.json`.
+
+## Top-20 dopo B.1 — `output_14` e `output_15`
+
+Dopo avere eliminato i fallimenti di allocazione persistente con B.1, sono
+stati provati i primi **20** expert predetti. Il forward reale resta sempre a
+sei expert: Top-20 aumenta solo il lavoro speculativo e la capacita' logica a
+`2 x 20 = 40` entry per layer. L'obiettivo era sfruttare la Recall@20 piu'
+alta senza reintrodurre la saturazione della RAM pinned.
+
+| Esperimento | Worker | B medio | C medio | Speedup medio |
+|---|---:|---:|---:|---:|
+| `output_14` | 6 | 102,541 s | 100,043 s | **+2,46%** |
+| `output_15` | 8 | 99,159 s | 99,101 s | **+0,05%** |
+
+| Ripetizione | `output_14`: C Top-20, 6 worker | `output_15`: C Top-20, 8 worker |
+|---|---:|---:|
+| 1 | 98,195 s (+3,36%) | 96,871 s (-0,75%) |
+| 2 | 96,639 s (+5,03%) | 104,510 s (+0,19%) |
+| 3 | 105,294 s (-1,00%) | 95,922 s (+0,72%) |
+
+B.1 continua a prevenire la saturazione, ma Top-20 non migliora il record:
+gli expert aggiuntivi richiedono piu' lavoro di pianificazione, I/O e
+pubblicazione rispetto ai sei expert consumabili dal forward. Otto worker non
+risolvono il limite, perche' il costo dominante non e' piu' la sola attesa
+dello shard. Il risultato rafforza la scelta di privilegiare il gruppo Top-6
+del percorso record, non di allargare indiscriminatamente Top-K.
+
+I report completi sono
+[`output_14/benchmark_summary.json`](output_14/benchmark_summary.json) e
+[`output_15/benchmark_summary.json`](output_15/benchmark_summary.json).
+
+## Top-10 con percorso critico Top-6 prioritario — `output_16`
+
+`output_16` verifica un'ammissione a due priorita' mantenendo **Top-10**,
+cache B.1, sei worker e capacita' logica `2 x Top-10` per layer. I primi sei
+rank, ossia il massimo numero di expert che il forward MoE puo' realmente
+consumare, sono accodati subito come **primari**; i rank 7--10 restano nella
+cache come tail `QUEUED` e vengono consegnati al worker soltanto quando la
+coda primaria dello shard e' vuota. Un expert tail promosso fra i primi sei
+in una previsione successiva diventa primario senza una nuova lettura.
+
+| Ripetizione | B baseline | C Top-10, Top-6 prioritario | Speedup di C |
+|---|---:|---:|---:|
+| 1 | 105,006 s | 77,948 s | +25,77% |
+| 2 | 106,712 s | 79,649 s | +25,36% |
+| 3 | 104,857 s | 75,881 s | +27,63% |
+| Media | **105,525 s** | **77,826 s** | **+26,25%** |
+
+| Indicatore | `output_16` |
+|---|---:|
+| `primary_top_k` | 6 |
+| Accodamenti primari | ~7.149 per ripetizione |
+| Tail rilasciati in modo differito | ~4.110 per ripetizione |
+| Hit `READY` del decode | ~49,1% |
+| `FAILED` residenti | 0 |
+| `capacity_fallbacks` | ~1.224 per ripetizione |
+
+La policy elimina l'interferenza diretta del tail sulla coda del gruppo che
+puo' servire il forward, e non introduce fallimenti bridge o di RAM pinned.
+Non supera pero' il record TEST_14 `output_2` (**+29,65%**): la copertura
+`READY` scende a circa 49%, quindi oltre meta' degli expert reali richiede
+ancora il fallback on-demand. Il tail Top-10 viene preservato per riuso
+opportunistico, ma non e' pronto abbastanza spesso da compensare il costo
+residuo della cache per-expert rispetto al vecchio percorso Top-6 a gruppi.
+
+I contatori che consentono di verificare l'ammissione sono in
+`output_16/repetition_*/shared_expert_cache_metrics.json`, nelle sezioni
+`cache` e `planner`, e sono inclusi anche nel
+[`output_16/benchmark_summary.json`](output_16/benchmark_summary.json).
+
+## Percorso ibrido Top-6 + tail Top-10 — `output_17`
+
+`output_17` e' il primo benchmark del percorso ibrido corrente. Mantiene
+**Top-10**, sei worker e due finestre logiche per layer (`2 x Top-10`), ma
+non usa piu' la cache per-expert come percorso principale. Per ogni richiesta:
+
+- i rank **1--6** sono letti nello slot batch Top-6 del percorso record di
+  TEST_14;
+- solo i rank **7--10** entrano nella cache RAM pinned condivisa come tail;
+- al decode si consulta prima lo slot Top-6; la cache tail viene consultata
+  solo quando non e' disponibile alcun gruppo utilizzabile.
+
+L'obiettivo era conservare la granularita' I/O favorevole del record sui sei
+expert che il forward puo' realmente consumare, aggiungendo il riuso
+opportunistico dei quattro candidati ulteriori senza letture duplicate.
+
+| Ripetizione | B baseline | C ibrido Top-10 | Speedup di C |
+|---|---:|---:|---:|
+| 1 | 103,614 s | 107,002 s | -3,17% |
+| 2 | 106,092 s | 114,108 s | -7,02% |
+| 3 | 98,507 s | 109,679 s | -10,19% |
+| Media | **102,738 s** | **110,263 s** | **-6,82%** |
+
+La run e' quindi corretta funzionalmente, ma e' una regressione e non un nuovo
+record. La qualita' online e' quella attesa dal modello Build 7: Recall@6
+`0,516624` e Recall@10 `0,624363`. Il problema e' temporale e di costo
+operativo, non il checkpoint o il remap GPU: vengono riusati in media circa
+`6.670` expert dalla RAM pinned, ma ne servono ancora circa `8.450` da SSD ai
+layer predetti; i gruppi completamente coperti sono soltanto uno per
+ripetizione.
+
+La telemetria mostra inoltre circa `55 ms` di attesa media prima che un worker
+inizi una lettura, circa `146 ms` di lettura bridge e circa `201 ms` da
+`QUEUED` a `READY`. Il tail aggiunge strutture e lavoro di cache, ma nella
+misura attuale non produce abbastanza hit pronti da compensare quel costo. Il
+record operativo resta pertanto il percorso a slot Top-6 di TEST_14
+`output_2`; `output_17` resta utile come diagnosi del limite dell'ibrido.
+
+I dati completi sono in
+[`output_17/benchmark_summary.json`](output_17/benchmark_summary.json) e nei
+file `pinned_ram_policy_audit.json` delle tre ripetizioni.
+
 ## Telemetria diagnostica della cache condivisa
 
 Dalla run `output_3`, ogni fase C salva inoltre
@@ -633,12 +905,91 @@ Il runner crea `output*` senza sovrascrivere nulla. Nella modalita' benchmark
 scrive `benchmark_summary.json` dopo A e dopo ogni coppia B/C; nella modalita'
 storica aggiorna invece `overlap_measurement_report.json` dopo A e dopo ogni
 fase C. Un'interruzione conserva quindi l'oracolo e tutte le ripetizioni gia'
-completate. Il bridge Windows supporta anche le letture di un solo expert
-richieste dalla cache; riavviarlo dopo avere aggiornato il relativo script e
-ricompilare con `make test_15_runner` prima della prima esecuzione.
+completate. Il bridge Windows supporta batch coalescenti per layer fino a
+Top-20. Il forward reale continua invece a usare esattamente sei expert:
+Top-K cambia solo l'ampiezza della speculazione e della cache. Riavviare sia
+il servizio Build 7 sia il bridge Windows dopo avere aggiornato gli script,
+quindi ricompilare con `make test_15_runner` prima della prima esecuzione.
+
+### Esperimento Top-20
+
+Per valutare la maggiore copertura della Recall@20 senza cambiare il forward
+reale, impostare `DS4_TEST_15_PREFETCH_TOP_K=20`. La cache mantiene fino a due
+finestre speculative per layer (`2 x 20 = 40` entry logiche); il worker
+coalesce le entry `QUEUED` contigue dello stesso layer in una singola chiamata
+al bridge, fino a 20 expert. Gli expert realmente eseguiti dal router restano
+sempre sei: il report deve quindi essere letto confrontando la copertura
+`READY`, gli upload cached/on-demand, gli expert per chiamata bridge e il tempo
+end-to-end, non come un forward MoE con venti expert.
 
 Per rieseguire soltanto la misura storica dell'overlap:
 
 ```bash
 python test_predictor/test_15/test_15_runner.py --mode overlap-measurement
 ```
+
+### Ammissione prioritaria per Top-10
+
+Con `Top-K=10` i dieci expert non hanno lo stesso valore operativo: il
+forward MoE reale puo' consumarne al massimo sei. Per evitare che gli expert
+nelle posizioni 7--10 ritardino i sei con probabilita' maggiore, TEST_15 ora
+usa due priorita' nello stesso shard `layer % worker`:
+
+- **primari:** le prime `DS4_TEST_15_PREFETCH_PRIMARY_K` predizioni
+  (predefinito `6`) sono accodate subito al worker;
+- **tail:** le posizioni successive restano `QUEUED` nella cache e vengono
+  rilasciate al worker soltanto quando la coda primaria dello shard e' vuota.
+
+Questo conserva il possibile riuso Top-10, la cache condivisa e il bridge
+coalescente per layer, ma protegge il percorso che puo' ridurre direttamente
+il fallback dei sei expert eseguiti dal router reale. La nuova telemetria in
+`shared_expert_cache_metrics.json` espone `cache.primary_top_k` e, in
+`planner`, `primary_queue_pushes`, `tail_queue_pushes` e
+`deferred_tail_releases`.
+
+Per il confronto diretto con il record usare esplicitamente:
+
+```bash
+DS4_TEST_15_PREFETCH_TOP_K=10 \
+DS4_TEST_15_PREFETCH_PRIMARY_K=6 \
+DS4_TEST_15_PREFETCH_NUM_WORKERS=6 \
+python test_predictor/test_15/test_15_runner.py
+```
+
+L'ottimizzazione non garantisce da sola di superare il record: serve a
+misurare separatamente se il limite residuo e' la copertura delle prime sei
+predizioni, la disponibilita' temporale degli expert, oppure il costo I/O
+anche dopo aver tolto al tail la priorita' sul percorso critico.
+
+## Configurazione record attuale — riferimento da preservare
+
+La migliore modalita' verificata fino ad oggi non e' una variante della cache
+condivisa di TEST_15, ma il percorso batch originale rieseguito in
+**TEST_14 `output_2`**. E' il riferimento obbligatorio per ogni esperimento
+successivo: una nuova politica puo' essere considerata migliore soltanto se
+supera questo confronto end-to-end, con lo stesso modello GGUF, prompt,
+oracolo e alternanza B/C.
+
+| Componente | Configurazione record |
+|---|---|
+| Predictor | miglior checkpoint Build 7 Top-4 disponibile al run |
+| Expert richiesti al predictor | Top-6 |
+| Expert realmente eseguiti dal forward | 6 |
+| Layer fisici nella finestra learned | 3--42 (40 layer) |
+| Layer con predizione learned | 5--42 |
+| Slot batch futuri per layer | 2 |
+| Worker I/O | 6, assegnati con `layer % 6` |
+| Percorso dati | slot batch Top-6: bridge Windows legge `gate/up/down` direttamente nella RAM pinned dello slot, poi upload RAM pinned -> VRAM al forward |
+| Media baseline B | 103,170 s |
+| Media learned-prefetch C | **72,588 s** |
+| Tempo medio risparmiato | **30,582 s** |
+| Speedup medio | **+29,65%** |
+
+Il motivo operativo del record e' che il gruppo speculativo e il gruppo
+consumabile coincidono: il bridge trasferisce insieme i sei expert predetti,
+il decode riusa quelli che coincidono con il router reale e completa soltanto
+gli eventuali mancanti con il fallback on-demand. Le evoluzioni TEST_15 hanno
+migliorato osservabilita', sincronizzazione e gestione della RAM pinned, ma
+non hanno ancora compensato il loro costo aggiuntivo rispetto a questo percorso
+batch Top-6. Per questo la configurazione sopra resta quella da usare per il
+benchmark e per la generazione piu' veloce finche' un nuovo run non la supera.

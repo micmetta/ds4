@@ -1980,7 +1980,8 @@ poi dimostrato sperimentalmente, perché dipende anche da accuratezza del
 predictor, ritardo del bridge Windows e tempi di upload RAM pinned -> VRAM.
 La metrica di successo primaria è comunque chiara: i fallimenti di allocazione
 persistente devono diminuire senza mai riallocare entry con riferimento futuro
-o lease attivo.
+o lease attivo. Questa verifica è stata eseguita successivamente in TEST_15
+`output_12`.
 
 ## Risultati TEST_15 `output_11`: saturazione logica, non assenza fisica di RAM pinned
 
@@ -2022,22 +2023,68 @@ Le coppie candidate sono inoltre riportate nei file
 non è necessario aumentare subito la memoria pinned del PC; prima bisogna
 riutilizzare correttamente quella che è già stata allocata.
 
-## Correzione consigliata: pool fisico globale di buffer RAM pinned
+## Risultati TEST_15 `output_12`: B.1 elimina la saturazione pinned
 
-La soluzione B descritta sopra conserva ancora un limite importante: la cache
-è logica per `(layer, expert)`, ma nella pratica i buffer RAM pinned restano
-vincolati alla capacità locale del layer. Quando il layer 27 è saturo, non può
-usare i buffer che il layer 12 mantiene `READY` ma non utilizzerà più. Questa
-è la differenza che va eliminata.
+TEST_15 `output_12` applica B.1 al caso che aveva evidenziato il problema:
+cache condivisa `(layer, expert)`, `Top-K = 10`, capacità logica `2 × Top-10`
+per layer e **otto worker I/O / otto shard**. Il risultato conferma il
+meccanismo previsto: un buffer fisico viene spostato da una entry `READY`
+sicura a una nuova entry `QUEUED`, senza una nuova allocazione pinned.
 
-La modifica consigliata è separare definitivamente **entry logica** e
+| Ripetizione | Baseline B | Cache condivisa B.1 C | Speedup C |
+|---|---:|---:|---:|
+| 1 | 101,158 s | 77,685 s | +23,21% |
+| 2 | 106,446 s | 79,501 s | +25,31% |
+| 3 | 100,514 s | 80,733 s | +19,68% |
+| Media | **102,706 s** | **79,306 s** | **+22,73%** |
+
+| Contatore B.1, media per ripetizione | Risultato |
+|---|---:|
+| `persistent_pinned_allocation_failed` | **0** |
+| `bridge_failed` | **0** |
+| `scatter_invariant_failed` | **0** |
+| Riallocazioni fisiche cross-layer | ~13.020 |
+| Byte trasferiti fra proprietà logiche | ~85,8 GiB |
+| Donor `READY` riutilizzati | ~13.020 |
+| Donor `FAILED` riutilizzati | 0 |
+| Nessun donor sicuro disponibile | 380 |
+| Hit `READY` del decode | ~53,65% |
+
+La diagnosi cambia in modo netto. In `output_11` i buffer già allocati
+rimanevano legati a entry ormai inutili e provocavano oltre sedicimila
+fallimenti di allocazione persistente per ripetizione; in `output_12` non si
+verifica più alcun `FAILED` né del bridge né dell'allocazione. Le
+riallocazioni provengono tutte da entry `READY` con `future_refcount = 0` e
+`lease_count = 0`: byte che il THREAD DI DECODE DS4 aveva già usato, oppure
+che nessuna previsione futura poteva più richiedere.
+
+Lo speedup torna positivo in tutte le ripetizioni, passando da `-23,45%` di
+`output_11` a **+22,73%**. Non è ancora il record di TEST_14 `output_2`
+(+29,65%): il percorso per-expert conserva circa 2.387 chiamate bridge per
+run e un'attesa media in coda di circa 155 ms per job. B.1 risolve quindi la
+saturazione della RAM pinned; il limite rimanente è il costo di coda,
+pianificazione e I/O della cache per-expert, non la capacità fisica pinned.
+
+I dati verificabili sono in
+`test_predictor/test_15/output_12/benchmark_summary.json` e in ciascun
+`output_12/repetition_*/shared_expert_cache_metrics.json`.
+
+## Come B.1 realizza il pool fisico di buffer RAM pinned
+
+Prima di B.1 la cache era logica per `(layer, expert)`, ma nella pratica i
+buffer RAM pinned restavano vincolati alla capacità locale del layer. Quando
+il layer 27 era saturo, non poteva usare i buffer che il layer 12 manteneva
+`READY` ma non avrebbe più utilizzato. B.1 elimina questo vincolo, come
+confermato da `output_12`.
+
+La modifica applicata separa concettualmente **entry logica** e
 **buffer fisico**:
 
 ```text
-oggi
+prima di B.1
   entry (layer, expert)  ---> possiede direttamente i suoi buffer RAM pinned
 
-proposto
+B.1
   entry (layer, expert)  ---> buffer_id opzionale
                                   |
                                   v
@@ -2049,26 +2096,28 @@ non viene quindi richiesta più RAM pinned del budget attuale. Cambia solo chi
 può usare un buffer diventato inutile: qualunque layer, non soltanto il layer
 che lo aveva ottenuto per primo.
 
-### Cosa deve cambiare rispetto all'implementazione attuale
+### Cosa cambia nell'implementazione B.1
 
-1. **Pool fisico unico.** I blocchi pinned vengono allocati una volta e messi
-   in una free-list globale. Ogni entry cache contiene un `buffer_id`, non la
-   proprietà permanente dei buffer `gate/up/down`.
+1. **Pool fisico condiviso.** I blocchi pinned già allocati possono essere
+   trasferiti fra entry logiche. Nel codice l'identità fisica è il gruppo di
+   buffer `gate/up/down` associato allo slot; non serve una nuova allocazione
+   quando quel gruppo viene passato a un altro layer.
 
 2. **Riassegnazione globale sicura.** Quando una nuova predizione per
    `(layer_nuovo, expert_nuovo)` non trova un buffer libero, il thread
    asincrono di prefetch cerca in tutto il pool prima le entry `FAILED`, poi le
    entry `READY` con `future_refcount = 0` e `lease_count = 0`. Se trova una
-   candidata, scollega in modo atomico la vecchia chiave, mantiene il
-   `buffer_id` e lo collega subito alla nuova chiave, che passa a `QUEUED`.
+   candidata, scollega in modo atomico la vecchia chiave, mantiene il gruppo
+   di buffer fisici e lo collega subito alla nuova chiave, che passa a
+   `QUEUED`.
    Il worker proprietario di `layer_nuovo % N` viene quindi segnalato e fa
    `QUEUED -> READING` nel buffer appena riusato.
 
 3. **Lock con ordine deterministico.** La mappa di ogni layer continua a
    essere protetta dal mutex del suo shard. Se una riassegnazione coinvolge un
    layer vecchio e uno nuovo, i due shard vanno presi sempre in ordine di
-   indice crescente; una piccola protezione del pool serve solo per togliere o
-   restituire un `buffer_id`. L'I/O del bridge Windows e la copia RAM
+   indice crescente; una piccola protezione del pool serve solo per trasferire
+   la proprietà del gruppo di buffer. L'I/O del bridge Windows e la copia RAM
    pinned -> VRAM restano fuori dai lock.
 
 4. **Le garanzie esistenti non cambiano.** Un buffer non può essere
@@ -2106,6 +2155,95 @@ da misurare accuratezza del predictor, ritardo del bridge, numero di chiamate
 di I/O e costo di upload verso VRAM. La correzione è soprattutto necessaria
 per rimuovere un limite artificiale di capacità; lo speedup end-to-end dovrà
 essere verificato contro TEST_14 `output_2`.
+
+## Batching per layer/shard: stato effettivamente implementato
+
+La soluzione B.1 non ha trasformato il percorso SSD in una lettura per singolo
+expert. L'implementazione corrente conserva il batching che precedeva B.1:
+il thread asincrono di prefetch DS4 valuta un Top-K per un certo layer, crea o
+riusa le corrispondenti entry logiche e accoda **solo gli expert mancanti**
+nello shard `layer % N`. L'accodamento avviene sotto il mutex di quello shard e
+la condition variable risveglia esclusivamente il worker proprietario.
+
+```text
+THREAD ASINCRONO DI PREFETCH DS4: layer 12, Top-10
+        |
+        +--> entry gia' READY / QUEUED / READING: riuso, nessuna lettura
+        |
+        +--> expert mancanti: entry (12, e) = QUEUED
+        |    rank 1--6: accodate subito come lavoro primario
+        |    rank 7--10: tail differito finche' la coda primaria non e' vuota
+        v
+worker dello shard 12
+        |
+        +--> sotto mutex: prende una sequenza FIFO contigua
+        |    di entry QUEUED dello stesso layer e della stessa priorita'
+        |    fino a Top-K
+        +--> QUEUED -> READING per il batch
+        +--> rilascia il mutex
+        +--> una chiamata bridge Windows con tutti gli expert del batch
+        +--> disperde gate/up/down nei buffer RAM pinned delle entry
+        +--> pubblica ogni entry come READY
+```
+
+Il batch viene formato soltanto dagli expert che necessitano davvero della
+lettura; gli expert gia' residenti non vengono ri-letti. I buffer RAM pinned
+restano per-entry per consentire riuso, lease e riallocazione B.1 sicuri, ma
+la chiamata SSD/bridge e' una sola per il gruppo dello stesso layer.
+
+### Ammissione Top-10 con Top-6 primario
+
+Quando `Top-K = 10`, non tutti i rank hanno il medesimo valore nel percorso
+critico: il router reale richiede al massimo sei expert. L'implementazione
+assegna quindi priorita' **primaria** ai rank 1--6 e priorita' **tail** ai rank
+7--10. Il thread asincrono accoda subito soltanto i primari; conserva i tail
+nella cache e li rilascia verso il worker proprietario solo quando la coda
+primaria dello shard e' vuota. Se una nuova previsione porta un tail fra i
+primi sei, l'entry viene promossa senza essere ri-letta.
+
+```text
+Top-10 predetto per layer 12
+    [e1 e2 e3 e4 e5 e6 | e7 e8 e9 e10]
+     \________ primari ________/ \_____ tail _____/
+                |                         |
+                v                         v
+        coda immediata shard 12%N   QUEUED nella cache
+                |                         |
+                v                         +--> rilasciato soltanto quando
+          batch bridge prioritario              la coda primaria e' vuota
+```
+
+La telemetria distingue `primary_queue_pushes`, `tail_queue_pushes` e
+`deferred_tail_releases`, cosi' da separare il costo della speculazione
+aggiuntiva dalla disponibilita' dei sei expert che possono essere davvero
+consumati dal forward.
+
+### Verifica sperimentale: TEST_15 `output_13`
+
+Con Top-10, B.1 e dieci worker/shard, `output_13` ha letto 13.866 expert
+mediante 2.391 chiamate bridge nella prima ripetizione: **5,80 expert per
+chiamata**, non 13.866 chiamate indipendenti. Le tre ripetizioni non hanno
+mostrato errori bridge o saturazione pinned; l'attesa media di coda e' scesa a
+circa 94 ms per expert, contro circa 155 ms con otto worker. Il tempo C medio
+e' migliorato da 79,306 s a 77,690 s, mentre lo speedup medio e' +20,55% a
+causa di una baseline di quella run piu' veloce e quindi non direttamente
+confrontabile.
+
+Di conseguenza, un'ulteriore implementazione di batching sarebbe ridondante:
+il margine residuo va ricercato nella quota di expert ancora assenti/non READY
+al decode, nei relativi upload on-demand e nella varianza della baseline,
+non in una supposta chiamata bridge per ogni expert.
+
+### Verifica sperimentale dell'ammissione prioritaria: TEST_15 `output_16`
+
+Con cache B.1, sei worker, Top-10 e `primary_top_k = 6`, `output_16` ha
+ottenuto **77,826 s** medi per C contro **105,525 s** della baseline,
+equivalenti a **+26,25%**. I tail non hanno piu' il diritto di precedere un
+batch primario gia' accodato, non sono comparsi `FAILED`, ma la copertura
+`READY` e' rimasta circa **49,1%**. Il risultato non supera quindi il record
+di TEST_14/output_2 (+29,65%): il limite osservato e' soprattutto la quota di
+expert reali non ancora residenti al decode, non la contesa fra i rank 7--10
+e i primi sei.
 
 Dopo l'implementazione, il test deve mostrare contemporaneamente:
 
