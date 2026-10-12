@@ -26446,10 +26446,12 @@ enum {
     CUDA_TEST4_DEFAULT_PREFETCH_DISTANCE = 1,
     CUDA_TEST4_MAX_PREFETCH_DISTANCE = 8,
     CUDA_TEST4_MIN_SELECTED_COUNT = 6,
-    CUDA_TEST4_MAX_SELECTED_COUNT = 10,
+    /* Maximum speculative group returned by the Build-7 predictor.  The
+     * actual decode path remains fixed at CUDA_TEST4_MIN_SELECTED_COUNT=6. */
+    CUDA_TEST4_MAX_SELECTED_COUNT = 20,
     CUDA_TEST4_EVENT_CAPACITY = 1024,
-    /* TEST_15 also evaluates eight layer-partitioned readers. */
-    CUDA_TEST4_MAX_WORKERS = 8,
+    /* TEST_15 also evaluates up to ten layer-partitioned readers. */
+    CUDA_TEST4_MAX_WORKERS = 10,
 };
 
 typedef struct {
@@ -26558,11 +26560,13 @@ static int cuda_test4_fifo_worker_enabled(void) {
     return policy && strcmp(policy, "fifo") == 0;
 }
 
-/* TEST_9 may split the historical low-layer scan among two, three or four workers.
+/* TEST_9 may split the historical low-layer scan among up to ten workers.
  * A physical layer belongs to exactly one worker according to layer % count.
  * TEST_4/5/7/8 do not set this variable and retain one worker. */
 static uint32_t cuda_test4_partition_worker_count(void) {
     const char *value = getenv("DS4_TEST_9_PARTITION_WORKERS");
+    if (value && strcmp(value, "10") == 0) return 10u;
+    if (value && strcmp(value, "9") == 0) return 9u;
     if (value && strcmp(value, "8") == 0) return 8u;
     if (value && strcmp(value, "7") == 0) return 7u;
     if (value && strcmp(value, "6") == 0) return 6u;
@@ -31540,6 +31544,9 @@ typedef struct {
 typedef struct {
     int state;
     int scheduled;
+    /* Rank in the model Top-K: primary entries are dispatched before the
+     * optional tail.  The real router still always consumes exactly six. */
+    uint8_t priority;
     uint32_t layer;
     int32_t expert;
     uint32_t lease_count;
@@ -31571,7 +31578,11 @@ typedef struct {
     int stop;
     uint32_t worker_count;
     uint32_t entries_per_layer;
+    uint32_t primary_top_k;
     uint64_t use_sequence;
+    /* Serializza soltanto la scelta/trasferimento di un buffer fisico fra
+     * shard. Gli stati delle entry restano protetti dai rispettivi shard. */
+    pthread_mutex_t pool_mutex;
     /* Atomici: le misure non devono aggiungere una nuova contesa ai lock
      * degli shard che stiamo studiando. */
     uint64_t planner_requests;
@@ -31586,7 +31597,15 @@ typedef struct {
     uint64_t evictions_ready;
     uint64_t evictions_ready_never_used;
     uint64_t evictions_ready_after_use;
+    uint64_t cross_layer_buffer_reassignments;
+    uint64_t cross_layer_buffer_reassigned_bytes;
+    uint64_t cross_layer_failed_donors;
+    uint64_t cross_layer_ready_donors;
+    uint64_t cross_layer_no_safe_donor;
     uint64_t queue_pushes;
+    uint64_t primary_queue_pushes;
+    uint64_t tail_queue_pushes;
+    uint64_t deferred_tail_releases;
     uint64_t queue_depth_sum;
     uint64_t queue_depth_samples;
     uint64_t queue_depth_high_water;
@@ -31713,6 +31732,7 @@ static int cuda_test15_shared_enabled(void) {
 }
 
 static void cuda_test15_shared_init_once(void) {
+    (void)pthread_mutex_init(&g_test15_shared.pool_mutex, NULL);
     for (uint32_t shard = 0; shard < CUDA_TEST4_MAX_WORKERS; ++shard) {
         (void)pthread_mutex_init(&g_test15_shared.shards[shard].mutex, NULL);
         (void)pthread_cond_init(&g_test15_shared.shards[shard].cond, NULL);
@@ -31722,6 +31742,20 @@ static void cuda_test15_shared_init_once(void) {
 
 static uint32_t cuda_test15_shard_for(uint32_t layer) {
     return g_test15_shared.worker_count ? layer % g_test15_shared.worker_count : 0u;
+}
+
+/* The first six ranks are the only ones the real router can consume.  For a
+ * larger predictive Top-K, dispatch these first and let the tail use the
+ * otherwise-idle interval after that primary I/O has been issued.  This keeps
+ * Top-10 useful without making its four marginal candidates delay Top-6. */
+static uint32_t cuda_test15_primary_top_k(uint32_t prefetch_top_k) {
+    const char *value = getenv("DS4_TEST_15_PREFETCH_PRIMARY_K");
+    if (!value || !*value) return CUDA_TEST4_MIN_SELECTED_COUNT;
+    char *end = NULL;
+    const unsigned long parsed = strtoul(value, &end, 10);
+    if (end == value || *end != '\0' || parsed < CUDA_TEST4_MIN_SELECTED_COUNT ||
+        parsed > prefetch_top_k) return CUDA_TEST4_MIN_SELECTED_COUNT;
+    return (uint32_t)parsed;
 }
 
 static void cuda_test15_future_add(cuda_test15_shared_entry *entry, uint32_t token) {
@@ -31775,7 +31809,7 @@ static cuda_test15_shared_entry *cuda_test15_find(uint32_t layer, int32_t expert
 }
 
 static cuda_test15_shared_entry *cuda_test15_allocate(uint32_t layer, int32_t expert,
-                                                       uint32_t target_token,
+                                                       uint32_t target_token, uint8_t priority,
                                                        const ds4_gpu_stream_expert_table *table) {
     cuda_test15_shared_entry *candidate = NULL;
     for (uint32_t i = 0; i < g_test15_shared.entries_per_layer; ++i) {
@@ -31803,6 +31837,7 @@ static cuda_test15_shared_entry *cuda_test15_allocate(uint32_t layer, int32_t ex
     memset(&candidate->future_counts, 0, sizeof(candidate->future_counts));
     candidate->state = CUDA_TEST15_ENTRY_QUEUED;
     candidate->scheduled = 0;
+    candidate->priority = priority;
     candidate->layer = layer; candidate->expert = expert;
     candidate->lease_count = 0; candidate->future_refcount = 0;
     candidate->use_count = 0; candidate->last_used_sequence = ++g_test15_shared.use_sequence;
@@ -31967,12 +32002,13 @@ static uint32_t cuda_test15_take_same_layer_batch(
     if (!first || first->state != CUDA_TEST15_ENTRY_QUEUED) return 0;
 
     const uint32_t layer = first->layer;
+    const uint8_t priority = first->priority;
     uint32_t count = 0;
     batch[count++] = first;
     while (count < max_batch && shard->count) {
         cuda_test15_shared_entry *next = shard->queue[shard->head];
         if (!next || next->state != CUDA_TEST15_ENTRY_QUEUED ||
-            next->layer != layer) break;
+            next->layer != layer || next->priority != priority) break;
         shard->head = (shard->head + 1u) % CUDA_TEST15_QUEUE_CAPACITY;
         --shard->count;
         batch[count++] = next;
@@ -31980,11 +32016,142 @@ static uint32_t cuda_test15_take_same_layer_batch(
     return count;
 }
 
+/* Called with the shard mutex held.  A tail entry is intentionally held back
+ * until its layer's primary group has left the queue.  It is then released as
+ * one same-layer batch, preserving bridge coalescing without delaying Top-6. */
+static void cuda_test15_release_deferred_tail(uint32_t shard_id,
+                                               cuda_test15_shard *shard,
+                                               uint32_t layer) {
+    /* Never put a tail in front of a primary request already queued for this
+     * shard.  It will be reconsidered when the primary queue drains. */
+    if (!shard || !g_test15_shared.primary_top_k || shard->count != 0) return;
+    for (uint32_t i = 0; i < g_test15_shared.entries_per_layer; ++i) {
+        cuda_test15_shared_entry *entry = &g_test15_shared.entries[layer][i];
+        if (entry->state != CUDA_TEST15_ENTRY_QUEUED || entry->scheduled ||
+            entry->priority == 0) continue;
+        if (shard->count >= CUDA_TEST15_QUEUE_CAPACITY) break;
+        cuda_test15_queue_push(shard_id, shard, entry);
+        cuda_test15_metric_add(&g_test15_shared.queue_pushes, 1);
+        cuda_test15_metric_add(&g_test15_shared.tail_queue_pushes, 1);
+        cuda_test15_metric_add(&g_test15_shared.shard_queue_pushes[shard_id], 1);
+        cuda_test15_metric_add(&g_test15_shared.deferred_tail_releases, 1);
+    }
+    if (shard->count) pthread_cond_signal(&shard->cond);
+}
+
 typedef enum {
     CUDA_TEST15_SCATTER_OK = 1,
     CUDA_TEST15_SCATTER_PERSISTENT_PINNED_ALLOCATION_FAILED,
     CUDA_TEST15_SCATTER_INVARIANT_FAILED,
 } cuda_test15_scatter_result;
+
+/* B.1: the cache key is logical, while a cuda_test4_pinned_slot is a physical
+ * allocation.  When the destination has never owned a buffer, first try to
+ * move one from a safe donor anywhere in the cache.  The pool mutex prevents
+ * two workers from selecting the same donor; the shard locks then make the
+ * map replacement and the ownership transfer coherent with the decoder.
+ *
+ * This deliberately moves an already allocated slot rather than allocating
+ * more pinned memory.  A READY donor is safe only after every planned future
+ * request and every active decode lease have disappeared.  FAILED entries are
+ * preferred because their bytes can never be consumed by the decoder. */
+static int cuda_test15_try_reassign_physical_buffer(
+        cuda_test15_shared_entry *destination) {
+    if (!destination || destination->state != CUDA_TEST15_ENTRY_READING ||
+        destination->storage.gate_raw) return 0;
+
+    const uint32_t destination_layer = destination->layer;
+    const uint32_t worker_count = g_test15_shared.worker_count;
+    if (!worker_count) return 0;
+
+    pthread_mutex_lock(&g_test15_shared.pool_mutex);
+    cuda_test15_shared_entry *donor = NULL;
+    uint32_t donor_layer = UINT32_MAX;
+    int donor_is_failed = 0;
+
+    /* First pass: FAILED storage has no useful payload.  Second pass selects
+     * the least-recently useful READY entry that is neither planned nor leased. */
+    for (uint32_t pass = 0; pass < 2 && !donor; ++pass) {
+        for (uint32_t shard_id = 0; shard_id < worker_count; ++shard_id) {
+            cuda_test15_shard *shard = &g_test15_shared.shards[shard_id];
+            pthread_mutex_lock(&shard->mutex);
+            for (uint32_t layer = shard_id; layer < CUDA_TEST4_MAX_SLOT_COUNT;
+                 layer += worker_count) {
+                for (uint32_t i = 0; i < g_test15_shared.entries_per_layer; ++i) {
+                    cuda_test15_shared_entry *entry =
+                        &g_test15_shared.entries[layer][i];
+                    if (entry == destination || !entry->storage.gate_raw) continue;
+                    const int eligible_failed =
+                        entry->state == CUDA_TEST15_ENTRY_FAILED &&
+                        entry->lease_count == 0;
+                    const int eligible_ready =
+                        entry->state == CUDA_TEST15_ENTRY_READY &&
+                        entry->lease_count == 0 && entry->future_refcount == 0;
+                    if ((pass == 0 && !eligible_failed) ||
+                        (pass == 1 && !eligible_ready)) continue;
+                    if (!donor || (pass == 1 &&
+                                   (entry->use_count < donor->use_count ||
+                                    (entry->use_count == donor->use_count &&
+                                     entry->last_used_sequence < donor->last_used_sequence)))) {
+                        donor = entry;
+                        donor_layer = layer;
+                        donor_is_failed = eligible_failed;
+                    }
+                }
+            }
+            pthread_mutex_unlock(&shard->mutex);
+            if (donor) break;
+        }
+    }
+
+    if (!donor) {
+        cuda_test15_metric_add(&g_test15_shared.cross_layer_no_safe_donor, 1);
+        pthread_mutex_unlock(&g_test15_shared.pool_mutex);
+        return 0;
+    }
+
+    const uint32_t donor_shard_id = cuda_test15_shard_for(donor_layer);
+    const uint32_t destination_shard_id = cuda_test15_shard_for(destination_layer);
+    cuda_test15_shard *first = &g_test15_shared.shards[
+        donor_shard_id < destination_shard_id ? donor_shard_id : destination_shard_id];
+    cuda_test15_shard *second = &g_test15_shared.shards[
+        donor_shard_id < destination_shard_id ? destination_shard_id : donor_shard_id];
+    pthread_mutex_lock(&first->mutex);
+    if (second != first) pthread_mutex_lock(&second->mutex);
+
+    const int donor_still_safe = donor->storage.gate_raw &&
+        ((donor->state == CUDA_TEST15_ENTRY_FAILED && donor->lease_count == 0) ||
+         (donor->state == CUDA_TEST15_ENTRY_READY && donor->lease_count == 0 &&
+          donor->future_refcount == 0));
+    const int destination_still_waiting =
+        destination->state == CUDA_TEST15_ENTRY_READING && !destination->storage.gate_raw;
+    if (!donor_still_safe || !destination_still_waiting) {
+        if (second != first) pthread_mutex_unlock(&second->mutex);
+        pthread_mutex_unlock(&first->mutex);
+        pthread_mutex_unlock(&g_test15_shared.pool_mutex);
+        return 0;
+    }
+
+    const uint64_t moved_bytes = cuda_test15_entry_pinned_bytes(donor);
+    destination->storage = donor->storage;
+    memset(&donor->storage, 0, sizeof(donor->storage));
+    /* The donor key becomes absent atomically with the physical handoff. */
+    memset(donor, 0, sizeof(*donor));
+    destination->storage.n_selected = 1;
+    destination->storage.selected[0] = destination->expert;
+    destination->storage.layer = destination_layer;
+    destination->storage.failure_code = DS4_GPU_TEST4_FAILURE_NONE;
+    cuda_test15_metric_add(&g_test15_shared.cross_layer_buffer_reassignments, 1);
+    cuda_test15_metric_add(&g_test15_shared.cross_layer_buffer_reassigned_bytes,
+                           moved_bytes);
+    cuda_test15_metric_add(donor_is_failed ? &g_test15_shared.cross_layer_failed_donors :
+                                             &g_test15_shared.cross_layer_ready_donors, 1);
+
+    if (second != first) pthread_mutex_unlock(&second->mutex);
+    pthread_mutex_unlock(&first->mutex);
+    pthread_mutex_unlock(&g_test15_shared.pool_mutex);
+    return 1;
+}
 
 static cuda_test15_scatter_result cuda_test15_scatter_batch_to_entries(
         const cuda_test4_pinned_slot *batch_storage,
@@ -32001,6 +32168,8 @@ static cuda_test15_scatter_result cuda_test15_scatter_batch_to_entries(
             entry->expert != batch_storage->selected[i]) {
             return CUDA_TEST15_SCATTER_INVARIANT_FAILED;
         }
+        if (!entry->storage.gate_raw)
+            (void)cuda_test15_try_reassign_physical_buffer(entry);
         if (!cuda_test4_slot_ensure(&entry->storage, gate_bytes, down_bytes)) {
             return CUDA_TEST15_SCATTER_PERSISTENT_PINNED_ALLOCATION_FAILED;
         }
@@ -32060,6 +32229,8 @@ static void *cuda_test15_shared_worker(void *opaque) {
             cuda_test15_metric_add(&g_test15_shared.worker_queue_wait_ns, queue_wait_ns);
             cuda_test15_metric_add(&g_test15_shared.shard_worker_queue_wait_ns[shard_id], queue_wait_ns);
         }
+        const uint32_t completed_layer = batch[0]->layer;
+        const uint8_t completed_priority = batch[0]->priority;
         batch_storage.n_selected = batch_count;
         batch_storage.layer = batch[0]->layer;
         batch_storage.table = batch[0]->storage.table;
@@ -32109,6 +32280,8 @@ static void *cuda_test15_shared_worker(void *opaque) {
                 if (scattered) entry->ready_at_sec = cuda_wall_sec();
             }
         }
+        if (completed_priority == 0)
+            cuda_test15_release_deferred_tail(shard_id, shard, completed_layer);
         cuda_test15_metric_add(scattered ? &g_test15_shared.worker_reads_ready :
                                          &g_test15_shared.worker_reads_failed,
                                batch_count);
@@ -32128,6 +32301,7 @@ static int cuda_test15_start_workers(uint32_t prefetch_top_k) {
     if (g_test15_shared.worker_count == 0 || g_test15_shared.worker_count > CUDA_TEST4_MAX_WORKERS) return 0;
     /* Manteniamo due finestre logiche complete del Top-K scelto. */
     g_test15_shared.entries_per_layer = prefetch_top_k * 2u;
+    g_test15_shared.primary_top_k = cuda_test15_primary_top_k(prefetch_top_k);
     memset(&g_test15_shared.planner_requests, 0,
            (char *)&g_test15_shared.workers - (char *)&g_test15_shared.planner_requests);
     g_test15_shared.stop = 0;
@@ -32208,14 +32382,15 @@ static int cuda_test15_upload_cached_and_missing(
     return 1;
 }
 
-extern "C" int ds4_gpu_test15_shared_expert_cache_enqueue(
+static int cuda_test15_shared_expert_cache_enqueue_ranked(
         const ds4_gpu_stream_expert_table *table, uint32_t target_token, uint32_t layer,
-        const int32_t *selected, uint32_t n) {
+        const int32_t *selected, uint32_t n, uint32_t rank_offset,
+        uint32_t total_top_k) {
     if (!cuda_test15_shared_enabled()) return 0;
-    if (!table || !selected || n < CUDA_TEST4_MIN_SELECTED_COUNT ||
+    if (!table || !selected || n == 0 ||
         n > CUDA_TEST4_MAX_SELECTED_COUNT ||
         layer >= cuda_test4_prefetch_layer_count() || !cuda_stream_selected_ranges_valid(table) ||
-        !cuda_test15_start_workers(n)) return 0;
+        !cuda_test15_start_workers(total_top_k)) return 0;
     cuda_test15_shard *shard = &g_test15_shared.shards[cuda_test15_shard_for(layer)];
     cuda_test15_metric_add(&g_test15_shared.planner_requests, 1);
     cuda_test15_metric_add(&g_test15_shared.predicted_experts, n);
@@ -32228,9 +32403,15 @@ extern "C" int ds4_gpu_test15_shared_expert_cache_enqueue(
                            planner_lock_wait_ns);
     cuda_test15_metric_add(&g_test15_shared.shard_planner_lock_wait_ns[shard_id],
                            planner_lock_wait_ns);
+    int primary_pending = 0;
     for (uint32_t i = 0; i < n; ++i) {
+        const uint8_t priority = i + rank_offset < g_test15_shared.primary_top_k ? 0u : 1u;
         cuda_test15_shared_entry *entry = cuda_test15_find(layer, selected[i]);
         if (entry) {
+            /* A previously speculative tail may become a high-confidence
+             * candidate in the next prediction.  Promotion is metadata-only:
+             * never demote an already-primary entry. */
+            if (priority == 0) entry->priority = 0;
             if (entry->state == CUDA_TEST15_ENTRY_READY)
                 cuda_test15_metric_add(&g_test15_shared.entry_reused_ready, 1);
             else if (entry->state == CUDA_TEST15_ENTRY_QUEUED)
@@ -32242,21 +32423,48 @@ extern "C" int ds4_gpu_test15_shared_expert_cache_enqueue(
                 entry = NULL;
             }
         }
-        if (!entry) entry = cuda_test15_allocate(layer, selected[i], target_token, table);
+        if (!entry) entry = cuda_test15_allocate(layer, selected[i], target_token,
+                                                  priority, table);
         if (!entry) {
             cuda_test15_metric_add(&g_test15_shared.capacity_fallbacks, 1);
             continue; /* bounded cache full: normal demand fallback */
         }
         cuda_test15_future_add(entry, target_token);
-        if (entry->state == CUDA_TEST15_ENTRY_QUEUED && !entry->scheduled) {
+        if (entry->state == CUDA_TEST15_ENTRY_QUEUED && entry->priority == 0)
+            primary_pending = 1;
+        if (entry->state == CUDA_TEST15_ENTRY_QUEUED && !entry->scheduled &&
+            entry->priority == 0) {
             cuda_test15_queue_push(shard_id, shard, entry);
             cuda_test15_metric_add(&g_test15_shared.queue_pushes, 1);
+            cuda_test15_metric_add(&g_test15_shared.primary_queue_pushes, 1);
             cuda_test15_metric_add(&g_test15_shared.shard_queue_pushes[shard_id], 1);
         }
     }
+    /* If the primary ranks were already resident, there will be no primary
+     * worker completion to release this request's tail.  It is then safe to
+     * admit the deferred candidates immediately. */
+    if (!primary_pending)
+        cuda_test15_release_deferred_tail(shard_id, shard, layer);
     pthread_cond_signal(&shard->cond); /* exact worker for layer % N */
     pthread_mutex_unlock(&shard->mutex);
     return 1;
+}
+
+extern "C" int ds4_gpu_test15_shared_expert_cache_enqueue(
+        const ds4_gpu_stream_expert_table *table, uint32_t target_token, uint32_t layer,
+        const int32_t *selected, uint32_t n) {
+    return cuda_test15_shared_expert_cache_enqueue_ranked(
+        table, target_token, layer, selected, n, 0u, n);
+}
+
+extern "C" int ds4_gpu_test15_shared_expert_cache_enqueue_tail(
+        const ds4_gpu_stream_expert_table *table, uint32_t target_token, uint32_t layer,
+        const int32_t *selected, uint32_t n, uint32_t total_top_k) {
+    /* Il chiamante passa gli expert successivi al gruppo Top-6: conservarne
+     * il rango evita che vengano trattati come una nuova primaria. */
+    return cuda_test15_shared_expert_cache_enqueue_ranked(
+        table, target_token, layer, selected, n, CUDA_TEST4_MIN_SELECTED_COUNT,
+        total_top_k);
 }
 
 extern "C" int ds4_gpu_test15_shared_expert_cache_try_selected_load(
@@ -32379,15 +32587,16 @@ static void cuda_test15_shared_cache_shutdown(void) {
                 allocation_failure_snapshots ? (double)allocation_failure_snapshots : 1.0;
             fprintf(metrics,
                 "{\n  \"experiment\": \"test_15_shared_expert_cache_metrics\",\n"
-                "  \"cache\": {\"entries_per_layer\": %u, \"worker_shards\": %u, \"wall_seconds\": %.3f, \"resident_ready\": %llu, \"resident_ready_never_used\": %llu, \"resident_queued\": %llu, \"resident_reading\": %llu, \"resident_failed\": %llu},\n"
-                "  \"planner\": {\"requests\": %llu, \"predicted_experts\": %llu, \"entry_created\": %llu, \"reused_ready\": %llu, \"reused_queued\": %llu, \"reused_reading\": %llu, \"retried_failed\": %llu, \"capacity_fallbacks\": %llu, \"queue_pushes\": %llu, \"lock_wait_ms_total\": %.3f},\n"
+                "  \"cache\": {\"entries_per_layer\": %u, \"primary_top_k\": %u, \"worker_shards\": %u, \"wall_seconds\": %.3f, \"resident_ready\": %llu, \"resident_ready_never_used\": %llu, \"resident_queued\": %llu, \"resident_reading\": %llu, \"resident_failed\": %llu},\n"
+                "  \"planner\": {\"requests\": %llu, \"predicted_experts\": %llu, \"entry_created\": %llu, \"reused_ready\": %llu, \"reused_queued\": %llu, \"reused_reading\": %llu, \"retried_failed\": %llu, \"capacity_fallbacks\": %llu, \"queue_pushes\": %llu, \"primary_queue_pushes\": %llu, \"tail_queue_pushes\": %llu, \"deferred_tail_releases\": %llu, \"lock_wait_ms_total\": %.3f},\n"
                 "  \"evictions\": {\"failed_entries_replaced\": %llu, \"ready_entries_replaced\": %llu, \"ready_never_used_replaced\": %llu, \"ready_after_use_replaced\": %llu},\n"
                 "  \"worker\": {\"jobs\": %llu, \"reads_ready\": %llu, \"reads_failed\": %llu, \"ssd_bytes_read\": %llu, \"queue_wait_ms_total\": %.3f, \"queue_wait_ms_per_job\": %.3f, \"read_ms_total\": %.3f, \"read_ms_per_job\": %.3f, \"lock_wait_ms_total\": %.3f},\n"
                 "  \"failure_causes\": {\"bridge_failed\": %llu, \"persistent_pinned_allocation_failed\": %llu, \"scatter_invariant_failed\": %llu},\n"
                 "  \"pinned_capacity_at_persistent_allocation_failure\": {\"samples\": %llu, \"first_snapshot\": {\"pinned_entries\": %llu, \"pinned_bytes\": %llu, \"ready_reclaimable_entries\": %llu, \"ready_reclaimable_bytes\": %llu}, \"mean_snapshot\": {\"pinned_entries\": %.3f, \"pinned_bytes\": %.3f, \"ready_reclaimable_entries\": %.3f, \"ready_reclaimable_bytes\": %.3f, \"ready_future_protected_entries\": %.3f, \"ready_leased_entries\": %.3f, \"failed_entries_with_buffers\": %.3f, \"failed_entries_with_buffers_bytes\": %.3f}, \"max_ready_reclaimable_bytes\": %llu},\n"
                 "  \"decode\": {\"groups\": %llu, \"experts\": %llu, \"ready_hits\": %llu, \"ready_hit_rate\": %.6f, \"full_cache_groups\": %llu, \"partial_cache_groups\": %llu, \"zero_cache_groups\": %llu, \"queued_misses\": %llu, \"reading_misses\": %llu, \"failed_misses\": %llu, \"absent_misses\": %llu, \"lock_wait_ms_total\": %.3f},\n"
                 "  \"data_path\": {\"cached_bytes_uploaded\": %llu, \"demand_bytes_uploaded\": %llu, \"cached_upload_ms_total\": %.3f, \"demand_upload_ms_total\": %.3f},\n",
-                g_test15_shared.entries_per_layer, g_test15_shared.worker_count,
+                g_test15_shared.entries_per_layer, g_test15_shared.primary_top_k,
+                g_test15_shared.worker_count,
                 g_test15_shared.started_at_sec ? cuda_wall_sec() - g_test15_shared.started_at_sec : 0.0,
                 (unsigned long long)resident_ready, (unsigned long long)resident_ready_never_used,
                 (unsigned long long)resident_queued, (unsigned long long)resident_reading,
@@ -32401,6 +32610,9 @@ static void cuda_test15_shared_cache_shutdown(void) {
                 (unsigned long long)cuda_test15_metric_get(&g_test15_shared.entry_retried_failed),
                 (unsigned long long)cuda_test15_metric_get(&g_test15_shared.capacity_fallbacks),
                 (unsigned long long)cuda_test15_metric_get(&g_test15_shared.queue_pushes),
+                (unsigned long long)cuda_test15_metric_get(&g_test15_shared.primary_queue_pushes),
+                (unsigned long long)cuda_test15_metric_get(&g_test15_shared.tail_queue_pushes),
+                (unsigned long long)cuda_test15_metric_get(&g_test15_shared.deferred_tail_releases),
                 cuda_test15_metric_get(&g_test15_shared.planner_lock_wait_ns) / 1.0e6,
                 (unsigned long long)cuda_test15_metric_get(&g_test15_shared.evictions_failed),
                 (unsigned long long)cuda_test15_metric_get(&g_test15_shared.evictions_ready),
@@ -32459,7 +32671,8 @@ static void cuda_test15_shared_cache_shutdown(void) {
                 "  \"queue\": {\"depth_high_water\": %llu, \"depth_mean_at_enqueue\": %.3f, \"queued_wait_ms_total\": %.3f, \"queued_wait_ms_per_job\": %.3f},\n"
                 "  \"entry_lifecycle\": {\"first_uses\": %llu, \"first_uses_on_origin_target\": %llu, \"first_uses_on_other_target\": %llu, \"reuses_after_first_use\": %llu, \"queue_to_first_use_ms_total\": %.3f, \"queue_to_first_use_ms_per_entry\": %.3f, \"ready_to_first_use_ms_total\": %.3f, \"ready_to_first_use_ms_per_entry\": %.3f},\n"
                 "  \"bridge\": {\"calls\": %llu, \"experts_requested\": %llu, \"bytes_requested\": %llu, \"experts_per_call\": %.3f},\n"
-                "  \"uploads\": {\"cached_experts\": %llu, \"demand_experts\": %llu},\n",
+                "  \"uploads\": {\"cached_experts\": %llu, \"demand_experts\": %llu},\n"
+                "  \"physical_pinned_pool\": {\"cross_layer_buffer_reassignments\": %llu, \"cross_layer_buffer_reassigned_bytes\": %llu, \"failed_donors\": %llu, \"ready_donors\": %llu, \"no_safe_donor\": %llu},\n",
                 (unsigned long long)cuda_test15_metric_get(&g_test15_shared.queue_depth_high_water),
                 queue_depth_samples ? (double)cuda_test15_metric_get(&g_test15_shared.queue_depth_sum) / queue_depth_samples : 0.0,
                 cuda_test15_metric_get(&g_test15_shared.worker_queue_wait_ns) / 1.0e6,
@@ -32477,7 +32690,12 @@ static void cuda_test15_shared_cache_shutdown(void) {
                 (unsigned long long)cuda_test15_metric_get(&g_test15_shared.bridge_bytes_requested),
                 bridge_calls ? (double)cuda_test15_metric_get(&g_test15_shared.bridge_experts_requested) / bridge_calls : 0.0,
                 (unsigned long long)cuda_test15_metric_get(&g_test15_shared.cached_expert_uploads),
-                (unsigned long long)cuda_test15_metric_get(&g_test15_shared.demand_expert_uploads));
+                (unsigned long long)cuda_test15_metric_get(&g_test15_shared.demand_expert_uploads),
+                (unsigned long long)cuda_test15_metric_get(&g_test15_shared.cross_layer_buffer_reassignments),
+                (unsigned long long)cuda_test15_metric_get(&g_test15_shared.cross_layer_buffer_reassigned_bytes),
+                (unsigned long long)cuda_test15_metric_get(&g_test15_shared.cross_layer_failed_donors),
+                (unsigned long long)cuda_test15_metric_get(&g_test15_shared.cross_layer_ready_donors),
+                (unsigned long long)cuda_test15_metric_get(&g_test15_shared.cross_layer_no_safe_donor));
             const uint32_t candidate_total =
                 g_test15_shared.pinned_alloc_failure_first_candidate_total;
             const uint32_t candidate_stored =

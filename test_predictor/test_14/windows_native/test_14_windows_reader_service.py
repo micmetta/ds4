@@ -18,11 +18,11 @@ from test_10_windows_native import NativeDirectReader, parse_expert_read_plan, s
 
 
 # TEST_14 adds the number of predicted experts to the header.  The payload
-# remains intentionally small.  TEST_14 uses Top-6..10 groups; TEST_15's
-# shared cache requests one expert at a time through the same bridge.
+# remains intentionally small.  TEST_15 reads coalesced same-layer groups
+# through the same bridge, up to the speculative Top-20 limit.
 REQUEST_HEADER = struct.Struct("<III")
 MIN_PREFETCH_TOP_K = 1
-MAX_PREFETCH_TOP_K = 10
+MAX_PREFETCH_TOP_K = 20
 MAGIC = 0x31335444
 
 

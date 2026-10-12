@@ -28,11 +28,14 @@ def configure_record_environment() -> tuple[str, str, str, str, int, int, Path]:
     """Mappa l'interfaccia TEST_15 sulla collaudata infrastruttura TEST_9/14."""
     checkpoint = Path(required("DS4_TEST_15_CHECKPOINT"))
     top_k = int(os.environ.get("DS4_TEST_15_PREFETCH_TOP_K", "6"))
-    if not 6 <= top_k <= 10:
-        raise SystemExit("DS4_TEST_15_PREFETCH_TOP_K deve essere un intero tra 6 e 10.")
+    if not 6 <= top_k <= 20:
+        raise SystemExit("DS4_TEST_15_PREFETCH_TOP_K deve essere un intero tra 6 e 20.")
     workers = int(os.environ.get("DS4_TEST_15_PREFETCH_NUM_WORKERS", "6"))
-    if workers not in (6, 8):
-        raise SystemExit("TEST_15 supporta 6 worker (record) oppure 8 worker (confronto di scalabilità).")
+    if workers not in (6, 8, 10):
+        raise SystemExit(
+            "TEST_15 supporta 6 worker (record), 8 worker oppure 10 worker "
+            "(confronti di scalabilità)."
+        )
     if not checkpoint.is_file():
         raise SystemExit(f"Checkpoint TEST_15 non trovato: {checkpoint}")
 
@@ -58,9 +61,21 @@ def configure_record_environment() -> tuple[str, str, str, str, int, int, Path]:
         # Il dispatcher C mantiene il predictor e il bridge di TEST_14, ma
         # sostituisce la banca a gruppi con la cache (layer, expert) di TEST_15.
         "DS4_TEST_15_SHARED_EXPERT_CACHE": "1",
+        # Percorso ibrido: slot batch Top-6 primario; cache condivisa solo
+        # per i ranghi aggiuntivi Top-(7..K), come fallback non duplicante.
+        "DS4_TEST_15_HYBRID_GROUP_PRIMARY": os.environ.get(
+            "DS4_TEST_15_HYBRID_GROUP_PRIMARY", "1"
+        ),
+        # Top-10 is admitted in two stages: the six ranks that can actually
+        # be consumed by the MoE are dispatched first; ranks 7..K are
+        # released only when the shard primary queue becomes idle.
+        "DS4_TEST_15_PREFETCH_PRIMARY_K": os.environ.get(
+            "DS4_TEST_15_PREFETCH_PRIMARY_K", "6"
+        ),
         "DS4_TEST_9_EXPERIMENT": f"test_15_build7_top{top_k}_shared_pinned_expert_cache",
         "DS4_TEST_9_ARCHITECTURE": (
-            "Build7 Top-4; cache RAM pinned condivisa per (layer, expert); "
+            "Build7 Top-4; slot batch Top-6 primario + cache RAM pinned "
+            "condivisa per i ranghi aggiuntivi; "
             f"2 x Top-{top_k} entry per layer; {workers} shard layer % {workers}"
         ),
         "DS4_TEST_13_WINDOWS_BRIDGE": "1",
@@ -187,7 +202,9 @@ def aggregate_overlap(repetitions: list[dict]) -> dict:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="TEST_15: cache pinned condivisa per expert Build 7.")
+    parser = argparse.ArgumentParser(
+        description="TEST_15: percorso ibrido Top-6 a gruppi + cache pinned per expert Build 7."
+    )
     parser.add_argument("--repetitions", type=int, default=int(os.environ.get("DS4_TEST_15_REPETITIONS", "3")))
     parser.add_argument("--mode", choices=("benchmark", "overlap-measurement"), default="benchmark")
     arguments = parser.parse_args()
@@ -199,7 +216,12 @@ def main() -> None:
     test9.start_service = test14.start_build7_service
     test9.run_c_with_automatic_audit = test14.run_c_build7
     if arguments.mode == "benchmark":
-        print("TEST_15: A/B/C con cache RAM pinned condivisa per (layer, expert)...")
+        hybrid = os.environ.get("DS4_TEST_15_HYBRID_GROUP_PRIMARY", "1") != "0"
+        print(
+            "TEST_15: A/B/C con slot batch Top-6 primario e cache RAM pinned "
+            "per expert di fallback..." if hybrid else
+            "TEST_15: A/B/C con cache RAM pinned condivisa per (layer, expert)..."
+        )
         test9.benchmark_with_automatic_audits(arguments)
         return
 

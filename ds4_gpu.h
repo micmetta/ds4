@@ -358,6 +358,16 @@ int ds4_gpu_test15_shared_expert_cache_enqueue(
         uint32_t                           layer,
         const int32_t                     *selected_ids,
         uint32_t                           n_selected);
+/* Variante per il percorso ibrido: selected_ids contiene solo i ranghi oltre
+ * il gruppo primario Top-6.  Sono quindi entry secondarie della cache e non
+ * devono duplicare la lettura batch dello slot di gruppo. */
+int ds4_gpu_test15_shared_expert_cache_enqueue_tail(
+        const ds4_gpu_stream_expert_table *table,
+        uint32_t                           target_token,
+        uint32_t                           layer,
+        const int32_t                     *selected_ids,
+        uint32_t                           n_selected,
+        uint32_t                           total_top_k);
 int ds4_gpu_test15_shared_expert_cache_try_selected_load(
         const ds4_gpu_stream_expert_table *table,
         uint32_t                           token,

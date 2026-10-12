@@ -33,7 +33,7 @@ from ffn_utils import build_fixed_nnz_state_two_hidden_gated_residual_ffn, requi
 EXPERTS = 256
 CURRENT_ROUTER_EXPERTS = 6
 DEFAULT_PREFETCH_TOP_K = 6
-MAX_PREFETCH_TOP_K = 10
+MAX_PREFETCH_TOP_K = 20
 RANKED_ROUTER = 16
 HIDDEN = 4096
 KV = 512
@@ -42,7 +42,7 @@ LAST_MODEL_LAYER = 42
 # ``prefetch_top_k`` belongs to the request so DS4 and the Python service
 # cannot silently disagree about the number of experts in a response.
 REQUEST = struct.Struct("<4sIIIII6i256f4096f4096f512f")
-RESPONSE = struct.Struct("<4sII10id")
+RESPONSE = struct.Struct("<4sII20id")
 
 
 def receive_exact(connection: socket.socket, size: int) -> bytes:
@@ -195,7 +195,7 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument("--current-hidden-scale", type=float, default=0.030650221456692914)
     parser.add_argument("--previous-hidden-scale", type=float, default=0.03066560039370079)
     parser.add_argument("--prefetch-top-k", type=int, default=DEFAULT_PREFETCH_TOP_K,
-                        help="Numero di expert predetti da restituire (6--10, default: 6).")
+                        help="Numero di expert predetti da restituire (6--20, default: 6).")
     return parser.parse_args()
 
 

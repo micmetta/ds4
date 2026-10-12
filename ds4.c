@@ -1789,6 +1789,10 @@ static const char *ds4_test4_worker_failure_name(uint32_t code) {
     }
 }
 
+/* The learned predictor may speculate beyond the six experts used by the
+ * real MoE forward.  TEST_15 currently evaluates up to Top-20. */
+enum { DS4_TEST14_PREFETCH_MAX_EXPERTS = 20 };
+
 /* The CUDA worker cannot safely write the shared JSONL file itself.  It puts
  * tiny lifecycle records in a bounded queue; the decode thread drains them.
  * This is active only in TEST_4/5 tracing mode. */
@@ -1853,8 +1857,10 @@ static bool ds4_test4_trace_drain_worker_events(void) {
                     ds4_test4_slot_state_name(event->same_layer_slot_state[future]),
                     event->same_layer_slot_target_token[future],
                     event->same_layer_slot_age_ms[future]);
-                const uint32_t expert_count = event->same_layer_slot_n_selected[future] > 10u ?
-                    10u : event->same_layer_slot_n_selected[future];
+            const uint32_t expert_count =
+                event->same_layer_slot_n_selected[future] > DS4_TEST14_PREFETCH_MAX_EXPERTS ?
+                DS4_TEST14_PREFETCH_MAX_EXPERTS :
+                event->same_layer_slot_n_selected[future];
                 for (uint32_t expert = 0; rc >= 0 && expert < expert_count; ++expert) {
                     rc = fprintf(g_test4_trace.fp, "%s%d", expert ? "," : "",
                         event->same_layer_slot_selected[future][expert]);
@@ -2005,8 +2011,6 @@ static bool ds4_test7_connect(void) {
 #endif
 }
 
-enum { DS4_TEST14_PREFETCH_MAX_EXPERTS = 10 };
-
 static void ds4_test7_trace_prediction(uint32_t source_pos, uint32_t layer,
                                         const int32_t *experts, uint32_t expert_count,
                                         double inference_ms, const int32_t *actual) {
@@ -2119,7 +2123,7 @@ typedef struct {
     bool valid;
     uint32_t pos;
     /* The real router still selects exactly six experts.  Only the predicted
-     * prefetch group may grow to Top-10. */
+     * prefetch group may grow to Top-20. */
     int32_t experts[6];
 } ds4_test7_actual_routing;
 typedef struct {
@@ -2193,6 +2197,39 @@ static bool ds4_test15_shared_cache_enabled(void) {
     return value && value[0] && strcmp(value, "0") != 0;
 }
 
+/* TEST_15 ibrido: il gruppo Top-6 resta il percorso principale collaudato;
+ * la cache per (layer, expert) ospita solo i ranghi ulteriori del predictor. */
+static bool ds4_test15_hybrid_group_primary_enabled(void) {
+    const char *value = getenv("DS4_TEST_15_HYBRID_GROUP_PRIMARY");
+    return ds4_test15_shared_cache_enabled() && value && value[0] && strcmp(value, "0") != 0;
+}
+
+static int ds4_test15_try_selected_load(
+        const ds4_gpu_stream_expert_table *table, uint32_t token, uint32_t layer,
+        const int32_t *selected, uint32_t n_selected,
+        ds4_gpu_stream_expert_load_stats *stats) {
+    if (!ds4_test15_shared_cache_enabled()) {
+        return ds4_gpu_test4_prefetch_try_selected_load(
+            table, token, layer, selected, n_selected, stats);
+    }
+    if (!ds4_test15_hybrid_group_primary_enabled()) {
+        return ds4_gpu_test15_shared_expert_cache_try_selected_load(
+            table, token, layer, selected, n_selected, stats);
+    }
+
+    /* Il loader di gruppo sa gestire anche l'hit parziale e completa lui i
+     * mancanti on-demand. La cache viene quindi consultata solo quando lo
+     * slot Top-6 non offre alcun gruppo per token/layer: nessun doppio I/O. */
+    const int group_result = ds4_gpu_test4_prefetch_try_selected_load(
+        table, token, layer, selected, n_selected, stats);
+    if (group_result != 0) return group_result;
+    /* Con Top-6 non esiste una coda tail: non inizializziamo né consultiamo
+     * una cache condivisa vuota, e lasciamo al chiamante il fallback normale. */
+    if (ds4_test14_prefetch_top_k() <= DS4_N_EXPERT_USED) return 0;
+    return ds4_gpu_test15_shared_expert_cache_try_selected_load(
+        table, token, layer, selected, n_selected, stats);
+}
+
 static void *ds4_test7_async_worker(void *unused) {
     (void)unused;
     for (;;) {
@@ -2238,12 +2275,25 @@ static void *ds4_test7_async_worker(void *unused) {
         const double inference_ms = job.build7 ? response14.inference_ms : response.inference_ms;
         ds4_test7_match_prediction_and_actual(source_pos, layer, experts, expert_count, inference_ms);
         if (ds4_test7_prefetch_enabled()) {
-            const int queued = ds4_test15_shared_cache_enabled() ?
-                ds4_gpu_test15_shared_expert_cache_enqueue(
-                    &job.table, source_pos + 1u, layer, experts, expert_count) :
-                ds4_gpu_test4_prefetch_enqueue(
-                    &job.table, source_pos + 1u, layer,
-                    experts, expert_count);
+            int queued = 0;
+            if (ds4_test15_hybrid_group_primary_enabled()) {
+                const uint32_t primary_count = expert_count < DS4_N_EXPERT_USED ?
+                    expert_count : DS4_N_EXPERT_USED;
+                const int primary_queued = ds4_gpu_test4_prefetch_enqueue(
+                    &job.table, source_pos + 1u, layer, experts, primary_count);
+                const int tail_queued = expert_count <= primary_count ||
+                    ds4_gpu_test15_shared_expert_cache_enqueue_tail(
+                        &job.table, source_pos + 1u, layer,
+                        experts + primary_count, expert_count - primary_count,
+                        expert_count);
+                queued = primary_queued && tail_queued;
+            } else if (ds4_test15_shared_cache_enabled()) {
+                queued = ds4_gpu_test15_shared_expert_cache_enqueue(
+                    &job.table, source_pos + 1u, layer, experts, expert_count);
+            } else {
+                queued = ds4_gpu_test4_prefetch_enqueue(
+                    &job.table, source_pos + 1u, layer, experts, expert_count);
+            }
             if (queued) {
                 (void)ds4_test4_trace_drain_worker_events();
                 (void)ds4_test4_trace_record("learned_prefetch_enqueue", source_pos + 1u,
@@ -22474,11 +22524,8 @@ static bool metal_graph_decode_set_hash_selected_override(
         const double trace_t0 = ssd_trace ? now_sec() : 0.0;
         if (!ds4_test4_trace_drain_worker_events()) return false;
         ds4_gpu_stream_expert_load_stats prefetch_stats = {0};
-        const int prefetch_hit = ds4_test15_shared_cache_enabled() ?
-            ds4_gpu_test15_shared_expert_cache_try_selected_load(
-                &table, pos, il, selected_i32, DS4_N_EXPERT_USED, &prefetch_stats) :
-            ds4_gpu_test4_prefetch_try_selected_load(
-                &table, pos, il, selected_i32, DS4_N_EXPERT_USED, &prefetch_stats);
+        const int prefetch_hit = ds4_test15_try_selected_load(
+            &table, pos, il, selected_i32, DS4_N_EXPERT_USED, &prefetch_stats);
         if (!ds4_test4_trace_drain_worker_events()) return false;
         if (prefetch_hit < 0) return false;
         if (prefetch_hit == 1) {
@@ -22868,11 +22915,8 @@ static bool metal_graph_decode_cuda_selected_load(
         }
         if (ok && !ds4_test4_trace_drain_worker_events()) ok = false;
         ds4_gpu_stream_expert_load_stats prefetch_stats = {0};
-        const int prefetch_hit = ds4_test15_shared_cache_enabled() ?
-            ds4_gpu_test15_shared_expert_cache_try_selected_load(
-                &table, pos, il, selected_ids, DS4_N_EXPERT_USED, &prefetch_stats) :
-            ds4_gpu_test4_prefetch_try_selected_load(
-                &table, pos, il, selected_ids, DS4_N_EXPERT_USED, &prefetch_stats);
+        const int prefetch_hit = ds4_test15_try_selected_load(
+            &table, pos, il, selected_ids, DS4_N_EXPERT_USED, &prefetch_stats);
         if (ok && !ds4_test4_trace_drain_worker_events()) ok = false;
         if (prefetch_hit < 0) {
             ok = false;

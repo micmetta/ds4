@@ -88,8 +88,8 @@ def main() -> None:
 
     checkpoint = required("DS4_TEST_14_CHECKPOINT")
     prefetch_top_k = int(os.environ.get("DS4_TEST_14_PREFETCH_TOP_K", "6"))
-    if not 6 <= prefetch_top_k <= 10:
-        raise SystemExit("DS4_TEST_14_PREFETCH_TOP_K deve essere un intero tra 6 e 10.")
+    if not 6 <= prefetch_top_k <= 20:
+        raise SystemExit("DS4_TEST_14_PREFETCH_TOP_K deve essere un intero tra 6 e 20.")
     # TEST_9's orchestration retains the physical window 3--42 (40 layers),
     # so its pinned worker accepts layer 42.  Build 7 itself sends requests
     # only for its valid learned interval 5--42 (38 layers).
